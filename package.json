@@ -1,0 +1,26 @@
+{
+  "name": "customerio-node",
+  "version": "0.0.0",
+  "description": "A node client for the Customer.io event API. http://customer.io",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/customerio/customerio-node.git"
+  },
+  "keywords": [
+    "customerio",
+    "node"
+  ],
+  "author": "Alvin Crespo",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/customerio/customerio-node/issues"
+  },
+  "homepage": "https://github.com/customerio/customerio-node"
+}
