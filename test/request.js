@@ -26,7 +26,7 @@ describe('#options', function() {
     var auth = 'Basic ' + new Buffer(request.siteid + ':' + request.apikey).toString('base64');
 
     var expectedOptions = {
-      headers: { Authorization: auth },
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
       uri: uri,
       timeout: 10000,
       method: 'POST'

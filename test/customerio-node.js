@@ -49,7 +49,7 @@ describe('#destroy', function() {
 describe('#track', function() {
   it('makes a POST request', function() {
     var cio = new CIO(123, 'abc');
-    var uri = cio.uri(1) + '/' + events;
+    var uri = cio.uri(1) + 'events';
 
     sinon.stub(cio.request, 'post');
 
@@ -62,7 +62,7 @@ describe('#track', function() {
 describe('#trackPageView', function() {
   it('makes a POST request', function() {
     var cio = new CIO(123, 'abc');
-    var uri = cio.uri(1);
+    var uri = cio.uri(1) + 'events';
 
     sinon.stub(cio.request, 'post');
 
