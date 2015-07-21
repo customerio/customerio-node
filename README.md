@@ -1,3 +1,5 @@
+[![Build Status](https://magnum.travis-ci.com/customerio/customerio-node.svg?token=zpjkEqUju9GyqyfknBXv&branch=create-initial-apis)](https://magnum.travis-ci.com/customerio/customerio-node)
+
 # Customerio
 
 A node client for the Customer.io event
