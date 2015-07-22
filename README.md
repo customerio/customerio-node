@@ -22,6 +22,8 @@ var cio = new CIO(siteId, apiKey);
 
 Both the `siteId` and `apiKey` are **required** in order to create a Basic Authorization header, allowing us to associate the data with your account.
 
+---
+
 ### cio.identify(id, data)
 
 Creating a person is as simple as identifying them with this call. You can also use this method to update a persons data.
@@ -38,6 +40,8 @@ cio.identify(1, {
 - **id**: String (required)
 - **data**: Object (optional)
 
+---
+
 ### cio.destroy(id)
 
 This will delete a person from Customer.io.
@@ -49,6 +53,8 @@ cio.destroy(1);
 #### Options
 
 - **id**: String (required)
+
+---
 
 ### cio.track(id, data)
 
@@ -77,6 +83,8 @@ cio.track(1, {
 - **data**: Object (required)
   - _name_ is a required key on the Object
   - _data_ is a required key if additional data is to be sent over with the event
+
+---
 
 ### cio.trackPageView(id, url)
 
@@ -119,4 +127,3 @@ npm install && npm test
 ## License
 
 Released under the MIT license. See file called LICENSE for more details.
-
