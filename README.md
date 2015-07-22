@@ -101,7 +101,7 @@ cio.trackPageView(1, '/home');
 
 ### Using Promises
 
-Our library is built with [RSVP.js](https://github.com/tildeio/rsvp.js/) - which means that every call is wrapped in a Promise object. Allowing you to chain your calls with `then`, `catch` and `finally`.
+Our library is built with [RSVP.js](https://github.com/tildeio/rsvp.js/) - which means that every call is wrapped in a [Promise](https://promisesaplus.com/) object. Allowing you to chain your calls with `then`, `catch` and `finally`.
 
 ```
 var customerId = 1;
