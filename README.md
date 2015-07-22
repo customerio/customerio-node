@@ -2,14 +2,23 @@
 
 # Customerio
 
-A node client for the Customer.io event
-[API](http://customer.io/docs/api/overview.htm ).
+A node client for the Customer.io [REST API](http://customer.io/docs/api/rest.html).
 
 ## Installation
 
 npm install --save customerio-node
 
 ## Usage
+
+### Creating a new instance
+
+In order to start using the library, you first need to create an instance of the CIO class:
+
+```
+var cio = new CIO(siteId, apiKey);
+```
+
+Both the `siteId` and `apiKey` are required in order to create a Basic Authorization header, allowing us to associate the data with your account.
 
 ### cio.identify(id, data)
 
