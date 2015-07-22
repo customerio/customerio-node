@@ -55,12 +55,12 @@ cio.track(1, {
 });
 ```
 
-### cio.trackPageView(id, name)
+### cio.trackPageView(id, url)
 
 Sending a page event includes sending over the customers id and the name of the page.
 
 ```
-cio.trackPageView(1, '#home');
+cio.trackPageView(1, '/home');
 ```
 
 ### Using Promises
