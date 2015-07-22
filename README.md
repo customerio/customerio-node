@@ -7,32 +7,76 @@ A node client for the Customer.io event
 
 ## Installation
 
-TBD
+npm install --save customerio-node
 
 ## Usage
 
-### Creating a customer
+### cio.identify(id, data)
 
-TBD
+Creating a person is as simple as identifying them with this call. You can also use this method to update a persons data.
 
-### Updating a customer
+```
+cio.identify(1, {
+  first_name: 'Finn',
+  last_name: 'Mertens'
+});
+```
 
-TBD
+### cio.destroy(id)
 
-### Deleting a customer
+This will delete a person from Customer.io.
 
-TBD
+```
+cio.destroy(1);
+```
 
-### Tracking a custom event
+### cio.track(id, data)
 
-TBD
+The track method will trigger events within Customer.io. When sending data along with your event, it is required to send a name key/value pair in you data object.
 
-## Contributing
+```
+cio.track(1, {
+  name: 'updated',
+  data: {
+    updated: true,
+    plan: 'free'
+  }
+});
+```
 
-1. Fork it
-2. Clone your fork (git clone
-3. git@github.com:MY_USERNAME/customerio-node.git && cd customerio-node)
-4. Create your feature branch (git checkout -b my-new-feature)
-5. Commit your changes (git commit -am 'Added some feature')
-6. Push to the branch (git push origin my-new-feature)
-7. Create new Pull Request
+### cio.trackPageView(id, name)
+
+Sending a page event includes sending over the customers id and the name of the page.
+
+```
+cio.trackPageView(1, '#home');
+```
+
+### Using Promises
+
+Our library is built with [RSVP.js](https://github.com/tildeio/rsvp.js/) - which means that every call is wrapped in a Promise object. Allowing you to chain your calls with `then`, `catch` and `finally`.
+
+```
+var customerId = 1;
+
+cio.identify(customerId, { first_name: 'Finn' }).
+  then(function(){
+    cio.track(customerId, {
+      name: 'updated',
+      data: {
+        updated: true,
+        plan: 'free'
+      }
+    });
+  });
+```
+
+## Tests
+
+```
+npm install && npm test
+```
+
+## License
+
+Released under the MIT license. See file called LICENSE for more details.
