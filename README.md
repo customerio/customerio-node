@@ -6,7 +6,9 @@ A node client for the Customer.io [REST API](http://customer.io/docs/api/rest.ht
 
 ## Installation
 
+```
 npm install --save customerio-node
+```
 
 ## Usage
 
