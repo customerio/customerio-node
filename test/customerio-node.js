@@ -36,7 +36,7 @@ describe('CustomerIO', function(){
   });
 
   describe('#destroy', function() {
-    it('makes a DEvarE request', function() {
+    it('makes a DELETE request', function() {
       var uri = cio.uri(1);
 
       sinon.stub(cio.request, 'destroy');

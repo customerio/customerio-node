@@ -1,7 +1,12 @@
+var chai = require('chai');
+var chaiAsPromised = require('chai-as-promised');
+var expect = require('chai').expect;
 var assert = require('chai').assert;
 var should = require('chai').should();
 var sinon = require('sinon');
 var Request = require('../lib/request');
+
+chai.use(chaiAsPromised);
 
 describe('Request', function() {
   var request;
@@ -42,6 +47,70 @@ describe('Request', function() {
     });
   });
 
+  describe('#handler', function() {
+    var uri;
+    var data;
+    var options;
+
+    beforeEach(function() {
+      uri = 'https://track.customer.io/api/v1/customers/1';
+      data = { first_name: 'Bruce', last_name: 'Wayne' };
+      options = {
+        method: 'PUT',
+        uri: uri,
+        headers: {
+          'Authorization': auth,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data),
+        timeout: 10000
+      };
+    });
+
+    it('returns a promise', function() {
+      var promise = request.handler(options);
+
+      request._request = function(){};
+
+      assert.isFunction(promise.then);
+      assert.isFunction(promise['catch']);
+    });
+
+    it('makes a request and resolves a promise on success', function() {
+      var body = {};
+
+      request._request = function(options, callback) {
+        var response = {
+          statusCode: 200
+        };
+        callback(null, response, JSON.stringify(body));
+      };
+
+      return request.handler(options).should.eventually.deep.equal(body);
+    });
+
+    it('makes a request and rejects with an error on failure', function() {
+      options.uri = 'https://track.customer.io/api/v1/customers/1/events';
+      options.data = JSON.stringify({ title: 'The Batman' });
+
+      var message = 'test error message';
+      var body = {
+        "meta": {
+          "error": message
+        }
+      };
+
+      request._request = function(options, callback) {
+        var response = {
+          statusCode: 400
+        };
+        callback(null, response, JSON.stringify(body));
+      };
+
+      return request.handler(options).should.be.rejectedWith(message);
+    });
+  });
+
   describe('#put', function() {
     var uri;
     var options;
@@ -54,7 +123,7 @@ describe('Request', function() {
         method: 'PUT',
         uri: uri,
         headers: {
-          'Authorization': 'Basic ' + new Buffer(siteid + ':' + apikey, 'utf8').toString('base64'),
+          'Authorization': auth,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(data),
@@ -88,7 +157,7 @@ describe('Request', function() {
         method: 'DELETE',
         uri: uri,
         headers: {
-          'Authorization': 'Basic ' + new Buffer(siteid + ':' + apikey, 'utf8').toString('base64'),
+          'Authorization': auth,
           'Content-Type': 'application/json'
         },
         timeout: 10000
@@ -123,7 +192,7 @@ describe('Request', function() {
         method: 'POST',
         uri: uri,
         headers: {
-          'Authorization': 'Basic ' + new Buffer(siteid + ':' + apikey, 'utf8').toString('base64'),
+          'Authorization': auth,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(data),
