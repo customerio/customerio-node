@@ -1,4 +1,4 @@
-[![Build Status](https://magnum.travis-ci.com/customerio/customerio-node.svg?token=zpjkEqUju9GyqyfknBXv&branch=create-initial-apis)](https://magnum.travis-ci.com/customerio/customerio-node)
+[![Build Status](https://travis-ci.org/alvincrespo/ember-cli-customerio.svg)](https://travis-ci.org/alvincrespo/ember-cli-customerio)
 
 # Customerio
 
