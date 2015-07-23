@@ -1,6 +1,6 @@
 {
   "name": "customerio-node",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A node client for the Customer.io event API. http://customer.io",
   "main": "lib/customerio-node",
   "directories": {
