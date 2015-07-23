@@ -2,12 +2,12 @@
   "name": "customerio-node",
   "version": "0.0.0",
   "description": "A node client for the Customer.io event API. http://customer.io",
-  "main": "index.js",
+  "main": "lib/customerio-node",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha && mocha --require blanket -R html-cov > coverage.html"
   },
   "repository": {
     "type": "git",
@@ -22,5 +22,22 @@
   "bugs": {
     "url": "https://github.com/customerio/customerio-node/issues"
   },
-  "homepage": "https://github.com/customerio/customerio-node"
+  "homepage": "https://github.com/customerio/customerio-node",
+  "dependencies": {
+    "request": "^2.58.0",
+    "rsvp": "^3.0.18",
+    "sinon": "^1.15.4"
+  },
+  "devDependencies": {
+    "blanket": "^1.1.7",
+    "chai": "^3.1.0",
+    "chai-as-promised": "^5.1.0",
+    "mocha": "^2.2.5"
+  },
+  "config": {
+    "blanket": {
+      "pattern": "lib",
+      "data-cover-never": [ "node_modules", "test" ]
+    }
+  }
 }
