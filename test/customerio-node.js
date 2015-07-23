@@ -49,7 +49,7 @@ describe('CustomerIO', function(){
 
   describe('#track', function() {
     it('makes a POST request', function() {
-      var uri = cio.uri(1) + 'events';
+      var uri = cio.uri(1) + '/events';
 
       sinon.stub(cio.request, 'post');
 
@@ -61,7 +61,7 @@ describe('CustomerIO', function(){
 
   describe('#trackPageView', function() {
     it('makes a POST request', function() {
-      var uri = cio.uri(1) + 'events';
+      var uri = cio.uri(1) + '/events';
 
       sinon.stub(cio.request, 'post');
 
