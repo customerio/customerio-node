@@ -2,6 +2,8 @@ const test = require('ava')
 const sinon = require('sinon')
 const CIO = require('../lib')
 
+const base = 'https://track.customer.io/api/v1'
+
 test.beforeEach(t => {
   t.context.client = new CIO(123, 'abc')
 })
@@ -14,35 +16,54 @@ test('constructor sets necessary variables', t => {
   t.is(t.context.client.request.apikey, 'abc')
 })
 
-test('#identify makes a PUT request', t => {
-  const uri = t.context.client.uri(1)
+test('#identify works', t => {
   sinon.stub(t.context.client.request, 'put')
   t.context.client.identify(1)
-  t.truthy(t.context.client.request.put.calledWith(uri, {}))
+  t.truthy(t.context.client.request.put.calledWith(`${base}/customers/1`, {}))
 })
 
-test('#destroy makes a DELETE request', t => {
-  const uri = t.context.client.uri(1)
+test('#destroy works', t => {
   sinon.stub(t.context.client.request, 'destroy')
   t.context.client.destroy(1)
-  t.truthy(t.context.client.request.destroy.calledWith(uri))
+  t.truthy(t.context.client.request.destroy.calledWith(`${base}/customers/1`))
 })
 
-test('#track makes a POST request', t => {
-  const uri = t.context.client.uri(1) + '/events'
+test('#track with customer id works', t => {
   sinon.stub(t.context.client.request, 'post')
-  t.context.client.track(1)
-  t.truthy(t.context.client.request.post.calledWith(uri, {}))
+  t.context.client.track(1, { data: 'yep' })
+  t.truthy(
+    t.context.client.request.post.calledWith(`${base}/customers/1/events`, {
+      data: 'yep'
+    })
+  )
 })
 
-test('#trackPageView makes a POST request', t => {
-  const uri = t.context.client.uri(1) + '/events'
+test('#track without customer id works', t => {
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.track({ data: 'yep' })
+  t.truthy(
+    t.context.client.request.post.calledWith(`${base}/events`, { data: 'yep' })
+  )
+})
+
+test('#trackPageView works', t => {
   sinon.stub(t.context.client.request, 'post')
   t.context.client.trackPageView(1, '#home')
   t.truthy(
-    t.context.client.request.post.calledWith(uri, {
+    t.context.client.request.post.calledWith(`${base}/customers/1/events`, {
       type: 'page',
       name: '#home'
+    })
+  )
+})
+
+test('#triggerBroadcast works', t => {
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.triggerBroadcast(1, { type: 'data' }, { type: 'recipients' })
+  t.truthy(
+    t.context.client.request.post.calledWith(`${base}/campaigns/1/triggers`, {
+      data: { type: 'data' },
+      recipients: { type: 'recipients' }
     })
   )
 })

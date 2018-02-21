@@ -67,7 +67,9 @@ test('#handler makes a request and rejects with an error on failure', t => {
     cb(null, { statusCode: 400 }, JSON.stringify(body))
   }
 
-  return t.context.req.handler(customOptions).catch(err => t.is(err, message))
+  return t.context.req
+    .handler(customOptions)
+    .catch(err => t.is(err.message, message))
 })
 
 test('#put calls the handler, makes PUT request with the correct args', t => {
