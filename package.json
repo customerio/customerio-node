@@ -1,43 +1,36 @@
 {
   "name": "customerio-node",
+  "description":
+    "A node client for the Customer.io event API. http://customer.io",
   "version": "0.2.0",
-  "description": "A node client for the Customer.io event API. http://customer.io",
-  "main": "lib/customerio-node",
+  "author": "Alvin Crespo",
+  "ava": {
+    "verbose": true
+  },
+  "bugs": {
+    "url": "https://github.com/customerio/customerio-node/issues"
+  },
+  "dependencies": {
+    "request": "^2.58.0",
+    "rsvp": "^4.8.1"
+  },
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "nyc": "^11.4.1",
+    "sinon": "^4.3.0"
+  },
   "directories": {
     "test": "tests"
   },
-  "scripts": {
-    "test": "mocha && mocha --require blanket -R html-cov > coverage.html"
-  },
+  "homepage": "https://github.com/customerio/customerio-node",
+  "keywords": ["customerio", "node"],
+  "license": "MIT",
+  "main": "lib/customerio-node",
   "repository": {
     "type": "git",
     "url": "https://github.com/customerio/customerio-node.git"
   },
-  "keywords": [
-    "customerio",
-    "node"
-  ],
-  "author": "Alvin Crespo",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/customerio/customerio-node/issues"
-  },
-  "homepage": "https://github.com/customerio/customerio-node",
-  "dependencies": {
-    "request": "^2.58.0",
-    "rsvp": "^3.0.18",
-    "sinon": "^1.15.4"
-  },
-  "devDependencies": {
-    "blanket": "^1.1.7",
-    "chai": "^3.1.0",
-    "chai-as-promised": "^5.1.0",
-    "mocha": "^2.2.5"
-  },
-  "config": {
-    "blanket": {
-      "pattern": "lib",
-      "data-cover-never": [ "node_modules", "test" ]
-    }
+  "scripts": {
+    "test": "nyc ava"
   }
 }

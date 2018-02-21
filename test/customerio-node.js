@@ -1,73 +1,48 @@
-var assert = require('chai').assert;
-var should = require('chai').should();
-var sinon = require('sinon');
-var CIO = require('../lib/customerio-node');
+const test = require('ava')
+const sinon = require('sinon')
+const CIO = require('../lib/customerio-node')
 
-describe('CustomerIO', function(){
-  var cio;
+test.beforeEach(t => {
+  t.context.client = new CIO(123, 'abc')
+})
 
-  beforeEach(function() {
-    cio = new CIO(123, 'abc');
-  });
+test('constructor sets necessary variables', t => {
+  t.is(t.context.client.siteid, 123)
+  t.is(t.context.client.apikey, 'abc')
+  t.truthy(t.context.client.request)
+  t.is(t.context.client.request.siteid, 123)
+  t.is(t.context.client.request.apikey, 'abc')
+})
 
-  describe('#constructor', function() {
-    it('sets siteid and apikey', function() {
-      cio.siteid.should.equal(123);
-      cio.apikey.should.equal('abc');
-    });
+test('#identify makes a PUT request', t => {
+  const uri = t.context.client.uri(1)
+  sinon.stub(t.context.client.request, 'put')
+  t.context.client.identify(1)
+  t.truthy(t.context.client.request.put.calledWith(uri, {}))
+})
 
-    it('creates a request object that stores the siteid and apikey', function() {
-      assert.ok(cio.request);
-      cio.request.siteid.should.equal(123);
-      cio.request.apikey.should.equal('abc');
-    });
-  });
+test('#destroy makes a DELETE request', t => {
+  const uri = t.context.client.uri(1)
+  sinon.stub(t.context.client.request, 'destroy')
+  t.context.client.destroy(1)
+  t.truthy(t.context.client.request.destroy.calledWith(uri))
+})
 
-  describe('#identify', function() {
-    it('makes a PUT request', function() {
-      var uri = cio.uri(1);
+test('#track makes a POST request', t => {
+  const uri = t.context.client.uri(1) + '/events'
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.track(1)
+  t.truthy(t.context.client.request.post.calledWith(uri, {}))
+})
 
-      sinon.stub(cio.request, 'put');
-
-      cio.identify(1);
-
-      assert.ok(cio.request.put.calledWith(uri, {}));
-    });
-  });
-
-  describe('#destroy', function() {
-    it('makes a DELETE request', function() {
-      var uri = cio.uri(1);
-
-      sinon.stub(cio.request, 'destroy');
-
-      cio.destroy(1);
-
-      assert.ok(cio.request.destroy.calledWith(uri));
-    });
-  });
-
-  describe('#track', function() {
-    it('makes a POST request', function() {
-      var uri = cio.uri(1) + '/events';
-
-      sinon.stub(cio.request, 'post');
-
-      cio.track(1);
-
-      assert.ok(cio.request.post.calledWith(uri, {}));
-    });
-  });
-
-  describe('#trackPageView', function() {
-    it('makes a POST request', function() {
-      var uri = cio.uri(1) + '/events';
-
-      sinon.stub(cio.request, 'post');
-
-      cio.trackPageView(1, '#home');
-
-      assert.ok(cio.request.post.calledWith(uri, { type: 'page', name: '#home'}));
-    });
-  });
-});
+test('#trackPageView makes a POST request', t => {
+  const uri = t.context.client.uri(1) + '/events'
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.trackPageView(1, '#home')
+  t.truthy(
+    t.context.client.request.post.calledWith(uri, {
+      type: 'page',
+      name: '#home'
+    })
+  )
+})
