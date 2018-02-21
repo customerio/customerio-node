@@ -11,8 +11,7 @@
     "url": "https://github.com/customerio/customerio-node/issues"
   },
   "dependencies": {
-    "request": "^2.58.0",
-    "rsvp": "^4.8.1"
+    "request": "^2.58.0"
   },
   "devDependencies": {
     "ava": "^0.25.0",
