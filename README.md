@@ -1,13 +1,13 @@
-[![Build Status](https://travis-ci.org/alvincrespo/ember-cli-customerio.svg)](https://travis-ci.org/alvincrespo/ember-cli-customerio)
+[![Build Status](https://travis-ci.org/customerio/customerio-node.svg)](https://travis-ci.org/customerio/customerio-node)
 
 # Customerio
 
-A node client for the Customer.io [REST API](http://customer.io/docs/api/rest.html).
+A node client for the Customer.io [REST API](https://learn.customer.io/api/).
 
 ## Installation
 
 ```
-npm install --save customerio-node
+npm i customerio-node
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ npm install --save customerio-node
 In order to start using the library, you first need to create an instance of the CIO class:
 
 ```
-var cio = new CIO(siteId, apiKey);
+const cio = new CIO(siteId, apiKey);
 ```
 
 Both the `siteId` and `apiKey` are **required** in order to create a Basic Authorization header, allowing us to associate the data with your account.
@@ -37,8 +37,8 @@ cio.identify(1, {
 
 #### Options
 
-- **id**: String (required)
-- **data**: Object (optional)
+* **id**: String (required)
+* **data**: Object (optional)
 
 ---
 
@@ -52,7 +52,7 @@ cio.destroy(1);
 
 #### Options
 
-- **id**: String (required)
+* **id**: String (required)
 
 ---
 
@@ -67,6 +67,7 @@ cio.track(1, { name: 'updated' });
 ```
 
 **Sending data with an event**
+
 ```
 cio.track(1, {
   name: 'updated',
@@ -79,10 +80,10 @@ cio.track(1, {
 
 #### Options
 
-- **id**: String (required)
-- **data**: Object (required)
-  - _name_ is a required key on the Object
-  - _data_ is a required key if additional data is to be sent over with the event
+* **id**: String (required)
+* **data**: Object (required)
+  * _name_ is a required key on the Object
+  * _data_ is a required key if additional data is to be sent over with the event
 
 ---
 
@@ -96,26 +97,25 @@ cio.trackPageView(1, '/home');
 
 #### Options
 
-- **id**: String (required)
-- **url**: String (required)
+* **id**: String (required)
+* **url**: String (required)
 
 ### Using Promises
 
-Our library is built with [RSVP.js](https://github.com/tildeio/rsvp.js/) - which means that every call is wrapped in a [Promise](https://promisesaplus.com/) object. Allowing you to chain your calls with `then`, `catch` and `finally`.
+All calls to the library will return a native promise, allowing you to chain calls as such:
 
 ```
-var customerId = 1;
+const customerId = 1;
 
-cio.identify(customerId, { first_name: 'Finn' }).
-  then(function(){
-    cio.track(customerId, {
-      name: 'updated',
-      data: {
-        updated: true,
-        plan: 'free'
-      }
-    });
+cio.identify(customerId, { first_name: 'Finn' }).then(() => {
+  return cio.track(customerId, {
+    name: 'updated',
+    data: {
+      updated: true,
+      plan: 'free'
+    }
   });
+});
 ```
 
 ## Tests
