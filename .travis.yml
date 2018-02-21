@@ -1,11 +1,6 @@
+sudo: false
 language: node_js
 node_js:
-  - "0.12"
-sudo: false
-cache:
-  directories:
-    - node_modules
-install:
-  - npm install
-script:
-  - npm test
+  - 6
+  - 8
+  - 9
