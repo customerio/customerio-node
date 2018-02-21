@@ -1,6 +1,6 @@
 const test = require('ava')
 const sinon = require('sinon')
-const CIO = require('../lib/customerio-node')
+const CIO = require('../lib')
 
 test.beforeEach(t => {
   t.context.client = new CIO(123, 'abc')
