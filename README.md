@@ -58,7 +58,7 @@ cio.destroy(1);
 
 ### cio.track(id, data)
 
-The track method will trigger events within Customer.io. When sending data along with your event, it is required to send a name key/value pair in you data object.
+The track method will trigger events within Customer.io. When sending data along with your event, it is required to send a name key/value pair in you data object. If you do not pass an id as the first parameter, it will be tracked as an anonymous event.
 
 **Simple event tracking**
 
@@ -78,10 +78,22 @@ cio.track(1, {
 });
 ```
 
+**Tracking an anonymous event**
+
+```
+cio.track({
+  name: 'updated',
+  data: {
+    updated: true,
+    plan: 'free'
+  }
+});
+```
+
 #### Options
 
-* **id**: String (required)
-* **data**: Object (required)
+* **id**: String (optional)
+* **data**: Object (optional)
   * _name_ is a required key on the Object
   * _data_ is a required key if additional data is to be sent over with the event
 
@@ -99,6 +111,20 @@ cio.trackPageView(1, '/home');
 
 * **id**: String (required)
 * **url**: String (required)
+
+### cio.triggerBroadcast(campaign_id, data, recipients)
+
+Trigger an email broadcast using the email campaign's id. You can also optionally pass along custom data that will be merged with the liquid template, and additional conditions to filter recipients.
+
+```
+cio.triggerBroadcast(1, { name: 'foo'}, { segment: { id: 7 });
+```
+
+#### Options
+
+* **id**: String (required)
+* **data**: Object (optional)
+* **recipients**: Object (optional)
 
 ### Using Promises
 
