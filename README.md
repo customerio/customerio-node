@@ -7,7 +7,7 @@ A node client for the Customer.io [REST API](https://learn.customer.io/api/).
 ## Installation
 
 ```
-npm i customerio-node
+npm i --save customerio-node
 ```
 
 ## Usage
@@ -17,6 +17,7 @@ npm i customerio-node
 In order to start using the library, you first need to create an instance of the CIO class:
 
 ```
+let CIO = require('customerio-node');
 const cio = new CIO(siteId, apiKey);
 ```
 
@@ -30,15 +31,19 @@ Creating a person is as simple as identifying them with this call. You can also 
 
 ```
 cio.identify(1, {
-  first_name: 'Finn',
-  last_name: 'Mertens'
+  email: 'customer@example.com',
+  created_at: 1361205308,
+  first_name: 'Bob',
+  plan: 'basic'
 });
 ```
 
 #### Options
 
-* **id**: String (required)
-* **data**: Object (optional)
+- **id**: String (required)
+- **data**: Object (optional)
+  - _email_ is a required key if you intend to send email messages
+  - _created\_at_ is a required key if you want to segment based on signed up/created date
 
 ---
 
@@ -58,7 +63,7 @@ cio.destroy(1);
 
 ### cio.track(id, data)
 
-The track method will trigger events within Customer.io. When sending data along with your event, it is required to send a name key/value pair in you data object. If you do not pass an id as the first parameter, it will be tracked as an anonymous event.
+The track method will trigger events within Customer.io. When sending data along with your event, it is required to send a name key/value pair in you data object. 
 
 **Simple event tracking**
 
@@ -70,18 +75,29 @@ cio.track(1, { name: 'updated' });
 
 ```
 cio.track(1, {
-  name: 'updated',
+  name: 'purchase',
   data: {
-    updated: true,
-    plan: 'free'
+    price: '23.45',
+    product: 'socks'
   }
 });
 ```
 
-**Tracking an anonymous event**
+#### Options
+
+* **id**: String (requiredl)
+* **data**: Object (required)
+  * _name_ is a required key on the Object
+  * _data_ is an optional key for additional data sent over with the event
+
+---
+
+### cio.trackAnonymous(data)
+
+Anonymous event tracking does not require a customer ID and these events will not be associated with a tracked profile in Customer.io
 
 ```
-cio.track({
+cio.trackAnonymous({
   name: 'updated',
   data: {
     updated: true,
@@ -92,10 +108,9 @@ cio.track({
 
 #### Options
 
-* **id**: String (optional)
-* **data**: Object (optional)
+* **data**: Object (required)
   * _name_ is a required key on the Object
-  * _data_ is a required key if additional data is to be sent over with the event
+  * _data_ is an optional key for additional data sent over with the event
 
 ---
 
@@ -117,7 +132,7 @@ cio.trackPageView(1, '/home');
 Trigger an email broadcast using the email campaign's id. You can also optionally pass along custom data that will be merged with the liquid template, and additional conditions to filter recipients.
 
 ```
-cio.triggerBroadcast(1, { name: 'foo'}, { segment: { id: 7 });
+cio.triggerBroadcast(1, { name: 'foo'}, { segment: { id: 7 }});
 ```
 
 #### Options
@@ -144,6 +159,10 @@ cio.identify(customerId, { first_name: 'Finn' }).then(() => {
 });
 ```
 
+## Further examples
+
+We've included functional examples in the [examples/ directory](https://github.com/customerio/customerio-node/tree/master/examples) of the repo to further assist in demonstrating how to use this library to integrate with Customer.io
+
 ## Tests
 
 ```
@@ -152,4 +171,4 @@ npm install && npm test
 
 ## License
 
-Released under the MIT license. See file called LICENSE for more details.
+Released under the MIT license. See file [LICENSE](LICENSE) for more details.

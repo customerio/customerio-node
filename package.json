@@ -1,8 +1,12 @@
 {
   "name": "customerio-node",
   "description": "A node client for the Customer.io event API. http://customer.io",
-  "version": "0.2.0",
-  "author": "Alvin Crespo",
+  "version": "0.3.0",
+  "author": "Customer.io (https://customer.io",
+  "contributors": [
+    "Alvin Crespo (https://github.com/alvincrespo)",
+    "Jeff Escalante (https://github.com/jescalan)"
+  ],
   "ava": {
     "verbose": true
   },

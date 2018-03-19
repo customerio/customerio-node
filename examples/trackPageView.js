@@ -1,7 +1,8 @@
-var CIO = require('../lib/customerio-node');
-var siteId = require('./config').siteId;
-var apiKey = require('./config').apiKey;
-var customerId = require('./config').customerId;
-var cio = new CIO(siteId, apiKey);
+let CIO = require('../lib/index');
+// In actual use require the node module: let CIO = require('customerio-node');
+const siteId = require('./config').siteId;
+const apiKey = require('./config').apiKey;
+const customerId = require('./config').customerId;
+const cio = new CIO(siteId, apiKey);
 
 cio.trackPageView(customerId, '#home');
