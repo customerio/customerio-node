@@ -63,7 +63,7 @@ cio.destroy(1);
 
 ### cio.track(id, data)
 
-The track method will trigger events within Customer.io. When sending data along with your event, it is required to send a name key/value pair in you data object. 
+The track method will trigger events within Customer.io. When sending data along with your event, it is required to send a name key/value pair in you data object.
 
 **Simple event tracking**
 
@@ -140,6 +140,32 @@ cio.triggerBroadcast(1, { name: 'foo'}, { segment: { id: 7 }});
 * **id**: String (required)
 * **data**: Object (optional)
 * **recipients**: Object (optional)
+
+### cio.addDevice(id, device_id, platform, data)
+Add a device to send push notifications.
+
+```
+cio.addDevice(1, "device_id", 'ios', { primary: true });
+```
+
+#### Options
+
+* *customer_id*: String (required)
+* *device_id*: String (required)
+* *platform*: String (required)
+* *data*: Object (required)
+
+### cio.removeDevice(id, device_id)
+Delete a device to remove it from the associated customer and stop sending push notifications to it.
+
+```
+cio.deleteDevice(1, "device_id")
+```
+
+#### Options
+
+* *customer_id*: String (required)
+* *device_id*: String (required)
 
 ### Using Promises
 
