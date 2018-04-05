@@ -150,10 +150,10 @@ cio.addDevice(1, "device_id", 'ios', { primary: true });
 
 #### Options
 
-* *customer_id*: String (required)
-* *device_id*: String (required)
-* *platform*: String (required)
-* *data*: Object (required)
+* **customer_id**: String (required)
+* **device_id**: String (required)
+* **platform**: String (required)
+* **data**: Object (required)
 
 ### cio.removeDevice(id, device_id)
 Delete a device to remove it from the associated customer and stop sending push notifications to it.
@@ -164,8 +164,8 @@ cio.deleteDevice(1, "device_token")
 
 #### Options
 
-* *customer_id*: String (required)
-* *device_id*: String (required)
+* **customer_id**: String (required)
+* **device_token**: String (required)
 
 ### Using Promises
 
