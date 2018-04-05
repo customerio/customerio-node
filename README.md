@@ -145,7 +145,7 @@ cio.triggerBroadcast(1, { name: 'foo'}, { segment: { id: 7 }});
 Add a device to send push notifications.
 
 ```
-cio.addDevice(1, "device_id", 'ios', { primary: true });
+cio.addDevice(1, "device_id", "ios", { primary: true });
 ```
 
 #### Options
