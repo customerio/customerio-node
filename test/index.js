@@ -83,3 +83,44 @@ test('#triggerBroadcast works', t => {
     )
   )
 })
+
+test('#addDevice works', t => {
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.addDevice(1, 123, 'ios', { primary: true });
+  t.truthy(
+    t.context.client.request.post.calledWith(
+      `${trackRoot}/customers/1/devices`, {
+        device: {
+          id: 123,
+          platform: 'ios',
+          primary: true
+        }
+      }
+    )
+  )
+})
+
+test('#addDevice works with an empty data parameter', t => {
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.addDevice(1, 123, 'ios', null);
+  t.truthy(
+    t.context.client.request.post.calledWith(
+      `${trackRoot}/customers/1/devices`, {
+        device: {
+          id: 123,
+          platform: 'ios'
+        }
+      }
+    )
+  )
+})
+
+test('#removeDevice works', t => {
+  sinon.stub(t.context.client.request, 'destroy')
+  t.context.client.removeDevice(1, 123)
+  t.truthy(
+    t.context.client.request.destroy.calledWith(
+      `${trackRoot}/customers/1/devices/123`
+    )
+  )
+})
