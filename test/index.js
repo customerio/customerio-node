@@ -85,10 +85,10 @@ test('#triggerBroadcast works', t => {
 })
 
 test('#addDevice works', t => {
-  sinon.stub(t.context.client.request, 'post')
+  sinon.stub(t.context.client.request, 'put')
   t.context.client.addDevice(1, 123, 'ios', { primary: true });
   t.truthy(
-    t.context.client.request.post.calledWith(
+    t.context.client.request.put.calledWith(
       `${trackRoot}/customers/1/devices`, {
         device: {
           id: 123,
@@ -101,10 +101,10 @@ test('#addDevice works', t => {
 })
 
 test('#addDevice works with an empty data parameter', t => {
-  sinon.stub(t.context.client.request, 'post')
+  sinon.stub(t.context.client.request, 'put')
   t.context.client.addDevice(1, 123, 'ios', null);
   t.truthy(
-    t.context.client.request.post.calledWith(
+    t.context.client.request.put.calledWith(
       `${trackRoot}/customers/1/devices`, {
         device: {
           id: 123,
