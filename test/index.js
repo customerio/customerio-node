@@ -115,9 +115,9 @@ test('#addDevice works with an empty data parameter', t => {
   )
 })
 
-test('#removeDevice works', t => {
+test('#deleteDevice works', t => {
   sinon.stub(t.context.client.request, 'destroy')
-  t.context.client.removeDevice(1, 123)
+  t.context.client.deleteDevice(1, 123)
   t.truthy(
     t.context.client.request.destroy.calledWith(
       `${trackRoot}/customers/1/devices/123`
