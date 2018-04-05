@@ -159,7 +159,7 @@ cio.addDevice(1, "device_id", 'ios', { primary: true });
 Delete a device to remove it from the associated customer and stop sending push notifications to it.
 
 ```
-cio.deleteDevice(1, "device_id")
+cio.deleteDevice(1, "device_token")
 ```
 
 #### Options
