@@ -168,7 +168,7 @@ cio.deleteDevice(1, "device_token")
 * **device_token**: String (required)
 
 ### cio.addToSegment(id, customer_ids)
-Add customers to a segment.
+Add customers to a manual segment.
 
 ```
 cio.addToSegment(1, ["1", "2", "3"])
@@ -180,7 +180,7 @@ cio.addToSegment(1, ["1", "2", "3"])
 * **customer_ids**: Array (required)
 
 ### cio.removeFromSegment(id, customer_ids)
-Remove customers from a segment.
+Remove customers from a manual segment.
 
 ```
 cio.removeFromSegment(1, ["1", "2", "3"])
