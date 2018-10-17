@@ -126,25 +126,29 @@ test('#deleteDevice works', t => {
 })
 
 test('#addToSegment works', t => {
+  let ids = ['1', '2', '3']
+
   sinon.stub(t.context.client.request, 'post')
-  t.context.client.addToSegment(1, [1, 2, 3])
+  t.context.client.addToSegment(1, ids)
 
   t.truthy(
     t.context.client.request.post.calledWith(
       `${trackRoot}/segments/1/add_customers`,
-      { ids: [1, 2, 3] }
+      { ids }
     )
   )
 })
 
 test('#removeFromSegment works', t => {
+  let ids = ['1', '2', '3']
+
   sinon.stub(t.context.client.request, 'post')
-  t.context.client.removeFromSegment(1, [1, 2, 3])
+  t.context.client.removeFromSegment(1, ids)
 
   t.truthy(
     t.context.client.request.post.calledWith(
       `${trackRoot}/segments/1/remove_customers`,
-      { ids: [1, 2, 3] }
+      { ids }
     )
   )
 })
