@@ -167,6 +167,30 @@ cio.deleteDevice(1, "device_token")
 * **customer_id**: String (required)
 * **device_token**: String (required)
 
+### cio.addToSegment(id, customer_ids)
+Add customers to a manual segment.
+
+```
+cio.addToSegment(1, ["1", "2", "3"])
+```
+
+#### Options
+
+* **segment_id**: String (required)
+* **customer_ids**: Array (required)
+
+### cio.removeFromSegment(id, customer_ids)
+Remove customers from a manual segment.
+
+```
+cio.removeFromSegment(1, ["1", "2", "3"])
+```
+
+#### Options
+
+* **segment_id**: String (required)
+* **customer_ids**: Array (required)
+
 ### Using Promises
 
 All calls to the library will return a native promise, allowing you to chain calls as such:
