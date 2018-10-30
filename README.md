@@ -184,7 +184,24 @@ Remove customers from a manual segment.
 
 ```
 cio.removeFromSegment(1, ["1", "2", "3"])
+
+### cio.getSegments()
+
+List Segments
+
+```js
+cio.getSegments()
 ```
+
+### cio.getSegmentMembership(segment_id, start, limit)
+
+List customers within segment
+
+```js
+cio.getSegmentMembership(1)
+```
+
+See [`examples/segmentMembership.js`](./examples/segmentMembership.js) for an example using pagination.
 
 #### Options
 
