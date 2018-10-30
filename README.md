@@ -6,7 +6,7 @@ A node client for the Customer.io [REST API](https://learn.customer.io/api/).
 
 ## Installation
 
-```
+```js
 npm i --save customerio-node
 ```
 
@@ -16,9 +16,9 @@ npm i --save customerio-node
 
 In order to start using the library, you first need to create an instance of the CIO class:
 
-```
-let CIO = require('customerio-node');
-const cio = new CIO(siteId, apiKey);
+```js
+let CIO = require('customerio-node')
+const cio = new CIO(siteId, apiKey)
 ```
 
 Both the `siteId` and `apiKey` are **required** in order to create a Basic Authorization header, allowing us to associate the data with your account.
@@ -29,13 +29,13 @@ Both the `siteId` and `apiKey` are **required** in order to create a Basic Autho
 
 Creating a person is as simple as identifying them with this call. You can also use this method to update a persons data.
 
-```
+```js
 cio.identify(1, {
   email: 'customer@example.com',
   created_at: 1361205308,
   first_name: 'Bob',
   plan: 'basic'
-});
+})
 ```
 
 #### Options
@@ -43,7 +43,7 @@ cio.identify(1, {
 - **id**: String (required)
 - **data**: Object (optional)
   - _email_ is a required key if you intend to send email messages
-  - _created\_at_ is a required key if you want to segment based on signed up/created date
+  - _created_at_ is a required key if you want to segment based on signed up/created date
 
 ---
 
@@ -51,13 +51,13 @@ cio.identify(1, {
 
 This will delete a person from Customer.io.
 
-```
-cio.destroy(1);
+```js
+cio.destroy(1)
 ```
 
 #### Options
 
-* **id**: String (required)
+- **id**: String (required)
 
 ---
 
@@ -67,28 +67,28 @@ The track method will trigger events within Customer.io. When sending data along
 
 **Simple event tracking**
 
-```
-cio.track(1, { name: 'updated' });
+```js
+cio.track(1, { name: 'updated' })
 ```
 
 **Sending data with an event**
 
-```
+```js
 cio.track(1, {
   name: 'purchase',
   data: {
     price: '23.45',
     product: 'socks'
   }
-});
+})
 ```
 
 #### Options
 
-* **id**: String (requiredl)
-* **data**: Object (required)
-  * _name_ is a required key on the Object
-  * _data_ is an optional key for additional data sent over with the event
+- **id**: String (requiredl)
+- **data**: Object (required)
+  - _name_ is a required key on the Object
+  - _data_ is an optional key for additional data sent over with the event
 
 ---
 
@@ -96,21 +96,21 @@ cio.track(1, {
 
 Anonymous event tracking does not require a customer ID and these events will not be associated with a tracked profile in Customer.io
 
-```
+```js
 cio.trackAnonymous({
   name: 'updated',
   data: {
     updated: true,
     plan: 'free'
   }
-});
+})
 ```
 
 #### Options
 
-* **data**: Object (required)
-  * _name_ is a required key on the Object
-  * _data_ is an optional key for additional data sent over with the event
+- **data**: Object (required)
+  - _name_ is a required key on the Object
+  - _data_ is an optional key for additional data sent over with the event
 
 ---
 
@@ -118,72 +118,82 @@ cio.trackAnonymous({
 
 Sending a page event includes sending over the customers id and the name of the page.
 
-```
-cio.trackPageView(1, '/home');
+```js
+cio.trackPageView(1, '/home')
 ```
 
 #### Options
 
-* **id**: String (required)
-* **url**: String (required)
+- **id**: String (required)
+- **url**: String (required)
 
 ### cio.triggerBroadcast(campaign_id, data, recipients)
 
 Trigger an email broadcast using the email campaign's id. You can also optionally pass along custom data that will be merged with the liquid template, and additional conditions to filter recipients.
 
-```
-cio.triggerBroadcast(1, { name: 'foo'}, { segment: { id: 7 }});
+```js
+cio.triggerBroadcast(1, { name: 'foo' }, { segment: { id: 7 } })
 ```
 
 #### Options
 
-* **id**: String (required)
-* **data**: Object (optional)
-* **recipients**: Object (optional)
+- **id**: String (required)
+- **data**: Object (optional)
+- **recipients**: Object (optional)
 
 ### cio.addDevice(id, device_id, platform, data)
+
 Add a device to send push notifications.
 
-```
-cio.addDevice(1, "device_id", "ios", { primary: true });
+```js
+cio.addDevice(1, 'device_id', 'ios', { primary: true })
 ```
 
 #### Options
 
-* **customer_id**: String (required)
-* **device_id**: String (required)
-* **platform**: String (required)
-* **data**: Object (optional)
+- **customer_id**: String (required)
+- **device_id**: String (required)
+- **platform**: String (required)
+- **data**: Object (optional)
 
 ### cio.deleteDevice(id, device_id)
+
 Delete a device to remove it from the associated customer and stop sending push notifications to it.
 
-```
-cio.deleteDevice(1, "device_token")
+```js
+cio.deleteDevice(1, 'device_token')
 ```
 
 #### Options
 
-* **customer_id**: String (required)
-* **device_token**: String (required)
+- **customer_id**: String (required)
+- **device_token**: String (required)
 
 ### cio.addToSegment(id, customer_ids)
+
 Add customers to a manual segment.
 
-```
-cio.addToSegment(1, ["1", "2", "3"])
+```js
+cio.addToSegment(1, ['1', '2', '3'])
 ```
 
 #### Options
 
-* **segment_id**: String (required)
-* **customer_ids**: Array (required)
+- **segment_id**: String (required)
+- **customer_ids**: Array (required)
 
 ### cio.removeFromSegment(id, customer_ids)
+
 Remove customers from a manual segment.
 
+```js
+cio.removeFromSegment(1, ['1', '2', '3'])
 ```
-cio.removeFromSegment(1, ["1", "2", "3"])
+
+#### Options
+
+- **segment_id**: String (required)
+- **customer_ids**: Array (required)
 
 ### cio.getSegments()
 
@@ -205,15 +215,16 @@ See [`examples/segmentMembership.js`](./examples/segmentMembership.js) for an ex
 
 #### Options
 
-* **segment_id**: String (required)
-* **customer_ids**: Array (required)
+- **segment_id**: String (required)
+- **start**: String - continuation token for pagination (optional)
+- **limit**: Integer - page limit (optional)
 
 ### Using Promises
 
 All calls to the library will return a native promise, allowing you to chain calls as such:
 
-```
-const customerId = 1;
+```js
+const customerId = 1
 
 cio.identify(customerId, { first_name: 'Finn' }).then(() => {
   return cio.track(customerId, {
@@ -222,8 +233,8 @@ cio.identify(customerId, { first_name: 'Finn' }).then(() => {
       updated: true,
       plan: 'free'
     }
-  });
-});
+  })
+})
 ```
 
 ## Further examples
@@ -232,7 +243,7 @@ We've included functional examples in the [examples/ directory](https://github.c
 
 ## Tests
 
-```
+```js
 npm install && npm test
 ```
 
