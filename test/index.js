@@ -4,6 +4,7 @@ const CIO = require('../lib')
 
 const trackRoot = 'https://track.customer.io/api/v1'
 const apiRoot = 'https://api.customer.io/v1/api'
+const betaApiRoot = 'https://beta-api.customer.io/v1/api'
 
 test.beforeEach(t => {
   t.context.client = new CIO(123, 'abc')
@@ -149,6 +150,34 @@ test('#removeFromSegment works', t => {
     t.context.client.request.post.calledWith(
       `${trackRoot}/segments/1/remove_customers`,
       { ids }
+    )
+  )
+})
+
+test('#getSegments works', t => {
+  sinon.stub(t.context.client.request, 'get')
+  t.context.client.getSegments()
+
+  t.truthy(t.context.client.request.get.calledWith(`${betaApiRoot}/segments/`))
+})
+
+test('#getSegmentMembership works', t => {
+  sinon.stub(t.context.client.request, 'get')
+  t.context.client.getSegmentMembership(1)
+  t.truthy(
+    t.context.client.request.get.calledWith(
+      `${betaApiRoot}/segments/1/membership/`
+    )
+  )
+})
+
+test('#getSegmentMembership with start and limit works', t => {
+  sinon.stub(t.context.client.request, 'get')
+  t.context.client.getSegmentMembership(1, 'token', 20)
+  t.truthy(
+    t.context.client.request.get.calledWith(
+      `${betaApiRoot}/segments/1/membership/`,
+      { limit: 20, start: 'token' }
     )
   )
 })
