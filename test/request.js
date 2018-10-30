@@ -35,6 +35,17 @@ test('#options returns a correctly formatted object', t => {
   t.deepEqual(resultOptions, expectedOptions)
 })
 
+const getOptions = Object.assign({}, baseOptions, {
+  method: 'GET',
+  qs: data
+})
+
+test('#get calls the handler, makes GET request with the correct args', t => {
+  sinon.stub(t.context.req, 'handler')
+  t.context.req.get(uri, data)
+  t.truthy(t.context.req.handler.calledWith(getOptions))
+})
+
 const putOptions = Object.assign({}, baseOptions, {
   method: 'PUT',
   body: JSON.stringify(data)
