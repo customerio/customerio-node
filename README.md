@@ -135,6 +135,13 @@ Trigger an email broadcast using the email campaign's id. You can also optionall
 cio.triggerBroadcast(1, { name: 'foo'}, { segment: { id: 7 }});
 ```
 
+You can also use emails or ids to select recipients, and pass optional API parameters such as `email_ignore_missing`. 
+
+```
+cio.triggerBroadcast(1, { name: 'foo'},  { emails: ['example@emails.com'], email_ignore_missing: true }
+);
+```
+
 #### Options
 
 * **id**: String (required)
