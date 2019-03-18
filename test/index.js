@@ -115,6 +115,21 @@ test('#triggerBroadcast works with ids', t => {
   )
 })
 
+test('#triggerBroadcast discards extraneous fields', t => {
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.triggerBroadcast(1, { type: 'data' }, { ids: [1], id_ignore_missing: true, emails: ['test@email.com'], exampleField: true })
+  t.truthy(
+    t.context.client.request.post.calledWith(
+      `${apiRoot}/campaigns/1/triggers`,
+      {
+        data: { type: 'data' },
+        ids: [1],
+        id_ignore_missing: true,
+      }
+    )
+  )
+})
+
 test('#addDevice works', t => {
   sinon.stub(t.context.client.request, 'put')
   t.context.client.addDevice(1, 123, 'ios', { primary: true });
