@@ -1,6 +1,4 @@
-[![Build Status](https://travis-ci.org/customerio/customerio-node.svg)](https://travis-ci.org/customerio/customerio-node)
-
-# Customerio
+# Customerio [![CircleCI](https://circleci.com/gh/customerio/customerio-node.svg?style=svg)](https://circleci.com/gh/customerio/customerio-node)
 
 A node client for the Customer.io [REST API](https://learn.customer.io/api/).
 
