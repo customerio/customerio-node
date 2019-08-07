@@ -16,7 +16,6 @@ declare namespace CIO {
         interface Payload {
             name: string
             data?: object
-            [key: string]: any
         }
     }
 
@@ -53,10 +52,10 @@ declare namespace CIO {
         }
 
         interface FiltersByRecipients {
-            recipients: { segment: { id: string } }
+            recipients: { segment: { id: number } }
         }
 
-        type Filter = FiltersById | FiltersByEmail | FiltersByRecipients | FilterPerDataFile
+        type Filter = FiltersById | FiltersByEmail | FiltersByRecipients | FilterPerDataFile | FilterPerUserData
 
         interface Response {
             id: number
@@ -106,5 +105,5 @@ declare class CIO {
     removeFromSegment(segmentId: string, customerIds: Array<string>): Promise<void>
 
     // MARK: - Broadcast
-    triggerBroadcast(campaignId: string, payload: CIO.Broadcast.Payload, filters: CIO.Broadcast.Filter): Promise<CIO.Broadcast.Response>
+    triggerBroadcast(campaignId: string, payload?: CIO.Broadcast.Payload, filters?: CIO.Broadcast.Filter): Promise<CIO.Broadcast.Response>
 }
