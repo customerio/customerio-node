@@ -21,6 +21,17 @@ const cio = new CIO(siteId, apiKey);
 
 Both the `siteId` and `apiKey` are **required** in order to create a Basic Authorization header, allowing us to associate the data with your account.
 
+### Typescript
+
+If using typescript, you can use an import statement:
+
+```
+import CIO from 'customerio-node'
+const cio = new CIO(siteId, apiKey)
+```
+
+The `CIO` is both a class containing all typed methods and a namespace containing the specific payloads for subclassing.
+
 ---
 
 ### cio.identify(id, data)
