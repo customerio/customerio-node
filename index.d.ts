@@ -19,6 +19,18 @@ declare namespace CIO {
         }
     }
 
+    namespace TrackAnonymous {
+        interface Payload {
+            name: string,
+            data?: {
+                [key: string]: any
+                recipient?: string
+                from_address?: string
+                reply_to?: string
+            }
+        }
+    }
+
     // MARK: - Device
     namespace Device {
         type Payload = object
@@ -85,7 +97,7 @@ declare class CIO {
     track(customerId: string, payload: CIO.Track.Payload): Promise<void>
 
     /** Anonymous event tracking does not require a customer ID and these events will not be associated with a tracked profile in Customer.io */
-    trackAnonymous(payload: CIO.Track.Payload): Promise<void>
+    trackAnonymous(payload: CIO.TrackAnonymous.Payload): Promise<void>
 
     /** Sending a page event includes sending over the customers id and the name of the page. */
     trackPageView(customerId: string, url: string): Promise<void>
