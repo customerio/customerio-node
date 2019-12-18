@@ -148,11 +148,11 @@ cio.triggerBroadcast(1, { name: 'foo'},  { emails: ['example@emails.com'], email
 * **data**: Object (optional)
 * **recipients**: Object (optional)
 
-### cio.addDevice(id, device_id, platform, data)
+### cio.addDevice(id, device_id, platform, last_used)
 Add a device to send push notifications.
 
 ```
-cio.addDevice(1, "device_id", "ios", { primary: true });
+cio.addDevice(1, "device_id", "ios", 1514764800);
 ```
 
 #### Options
@@ -160,7 +160,7 @@ cio.addDevice(1, "device_id", "ios", { primary: true });
 * **customer_id**: String (required)
 * **device_id**: String (required)
 * **platform**: String (required)
-* **data**: Object (optional)
+* **last_used**: UNIX timestamp (optional)
 
 ### cio.deleteDevice(id, device_id)
 Delete a device to remove it from the associated customer and stop sending push notifications to it.
