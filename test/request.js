@@ -72,6 +72,21 @@ test('#handler makes a request and rejects with an error on failure', t => {
     .catch(err => t.is(err.message, message))
 })
 
+test('#handler makes a request and rejects with `null` as body', t => {
+  const customOptions = Object.assign({}, baseOptions, {
+    uri: 'https://track.customer.io/api/v1/customers/1/events',
+    body: JSON.stringify({ title: 'The Batman' })
+  })
+
+  t.context.req._request = (options, cb) => {
+    cb(null, { statusCode: 500 })
+  }
+
+  return t.context.req
+    .handler(customOptions)
+    .catch(err => t.is(err.message, 'Unknown error'))
+})
+
 test('#put calls the handler, makes PUT request with the correct args', t => {
   sinon.stub(t.context.req, 'handler')
   t.context.req.put(uri, data)
