@@ -7,7 +7,7 @@ const siteId = 123
 const apiKey = 'abc'
 const uri = 'https://track.customer.io/api/v1/customers/1'
 const data = { first_name: 'Bruce', last_name: 'Wayne' }
-const auth = `Basic ${new Buffer(`${siteId}:${apiKey}`).toString('base64')}`
+const auth = `Basic ${Buffer.from(`${siteId}:${apiKey}`).toString('base64')}`
 const baseOptions = {
   uri,
   headers: {

@@ -33,6 +33,14 @@ test('#destroy works', t => {
   )
 })
 
+test('#suppress works', t => {
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.suppress(1)
+  t.truthy(
+    t.context.client.request.post.calledWith(`${trackRoot}/customers/1/suppress`)
+  )
+})
+
 test('#track with customer id works', t => {
   sinon.stub(t.context.client.request, 'post')
   t.context.client.track(1, { data: 'yep' })
