@@ -16,10 +16,20 @@ In order to start using the library, you first need to create an instance of the
 
 ```
 let CIO = require('customerio-node');
-const cio = new CIO(siteId, apiKey);
+const cio = new CIO(siteId, apiKey, [defaults]);
 ```
 
 Both the `siteId` and `apiKey` are **required** in order to create a Basic Authorization header, allowing us to associate the data with your account.
+
+Optionally you may pass `defaults` as an object that will be passed to the underlying request instance. A list of the possible options are listed [here](https://github.com/request/request#requestoptions-callback).
+
+This is useful to override the default 10s timeout. Example:
+
+```
+const cio = new CIO(123, 'abc', {
+  timeout: 5000
+});
+```
 
 ---
 
