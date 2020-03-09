@@ -5,7 +5,9 @@
   "author": "Customer.io (https://customer.io)",
   "contributors": [
     "Alvin Crespo (https://github.com/alvincrespo)",
-    "Jeff Escalante (https://github.com/jescalan)"
+    "Jeff Escalante (https://github.com/jescalan)",
+    "Artem Ivanov (https://github.com/ivanovart)",
+    "Nuno Sousa (https://github.com/nunofgs)"
   ],
   "ava": {
     "verbose": true
