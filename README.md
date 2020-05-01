@@ -42,7 +42,7 @@ cio.identify(1, {
   email: 'customer@example.com',
   created_at: 1361205308,
   first_name: 'Bob',
-  plan: 'basic'
+  plan: 'basic',
 })
 ```
 
@@ -86,8 +86,8 @@ cio.track(1, {
   name: 'purchase',
   data: {
     price: '23.45',
-    product: 'socks'
-  }
+    product: 'socks',
+  },
 })
 ```
 
@@ -109,8 +109,8 @@ cio.trackAnonymous({
   name: 'updated',
   data: {
     updated: true,
-    plan: 'free'
-  }
+    plan: 'free',
+  },
 })
 ```
 
@@ -237,6 +237,7 @@ See [`examples/segmentMembership.js`](./examples/segmentMembership.js) for an ex
 - **limit**: Integer - page limit (optional)
 
 ### cio.supress(id)
+
 Suppress a customer.
 
 ```
@@ -245,7 +246,7 @@ cio.supress(1, ["1", "2", "3"])
 
 #### Options
 
-* **segment_id**: String (required)
+- **segment_id**: String (required)
 
 ### Using Promises
 
@@ -259,8 +260,8 @@ cio.identify(customerId, { first_name: 'Finn' }).then(() => {
     name: 'updated',
     data: {
       updated: true,
-      plan: 'free'
-    }
+      plan: 'free',
+    },
   })
 })
 ```
