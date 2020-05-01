@@ -1,6 +1,4 @@
-[![Build Status](https://travis-ci.org/customerio/customerio-node.svg)](https://travis-ci.org/customerio/customerio-node)
-
-# Customerio
+# Customerio [![CircleCI](https://circleci.com/gh/customerio/customerio-node.svg?style=svg)](https://circleci.com/gh/customerio/customerio-node)
 
 A node client for the Customer.io [REST API](https://learn.customer.io/api/).
 
@@ -18,10 +16,20 @@ In order to start using the library, you first need to create an instance of the
 
 ```js
 let CIO = require('customerio-node')
-const cio = new CIO(siteId, apiKey)
+const cio = new CIO(siteId, apiKey, [defaults])
 ```
 
 Both the `siteId` and `apiKey` are **required** in order to create a Basic Authorization header, allowing us to associate the data with your account.
+
+Optionally you may pass `defaults` as an object that will be passed to the underlying request instance. A list of the possible options are listed [here](https://github.com/request/request#requestoptions-callback).
+
+This is useful to override the default 10s timeout. Example:
+
+```
+const cio = new CIO(123, 'abc', {
+  timeout: 5000
+});
+```
 
 ---
 
@@ -34,7 +42,7 @@ cio.identify(1, {
   email: 'customer@example.com',
   created_at: 1361205308,
   first_name: 'Bob',
-  plan: 'basic'
+  plan: 'basic',
 })
 ```
 
@@ -78,8 +86,8 @@ cio.track(1, {
   name: 'purchase',
   data: {
     price: '23.45',
-    product: 'socks'
-  }
+    product: 'socks',
+  },
 })
 ```
 
@@ -101,8 +109,8 @@ cio.trackAnonymous({
   name: 'updated',
   data: {
     updated: true,
-    plan: 'free'
-  }
+    plan: 'free',
+  },
 })
 ```
 
@@ -134,6 +142,15 @@ Trigger an email broadcast using the email campaign's id. You can also optionall
 ```js
 cio.triggerBroadcast(1, { name: 'foo' }, { segment: { id: 7 } })
 ```
+
+You can also use emails or ids to select recipients, and pass optional API parameters such as `email_ignore_missing`.
+
+```
+cio.triggerBroadcast(1, { name: 'foo'},  { emails: ['example@emails.com'], email_ignore_missing: true }
+);
+```
+
+[You can learn more about the recipient fields available here](https://customer.io/docs/api/#apicorecampaignscampaigns_trigger).
 
 #### Options
 
@@ -219,6 +236,18 @@ See [`examples/segmentMembership.js`](./examples/segmentMembership.js) for an ex
 - **start**: String - continuation token for pagination (optional)
 - **limit**: Integer - page limit (optional)
 
+### cio.supress(id)
+
+Suppress a customer.
+
+```
+cio.supress(1, ["1", "2", "3"])
+```
+
+#### Options
+
+- **segment_id**: String (required)
+
 ### Using Promises
 
 All calls to the library will return a native promise, allowing you to chain calls as such:
@@ -231,8 +260,8 @@ cio.identify(customerId, { first_name: 'Finn' }).then(() => {
     name: 'updated',
     data: {
       updated: true,
-      plan: 'free'
-    }
+      plan: 'free',
+    },
   })
 })
 ```

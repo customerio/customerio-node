@@ -3,6 +3,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.0]
+### Changed
+- Catch scenarios where a response body is unexpectedly `null` ([#25](https://github.com/customerio/customerio-node/pull/25))
+
+### Added
+- Allow request defaults to be overridden ([#26](https://github.com/customerio/customerio-node/pull/26))
+- New API call for supressing customers ([#27](https://github.com/customerio/customerio-node/pull/27))
+
+## [0.6.0]
+### Changed
+- Add missing API params to `triggerBroadcast` ([#19](https://github.com/customerio/customerio-node/pull/19))
+- Further improve the `triggerBroadcast` API call and catch additional params ([#20](https://github.com/customerio/customerio-node/pull/20))
+- Switch from Travis CI to Circle CI ([#21](https://github.com/customerio/customerio-node/pull/21))
+
+## [0.5.0]
+### Added
+- New API calls for manual segments (`addToSegment`, `removeFromSegment`) ([#16](https://github.com/customerio/customerio-node/pull/16))
+
+## [0.4.0]
+### Added
+- New API call for adding and removing devices from push notifications ([#14](https://github.com/customerio/customerio-node/pull/14))
+
 ## [0.3.0]
 ### Changed
 - Huge thanks to [@jescalan](https://github.com/jescalan) for his work in modernizing the Javascript to es6 along with updating dependancies. ([#13](https://github.com/customerio/customerio-node/pull/13))

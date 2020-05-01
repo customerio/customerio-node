@@ -7,25 +7,30 @@ const siteId = 123
 const apiKey = 'abc'
 const uri = 'https://track.customer.io/api/v1/customers/1'
 const data = { first_name: 'Bruce', last_name: 'Wayne' }
-const auth = `Basic ${new Buffer(`${siteId}:${apiKey}`).toString('base64')}`
+const auth = `Basic ${Buffer.from(`${siteId}:${apiKey}`).toString('base64')}`
 const baseOptions = {
   uri,
   headers: {
     Authorization: auth,
     'Content-Type': 'application/json'
-  },
-  timeout: 10000
+  }
 }
 
 test.beforeEach(t => {
-  t.context.req = new Request(123, 'abc')
+  t.context.req = new Request(123, 'abc', { timeout: 5000 })
 })
 
 // tests begin here
 test('constructor sets all properties correctly', t => {
   t.is(t.context.req.siteid, 123)
   t.is(t.context.req.apikey, 'abc')
+  t.deepEqual(t.context.req.defaults, { timeout: 5000 })
   t.is(t.context.req.auth, auth)
+})
+
+test('constructor sets default timeout correctly', t => {
+  const req = new Request()
+  t.deepEqual(req.defaults, { timeout: 10000 })
 })
 
 test('#options returns a correctly formatted object', t => {
@@ -81,6 +86,37 @@ test('#handler makes a request and rejects with an error on failure', t => {
   return t.context.req
     .handler(customOptions)
     .catch(err => t.is(err.message, message))
+})
+
+test('#handler makes a request and rejects with `null` as body', t => {
+  const customOptions = Object.assign({}, baseOptions, {
+    uri: 'https://track.customer.io/api/v1/customers/1/events',
+    body: JSON.stringify({ title: 'The Batman' })
+  })
+
+  t.context.req._request = (options, cb) => {
+    cb(null, { statusCode: 500 })
+  }
+
+  return t.context.req
+    .handler(customOptions)
+    .catch(err => t.is(err.message, 'Unknown error'))
+})
+
+test('#handler makes a request and rejects with timeout error', t => {
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    timeout: 1
+  })
+
+  const message = 'test error message'
+  const body = { meta: { error: message } }
+
+  return t.context.req
+    .handler(customOptions)
+    .then(t.fail)
+    .catch(err => t.is(err.message, 'ETIMEDOUT'))
 })
 
 test('#put calls the handler, makes PUT request with the correct args', t => {

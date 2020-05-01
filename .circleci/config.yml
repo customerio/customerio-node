@@ -1,0 +1,74 @@
+version: 2.1
+
+commands:
+  runtests:
+    description: Run tests using npm
+    steps:
+      - run:
+          name: NodeJS version
+          command: node -v
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
+
+      - run: yarn install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
+
+      # run tests!
+      - run: yarn test
+
+jobs:
+  node-current: 
+    docker:
+      - image: circleci/node:current
+
+    working_directory: ~/customerio-node
+
+    steps:
+      - checkout
+      - runtests
+
+  node-dubnium: # EOL 2021-04-01
+    docker:
+      - image: circleci/node:dubnium
+
+    working_directory: ~/customerio-node
+
+    steps:
+      - checkout
+      - runtests
+  
+  node-carbon: # EOL 2019-12-31
+    docker:
+      - image: circleci/node:carbon
+
+    working_directory: ~/customerio-node
+
+    steps:
+      - checkout
+      - runtests
+
+  node-boron: # EOL 2019-04-01
+    docker:
+      - image: circleci/node:boron
+
+    working_directory: ~/customerio-node
+
+    steps:
+      - checkout
+      - runtests
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - node-current
+      - node-dubnium
+      - node-carbon
+      - node-boron

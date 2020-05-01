@@ -34,6 +34,14 @@ test('#destroy works', t => {
   )
 })
 
+test('#suppress works', t => {
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.suppress(1)
+  t.truthy(
+    t.context.client.request.post.calledWith(`${trackRoot}/customers/1/suppress`)
+  )
+})
+
 test('#track with customer id works', t => {
   sinon.stub(t.context.client.request, 'post')
   t.context.client.track(1, { data: 'yep' })
@@ -80,6 +88,52 @@ test('#triggerBroadcast works', t => {
       {
         data: { type: 'data' },
         recipients: { type: 'recipients' }
+      }
+    )
+  )
+})
+
+test('#triggerBroadcast works with emails', t => {
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.triggerBroadcast(1, { type: 'data' }, { emails: ['test@email.com'], email_ignore_missing: true, email_add_duplicates: true })
+  t.truthy(
+    t.context.client.request.post.calledWith(
+      `${apiRoot}/campaigns/1/triggers`,
+      {
+        data: { type: 'data' },
+        emails: ['test@email.com'],
+        email_ignore_missing: true,
+        email_add_duplicates: true,
+      }
+    )
+  )
+})
+
+test('#triggerBroadcast works with ids', t => {
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.triggerBroadcast(1, { type: 'data' }, { ids: [1], id_ignore_missing: true })
+  t.truthy(
+    t.context.client.request.post.calledWith(
+      `${apiRoot}/campaigns/1/triggers`,
+      {
+        data: { type: 'data' },
+        ids: [1],
+        id_ignore_missing: true,
+      }
+    )
+  )
+})
+
+test('#triggerBroadcast discards extraneous fields', t => {
+  sinon.stub(t.context.client.request, 'post')
+  t.context.client.triggerBroadcast(1, { type: 'data' }, { ids: [1], id_ignore_missing: true, emails: ['test@email.com'], exampleField: true })
+  t.truthy(
+    t.context.client.request.post.calledWith(
+      `${apiRoot}/campaigns/1/triggers`,
+      {
+        data: { type: 'data' },
+        ids: [1],
+        id_ignore_missing: true,
       }
     )
   )

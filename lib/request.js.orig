@@ -20,8 +20,11 @@ class Request {
       Authorization: this.auth,
       'Content-Type': 'application/json'
     }
+<<<<<<< HEAD
+=======
     const body = data ? JSON.stringify(data) : null
     const options = { method, uri, headers, body }
+>>>>>>> 52e27c2ff86a7b834621991b0fde9565ac5d5cac
 
     let options = { method, uri, headers, timeout: TIMEOUT }
 
