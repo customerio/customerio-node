@@ -208,16 +208,16 @@ cio.removeFromSegment(1, ["1", "2", "3"])
 * **segment_id**: String (required)
 * **customer_ids**: Array (required)
 
-### cio.supress(id)
+### cio.suppress(id)
 Suppress a customer.
 
 ```
-cio.supress(1, ["1", "2", "3"])
+cio.suppress(1)
 ```
 
 #### Options
 
-* **segment_id**: String (required)
+* **customer_id**: String (required)
 
 ### Using Promises
 
