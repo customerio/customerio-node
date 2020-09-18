@@ -123,6 +123,38 @@ test('#triggerBroadcast works with ids', t => {
   )
 })
 
+test('#triggerBroadcast works with per_user_data', t => {
+  sinon.stub(t.context.client.request, 'post')
+  const per_user_data = [ { id: 1, data: { very: 'important' }} ]
+  t.context.client.triggerBroadcast(1, { type: 'data' }, { per_user_data, id_ignore_missing: true })
+  t.truthy(
+    t.context.client.request.post.calledWith(
+      `${apiRoot}/campaigns/1/triggers`,
+      {
+        data: { type: 'data' },
+        per_user_data,
+        id_ignore_missing: true,
+      }
+    )
+  )
+})
+
+test('#triggerBroadcast works with data_file_url', t => {
+  sinon.stub(t.context.client.request, 'post')
+  const data_file_url = 'https://my.s3.bucket.com'
+  t.context.client.triggerBroadcast(1, { type: 'data' }, { data_file_url, id_ignore_missing: true })
+  t.truthy(
+    t.context.client.request.post.calledWith(
+      `${apiRoot}/campaigns/1/triggers`,
+      {
+        data: { type: 'data' },
+        data_file_url,
+        id_ignore_missing: true,
+      }
+    )
+  )
+})
+
 test('#triggerBroadcast discards extraneous fields', t => {
   sinon.stub(t.context.client.request, 'post')
   t.context.client.triggerBroadcast(1, { type: 'data' }, { ids: [1], id_ignore_missing: true, emails: ['test@email.com'], exampleField: true })
