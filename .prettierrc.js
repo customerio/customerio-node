@@ -1,9 +1,9 @@
 module.exports = {
   printWidth: 120,
-  trailingComma: 'all',
+  trailingComma: "all",
   overrides: [
     {
-      files: ['*.js', '.*.js'],
+      files: ["*.js", ".*.js"],
       options: {
         singleQuote: true,
       },

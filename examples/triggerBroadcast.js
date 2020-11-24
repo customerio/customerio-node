@@ -6,9 +6,10 @@ const campaignId = require('./config').campaignId;
 const cio = new CIO(siteId, apiKey);
 
 const data = {
-  headline: "Roadrunner spotted in Albuquerque!",
+  headline: 'Roadrunner spotted in Albuquerque!',
   date: 1511315635,
-  text: "We've received reports of a roadrunner in your immediate area! Head to your dashboard to view more information!"
-}
+  text:
+    "We've received reports of a roadrunner in your immediate area! Head to your dashboard to view more information!",
+};
 
-cio.triggerBroadcast(campaignId, data, { segment: { id: 7 }});
+cio.triggerBroadcast(campaignId, data, { segment: { id: 7 } });
