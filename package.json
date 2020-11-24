@@ -28,6 +28,11 @@
   ],
   "license": "MIT",
   "main": "lib",
+  "exports": {
+    ".": "./lib/index.js",
+    "./api": "./lib/api.js",
+    "./track": "./lib/track.js"
+  },
   "repository": "customerio/customerio-node",
   "scripts": {
     "test": "nyc ava"
