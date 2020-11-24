@@ -44,9 +44,9 @@ jobs:
       - checkout
       - runtests
   
-  node-carbon: # EOL 2019-12-31
+  node-erbium: # EOL 2022-04-30
     docker:
-      - image: circleci/node:carbon
+      - image: circleci/node:erbium
 
     working_directory: ~/customerio-node
 
@@ -54,9 +54,9 @@ jobs:
       - checkout
       - runtests
 
-  node-boron: # EOL 2019-04-01
+  node-fermium: # EOL 2023-04-30
     docker:
-      - image: circleci/node:boron
+      - image: circleci/node:fermium
 
     working_directory: ~/customerio-node
 
@@ -70,5 +70,5 @@ workflows:
     jobs:
       - node-current
       - node-dubnium
-      - node-carbon
-      - node-boron
+      - node-erbium
+      - node-fermium
