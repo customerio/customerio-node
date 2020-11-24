@@ -246,7 +246,7 @@ let CustomerioAPI = require('customerio-node/api');
 const api = new CustomerioAPI(siteId, apiKey, [defaults]);
 ```
 
-Then, you can pass in the `transactional_message_id`, the `to` (email) you want to send to, a `customer_id`, and any `message_data` that you want. Learn more about how transactional messages work here.
+Then, you can pass in the `transactional_message_id`, the `to` (email) you want to send to, a `customer_id`, and any `message_data` that you want. [Learn more about how transactional messages work here](https://customer.io/docs/transactional-api).
 
 ```
 api.sendEmail({
