@@ -1,8 +1,8 @@
-// In actual use require the node module: let CustomerioAPI = require('customerio-node/api');
-let CustomerioAPI = require('../lib/api');
+// In actual use require the node module: let ApiClient = require('customerio-node/api');
+let ApiClient = require('../lib/api');
 const { appKey, transactionalMessageId, customerId, customerEmail } = require('./config');
 
-const api = new CustomerioAPI(appKey);
+const api = new ApiClient(appKey);
 
 api.sendEmail({
   transactional_message_id: transactionalMessageId,
