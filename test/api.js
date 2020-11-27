@@ -1,11 +1,11 @@
 const test = require('ava');
 const sinon = require('sinon');
-const CioApiClient = require('../lib/api');
+const APIClient = require('../lib/api');
 
 const apiRoot = 'https://api.customer.io/v1';
 
 test.beforeEach((t) => {
-  t.context.client = new CioApiClient('appKey');
+  t.context.client = new APIClient('appKey');
 });
 
 test('constructor sets necessary variables', (t) => {

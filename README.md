@@ -242,8 +242,8 @@ cio.identify(customerId, { first_name: 'Finn' }).then(() => {
 To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), import our API client and initialise it with an [app key](https://customer.io/docs/managing-credentials#app-api-keys).
 
 ```
-let ApiClient = require('customerio-node/api');
-const api = new ApiClient(siteId, apiKey, [defaults]);
+let APIClient = require('customerio-node/api');
+const api = new APIClient(siteId, apiKey, [defaults]);
 ```
 
 Then, you can pass in the `transactional_message_id`, the `to` (email) you want to send to, a `customer_id`, and any `message_data` that you want. [Learn more about how transactional messages work here](https://customer.io/docs/transactional-api).
