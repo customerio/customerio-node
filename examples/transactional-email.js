@@ -2,12 +2,13 @@ const fs = require('fs');
 
 // In actual use require the node module: let APIClient = require('customerio-node/api');
 const APIClient = require('../lib/api');
+const TransactionalEmail = require('../lib/transactional-email');
 const { appKey, transactionalMessageId, customerId, customerEmail } = require('./config');
 
 const api = new APIClient(appKey);
 
 // Create a message: "to" is a required field.
-let message = {
+let message = new TransactionalEmail({
   to: customerEmail,
 
   // Optionally, send a `customer_id`. If your message uses customer variables,
@@ -37,14 +38,11 @@ let message = {
   fake_bcc: '',
 
   hide_body: false, // Hides the message body from displaying in Customer.io when viewing deliveries.
-  headers: {},
-  attachments: {},
-};
-
-// To send attachments with the message, add a base64 representation of the
-// file to the attachments object.
-['attachment-1.pdf', 'attachment-2.pdf'].forEach((fileName) => {
-  message.attachments[fileName] = fs.readFileSync(fileName, 'base64');
 });
+
+// To send attachments with the message, pass in a pathname or a Buffer
+// object.
+message.attach('attachment-1', 'attachment-1.pdf');
+message.attach('attachment-2', fs.readFileSync('attachment-2.pdf'));
 
 api.sendEmail(message).catch((err) => console.log(err.message, err.statusCode));
