@@ -36,4 +36,4 @@ let message = {
   message.attachments[fileName] = fs.readFileSync(fileName, 'base64');
 });
 
-api.sendEmail(message);
+api.sendEmail(message).catch((err) => console.log(err.message, err.statusCode));
