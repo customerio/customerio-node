@@ -19,7 +19,7 @@ test('constructor sets necessary variables', (t) => {
 
 test('#identify works', (t) => {
   sinon.stub(t.context.client.request, 'put');
-  t.throws(() => t.context.client.identify(''));
+  t.throws(() => t.context.client.identify(''), 'customerId is required');
 
   [
     [1, '1'],
@@ -33,31 +33,59 @@ test('#identify works', (t) => {
 
 test('#destroy works', (t) => {
   sinon.stub(t.context.client.request, 'destroy');
-  t.context.client.destroy(1);
-  t.truthy(t.context.client.request.destroy.calledWith(`${trackRoot}/customers/1`));
+  t.throws(() => t.context.client.destroy(''), 'customerId is required');
+
+  [
+    [1, '1'],
+    ['1 ', encodeURIComponent('1 ')],
+    ['1/', encodeURIComponent('1/')],
+  ].forEach(([input, expected]) => {
+    t.context.client.destroy(input);
+    t.truthy(t.context.client.request.destroy.calledWith(`${trackRoot}/customers/${expected}`));
+  });
 });
 
 test('#suppress works', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.context.client.suppress(1);
-  t.truthy(t.context.client.request.post.calledWith(`${trackRoot}/customers/1/suppress`));
+  t.throws(() => t.context.client.suppress(''), 'customerId is required');
+
+  [
+    [1, '1'],
+    ['1 ', encodeURIComponent('1 ')],
+    ['1/', encodeURIComponent('1/')],
+  ].forEach(([input, expected]) => {
+    t.context.client.suppress(input);
+    t.truthy(t.context.client.request.post.calledWith(`${trackRoot}/customers/${expected}/suppress`));
+  });
 });
 
 test('#track with customer id works', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.context.client.track(1, { data: 'yep' });
-  t.truthy(
-    t.context.client.request.post.calledWith(`${trackRoot}/customers/1/events`, {
-      data: 'yep',
-    }),
-  );
+  t.throws(() => t.context.client.track(''), 'customerId is required');
+
+  [
+    [1, '1'],
+    ['1 ', encodeURIComponent('1 ')],
+    ['1/', encodeURIComponent('1/')],
+  ].forEach(([input, expected]) => {
+    t.throws(() => t.context.client.track(input, { data: {} }), 'data.name is required');
+    t.context.client.track(input, { name: 'purchase', data: 'yep' });
+    t.truthy(
+      t.context.client.request.post.calledWith(`${trackRoot}/customers/${expected}/events`, {
+        name: 'purchase',
+        data: 'yep',
+      }),
+    );
+  });
 });
 
 test('#trackAnonymous works', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.context.client.trackAnonymous({ data: 'yep' });
+  t.throws(() => t.context.client.trackAnonymous({ data: {} }), 'data.name is required');
+  t.context.client.trackAnonymous({ name: 'purchase', data: 'yep' });
   t.truthy(
     t.context.client.request.post.calledWith(`${trackRoot}/events`, {
+      name: 'purchase',
       data: 'yep',
     }),
   );
@@ -65,13 +93,22 @@ test('#trackAnonymous works', (t) => {
 
 test('#trackPageView works', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.context.client.trackPageView(1, '#home');
-  t.truthy(
-    t.context.client.request.post.calledWith(`${trackRoot}/customers/1/events`, {
-      type: 'page',
-      name: '#home',
-    }),
-  );
+  t.throws(() => t.context.client.trackPageView(''), 'customerId is required');
+
+  [
+    [1, '1'],
+    ['1 ', encodeURIComponent('1 ')],
+    ['1/', encodeURIComponent('1/')],
+  ].forEach(([input, expected]) => {
+    t.throws(() => t.context.client.trackPageView(input, ''), 'path is required');
+    t.context.client.trackPageView(input, '#home');
+    t.truthy(
+      t.context.client.request.post.calledWith(`${trackRoot}/customers/${expected}/events`, {
+        type: 'page',
+        name: '#home',
+      }),
+    );
+  });
 });
 
 test('#triggerBroadcast works', (t) => {
@@ -141,16 +178,26 @@ test('#triggerBroadcast discards extraneous fields', (t) => {
 
 test('#addDevice works', (t) => {
   sinon.stub(t.context.client.request, 'put');
-  t.context.client.addDevice(1, 123, 'ios', { primary: true });
-  t.truthy(
-    t.context.client.request.put.calledWith(`${trackRoot}/customers/1/devices`, {
-      device: {
-        id: 123,
-        platform: 'ios',
-        primary: true,
-      },
-    }),
-  );
+
+  [
+    [1, '1'],
+    ['1 ', encodeURIComponent('1 ')],
+    ['1/', encodeURIComponent('1/')],
+  ].forEach(([input, expected]) => {
+    t.throws(() => t.context.client.addDevice(input, '', 'ios', { primary: true }), 'device_id is required');
+    t.throws(() => t.context.client.addDevice(input, 123, '', { primary: true }), 'platform is required');
+
+    t.context.client.addDevice(input, 123, 'ios', { primary: true });
+    t.truthy(
+      t.context.client.request.put.calledWith(`${trackRoot}/customers/${expected}/devices`, {
+        device: {
+          id: 123,
+          platform: 'ios',
+          primary: true,
+        },
+      }),
+    );
+  });
 });
 
 test('#addDevice works with an empty data parameter', (t) => {
@@ -168,24 +215,62 @@ test('#addDevice works with an empty data parameter', (t) => {
 
 test('#deleteDevice works', (t) => {
   sinon.stub(t.context.client.request, 'destroy');
-  t.context.client.deleteDevice(1, 123);
-  t.truthy(t.context.client.request.destroy.calledWith(`${trackRoot}/customers/1/devices/123`));
+  t.throws(() => t.context.client.deleteDevice(''), 'customerId is required');
+  t.throws(() => t.context.client.deleteDevice(1, ''), 'deviceToken is required');
+
+  [
+    [
+      [1, '1'],
+      ['abc123', 'abc123'],
+    ],
+    [
+      ['1 ', encodeURIComponent('1 ')],
+      ['abc:123 ', encodeURIComponent('abc:123 ')],
+    ],
+    [
+      ['1/', encodeURIComponent('1/')],
+      ['1/2==', encodeURIComponent('1/2==')],
+    ],
+  ].forEach(([[customerId, encodedCustomerId], [token, encodedToken]]) => {
+    t.context.client.deleteDevice(customerId, token);
+    t.truthy(
+      t.context.client.request.destroy.calledWith(
+        `${trackRoot}/customers/${encodedCustomerId}/devices/${encodedToken}`,
+      ),
+    );
+  });
 });
 
 test('#addToSegment works', (t) => {
   let ids = ['1', '2', '3'];
-
   sinon.stub(t.context.client.request, 'post');
-  t.context.client.addToSegment(1, ids);
 
-  t.truthy(t.context.client.request.post.calledWith(`${trackRoot}/segments/1/add_customers`, { ids }));
+  t.throws(() => t.context.client.addToSegment(''), 'segmentId is required');
+  t.throws(() => t.context.client.addToSegment(1, []), 'customerIds is required');
+
+  [
+    [1, '1'],
+    ['1 ', encodeURIComponent('1 ')],
+    ['1/', encodeURIComponent('1/')],
+  ].forEach(([input, expected]) => {
+    t.context.client.addToSegment(input, ids);
+    t.truthy(t.context.client.request.post.calledWith(`${trackRoot}/segments/${expected}/add_customers`, { ids }));
+  });
 });
 
 test('#removeFromSegment works', (t) => {
   let ids = ['1', '2', '3'];
-
   sinon.stub(t.context.client.request, 'post');
-  t.context.client.removeFromSegment(1, ids);
 
-  t.truthy(t.context.client.request.post.calledWith(`${trackRoot}/segments/1/remove_customers`, { ids }));
+  t.throws(() => t.context.client.removeFromSegment(''), 'segmentId is required');
+  t.throws(() => t.context.client.removeFromSegment(1, []), 'customerIds is required');
+
+  [
+    [1, '1'],
+    ['1 ', encodeURIComponent('1 ')],
+    ['1/', encodeURIComponent('1/')],
+  ].forEach(([input, expected]) => {
+    t.context.client.removeFromSegment(input, ids);
+    t.truthy(t.context.client.request.post.calledWith(`${trackRoot}/segments/${expected}/remove_customers`, { ids }));
+  });
 });
