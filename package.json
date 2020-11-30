@@ -19,6 +19,7 @@
   "devDependencies": {
     "ava": "^0.25.0",
     "nyc": "^11.4.1",
+    "prettier": "2.2.0",
     "sinon": "^4.3.0"
   },
   "homepage": "https://github.com/customerio/customerio-node",

@@ -34,9 +34,9 @@ jobs:
       - checkout
       - runtests
 
-  node-dubnium: # EOL 2021-04-01
+  node-10:
     docker:
-      - image: circleci/node:dubnium
+      - image: circleci/node:10
 
     working_directory: ~/customerio-node
 
@@ -44,9 +44,9 @@ jobs:
       - checkout
       - runtests
   
-  node-carbon: # EOL 2019-12-31
+  node-12:
     docker:
-      - image: circleci/node:carbon
+      - image: circleci/node:12
 
     working_directory: ~/customerio-node
 
@@ -54,9 +54,9 @@ jobs:
       - checkout
       - runtests
 
-  node-boron: # EOL 2019-04-01
+  node-14:
     docker:
-      - image: circleci/node:boron
+      - image: circleci/node:14
 
     working_directory: ~/customerio-node
 
@@ -69,6 +69,6 @@ workflows:
   test:
     jobs:
       - node-current
-      - node-dubnium
-      - node-carbon
-      - node-boron
+      - node-10
+      - node-12
+      - node-14
