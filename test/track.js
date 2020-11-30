@@ -19,8 +19,16 @@ test('constructor sets necessary variables', (t) => {
 
 test('#identify works', (t) => {
   sinon.stub(t.context.client.request, 'put');
-  t.context.client.identify(1);
-  t.truthy(t.context.client.request.put.calledWith(`${trackRoot}/customers/1`, {}));
+  t.throws(() => t.context.client.identify(''));
+
+  [
+    [1, '1'],
+    ['1 ', encodeURIComponent('1 ')],
+    ['1/', encodeURIComponent('1/')],
+  ].forEach(([input, expected]) => {
+    t.context.client.identify(input);
+    t.truthy(t.context.client.request.put.calledWith(`${trackRoot}/customers/${expected}`, {}));
+  });
 });
 
 test('#destroy works', (t) => {
