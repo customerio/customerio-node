@@ -243,7 +243,7 @@ To use the Customer.io [Transactional API](https://customer.io/docs/transactiona
 
 ```
 let APIClient = require('customerio-node/api');
-const api = new APIClient(siteId, apiKey, [defaults]);
+const api = new APIClient(appKey, [defaults]);
 ```
 
 Then, you can pass in the `transactional_message_id`, the `to` (email) you want to send to, a `customer_id`, and any `message_data` that you want. [Learn more about how transactional messages work here](https://customer.io/docs/transactional-api).

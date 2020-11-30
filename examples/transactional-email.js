@@ -6,17 +6,25 @@ const { appKey, transactionalMessageId, customerId, customerEmail } = require('.
 
 const api = new APIClient(appKey);
 
-// Create a message: "to" is a required field. "message_data" contains the values that should
-// replace placeholders in your template. Learn more at https://customer.io/docs/transactional-api
+// Create a message: "to" is a required field.
 let message = {
   to: customerEmail,
-  transactional_message_id: transactionalMessageId,
+
+  // Optionally, send a `customer_id`. If your message uses customer variables,
+  // they will be replaced by this customer's attributes.
   customer_id: customerId,
+
+  // Optionally, send a `message_data` object with values that should replace
+  // placeholders in your message body.
   message_data: {
     token: 'abc123',
   },
-  attachments: {},
-  headers: {},
+
+  // Use a transactional_message_id if you have created a transactional message
+  // within Customer.io.  Otherwise, pass in `from`, `to`, `subject`, and
+  // `body` to create a message.
+  transactional_message_id: transactionalMessageId,
+
   from: '',
   from_id: 0,
   reply_to: '',
@@ -27,7 +35,10 @@ let message = {
   plaintext_body: '',
   amp_body: '',
   fake_bcc: '',
-  hide_body: false,
+
+  hide_body: false, // Hides the message body from displaying in Customer.io when viewing deliveries.
+  headers: {},
+  attachments: {},
 };
 
 // To send attachments with the message, add a base64 representation of the
