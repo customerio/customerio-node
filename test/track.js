@@ -19,7 +19,7 @@ test('constructor sets necessary variables', (t) => {
 
 test('#identify works', (t) => {
   sinon.stub(t.context.client.request, 'put');
-  t.throws(() => t.context.client.identify(''), 'customerId is required');
+  t.throws(() => t.context.client.identify(''), { message: 'customerId is required' });
 
   [
     [1, '1'],
@@ -33,7 +33,7 @@ test('#identify works', (t) => {
 
 test('#destroy works', (t) => {
   sinon.stub(t.context.client.request, 'destroy');
-  t.throws(() => t.context.client.destroy(''), 'customerId is required');
+  t.throws(() => t.context.client.destroy(''), { message: 'customerId is required' });
 
   [
     [1, '1'],
@@ -47,7 +47,7 @@ test('#destroy works', (t) => {
 
 test('#suppress works', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.suppress(''), 'customerId is required');
+  t.throws(() => t.context.client.suppress(''), { message: 'customerId is required' });
 
   [
     [1, '1'],
@@ -61,14 +61,14 @@ test('#suppress works', (t) => {
 
 test('#track with customer id works', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.track(''), 'customerId is required');
+  t.throws(() => t.context.client.track(''), { message: 'customerId is required' });
 
   [
     [1, '1'],
     ['1 ', encodeURIComponent('1 ')],
     ['1/', encodeURIComponent('1/')],
   ].forEach(([input, expected]) => {
-    t.throws(() => t.context.client.track(input, { data: {} }), 'data.name is required');
+    t.throws(() => t.context.client.track(input, { data: {} }), { message: 'data.name is required' });
     t.context.client.track(input, { name: 'purchase', data: 'yep' });
     t.truthy(
       t.context.client.request.post.calledWith(`${trackRoot}/customers/${expected}/events`, {
@@ -81,7 +81,7 @@ test('#track with customer id works', (t) => {
 
 test('#trackAnonymous works', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.trackAnonymous({ data: {} }), 'data.name is required');
+  t.throws(() => t.context.client.trackAnonymous({ data: {} }), { message: 'data.name is required' });
   t.context.client.trackAnonymous({ name: 'purchase', data: 'yep' });
   t.truthy(
     t.context.client.request.post.calledWith(`${trackRoot}/events`, {
@@ -93,14 +93,14 @@ test('#trackAnonymous works', (t) => {
 
 test('#trackPageView works', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.trackPageView(''), 'customerId is required');
+  t.throws(() => t.context.client.trackPageView(''), { message: 'customerId is required' });
 
   [
     [1, '1'],
     ['1 ', encodeURIComponent('1 ')],
     ['1/', encodeURIComponent('1/')],
   ].forEach(([input, expected]) => {
-    t.throws(() => t.context.client.trackPageView(input, ''), 'path is required');
+    t.throws(() => t.context.client.trackPageView(input, ''), { message: 'path is required' });
     t.context.client.trackPageView(input, '#home');
     t.truthy(
       t.context.client.request.post.calledWith(`${trackRoot}/customers/${expected}/events`, {
@@ -184,8 +184,10 @@ test('#addDevice works', (t) => {
     ['1 ', encodeURIComponent('1 ')],
     ['1/', encodeURIComponent('1/')],
   ].forEach(([input, expected]) => {
-    t.throws(() => t.context.client.addDevice(input, '', 'ios', { primary: true }), 'device_id is required');
-    t.throws(() => t.context.client.addDevice(input, 123, '', { primary: true }), 'platform is required');
+    t.throws(() => t.context.client.addDevice(input, '', 'ios', { primary: true }), {
+      message: 'device_id is required',
+    });
+    t.throws(() => t.context.client.addDevice(input, 123, '', { primary: true }), { message: 'platform is required' });
 
     t.context.client.addDevice(input, 123, 'ios', { primary: true });
     t.truthy(
@@ -215,8 +217,8 @@ test('#addDevice works with an empty data parameter', (t) => {
 
 test('#deleteDevice works', (t) => {
   sinon.stub(t.context.client.request, 'destroy');
-  t.throws(() => t.context.client.deleteDevice(''), 'customerId is required');
-  t.throws(() => t.context.client.deleteDevice(1, ''), 'deviceToken is required');
+  t.throws(() => t.context.client.deleteDevice(''), { message: 'customerId is required' });
+  t.throws(() => t.context.client.deleteDevice(1, ''), { message: 'deviceToken is required' });
 
   [
     [
@@ -245,8 +247,8 @@ test('#addToSegment works', (t) => {
   let ids = ['1', '2', '3'];
   sinon.stub(t.context.client.request, 'post');
 
-  t.throws(() => t.context.client.addToSegment(''), 'segmentId is required');
-  t.throws(() => t.context.client.addToSegment(1, []), 'customerIds is required');
+  t.throws(() => t.context.client.addToSegment(''), { message: 'segmentId is required' });
+  t.throws(() => t.context.client.addToSegment(1, []), { message: 'customerIds is required' });
 
   [
     [1, '1'],
@@ -262,8 +264,8 @@ test('#removeFromSegment works', (t) => {
   let ids = ['1', '2', '3'];
   sinon.stub(t.context.client.request, 'post');
 
-  t.throws(() => t.context.client.removeFromSegment(''), 'segmentId is required');
-  t.throws(() => t.context.client.removeFromSegment(1, []), 'customerIds is required');
+  t.throws(() => t.context.client.removeFromSegment(''), { message: 'segmentId is required' });
+  t.throws(() => t.context.client.removeFromSegment(1, []), { message: 'customerIds is required' });
 
   [
     [1, '1'],
