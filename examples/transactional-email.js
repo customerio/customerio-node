@@ -11,9 +11,12 @@ const api = new APIClient(appKey);
 let message = new SendEmailRequest({
   to: customerEmail,
 
-  // Optionally, send a `customer_id`. If your message uses customer variables,
-  // they will be replaced by this customer's attributes.
-  customer_id: customerId,
+  // To identify a customer, send an identifiers object, including na `id`. If
+  // your message uses customer variables, they will be replaced by this
+  // customer's attributes.
+  identifiers: {
+    id: 'customer_id',
+  },
 
   // Optionally, send a `message_data` object with values that should replace
   // placeholders in your message body.
