@@ -2,13 +2,13 @@ const fs = require('fs');
 
 // In actual use require the node module: let APIClient = require('customerio-node/api');
 const APIClient = require('../lib/api');
-const TransactionalEmail = require('../lib/transactional-email');
+const SendEmailRequest = require('../lib/transactional-email');
 const { appKey, transactionalMessageId, customerId, customerEmail } = require('./config');
 
 const api = new APIClient(appKey);
 
 // Create a message: "to" is a required field.
-let message = new TransactionalEmail({
+let message = new SendEmailRequest({
   to: customerEmail,
 
   // Optionally, send a `customer_id`. If your message uses customer variables,
