@@ -1,8 +1,7 @@
 const fs = require('fs');
 
 // In actual use require the node module: let APIClient = require('customerio-node/api');
-const APIClient = require('../lib/api');
-const { SendEmailRequest } = require('../lib/api/requests');
+const { APIClient, SendEmailRequest } = require('../lib/api');
 const { appKey, transactionalMessageId, customerEmail } = require('./config');
 
 const api = new APIClient(appKey);

@@ -1,8 +1,7 @@
 const test = require('ava');
 const fs = require('fs');
 const sinon = require('sinon');
-const APIClient = require('../lib/api');
-const { SendEmailRequest } = require('../lib/api/requests');
+const { APIClient, SendEmailRequest } = require('../lib/api');
 
 const apiRoot = 'https://api.customer.io/v1';
 
