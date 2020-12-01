@@ -184,30 +184,6 @@ cio.deleteDevice(1, "device_token")
 * **customer_id**: String (required)
 * **device_token**: String (required)
 
-### cio.addToSegment(id, customer_ids)
-Add customers to a manual segment.
-
-```
-cio.addToSegment(1, ["1", "2", "3"])
-```
-
-#### Options
-
-* **segment_id**: String (required)
-* **customer_ids**: Array (required)
-
-### cio.removeFromSegment(id, customer_ids)
-Remove customers from a manual segment.
-
-```
-cio.removeFromSegment(1, ["1", "2", "3"])
-```
-
-#### Options
-
-* **segment_id**: String (required)
-* **customer_ids**: Array (required)
-
 ### cio.suppress(id)
 Suppress a customer.
 
@@ -239,28 +215,42 @@ cio.identify(customerId, { first_name: 'Finn' }).then(() => {
 
 ### Transactional API
 
-To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), import our API client and initialise it with an [app key](https://customer.io/docs/managing-credentials#app-api-keys).
+To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), import our API client and initialize it with an [app key](https://customer.io/docs/managing-credentials#app-api-keys).
+
+Create a new `sendEmailRequest` object containing:
+
+* `transactional_message_id`: the ID of the transactional message you want to send
+* `to`: the email address of your recipients 
+* an `identifiers` object containing the `id` of your recipient. If the `id` does not exist, Customer.io will create it.
+* a `message_data` object containing properties that you want reference in your message using Liquid. 
+
+Use `sendEmail` referencing your request object to send a transactional message. [Learn more about transactional messages and `sendEmailRequest` properties](https://customer.io/docs/transactional-api).
 
 ```
-let APIClient = require('customerio-node/api');
-const api = new APIClient(appKey, [defaults]);
-```
+const { APIClient, SendEmailRequest } = require("customerio-node/api");
 
-Then, you can pass in the `transactional_message_id`, the `to` (email) you want to send to, a `customer_id`, and any `message_data` that you want. [Learn more about how transactional messages work here](https://customer.io/docs/transactional-api).
+const client = new APIClient("your API key");
 
-```
-api.sendEmail({
-  to: 'ami@customer.io',
-  transactional_message_id: 1,
-  customer_id: 'c1',
+const request = new SendEmailRequest({
+  to: "person@example.com",
+  transactional_message_id: "3",
   message_data: {
-    token: "abc123",
-    …
-  }
-})
-```
+    name: "Person",
+    items: {
+      name: "shoes",
+      price: "59.99",
+    },
+    products: [],
+  },
+  identifiers: {
+    id: "2",
+  },
+});
 
-`sendEmail` returns a promise that, if successful, will return an object containing the delivery ID.
+client.sendEmail(request)
+  .then(res => console.log(res))
+  .catch(err => console.log(err.statusCode, err.message))
+```
 
 ## Further examples
 
