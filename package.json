@@ -32,7 +32,8 @@
   "exports": {
     ".": "./lib/index.js",
     "./api": "./lib/api.js",
-    "./track": "./lib/track.js"
+    "./track": "./lib/track.js",
+    "./api/requests": "./lib/api/requests.js"
   },
   "repository": "customerio/customerio-node",
   "scripts": {
