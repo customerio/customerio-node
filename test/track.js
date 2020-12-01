@@ -268,37 +268,3 @@ test('#deleteDevice works', (t) => {
     );
   });
 });
-
-test('#addToSegment works', (t) => {
-  let ids = ['1', '2', '3'];
-  sinon.stub(t.context.client.request, 'post');
-
-  t.throws(() => t.context.client.addToSegment(''), { message: 'segmentId is required' });
-  t.throws(() => t.context.client.addToSegment(1, []), { message: 'customerIds is required' });
-
-  [
-    [1, '1'],
-    ['1 ', encodeURIComponent('1 ')],
-    ['1/', encodeURIComponent('1/')],
-  ].forEach(([input, expected]) => {
-    t.context.client.addToSegment(input, ids);
-    t.truthy(t.context.client.request.post.calledWith(`${trackRoot}/segments/${expected}/add_customers`, { ids }));
-  });
-});
-
-test('#removeFromSegment works', (t) => {
-  let ids = ['1', '2', '3'];
-  sinon.stub(t.context.client.request, 'post');
-
-  t.throws(() => t.context.client.removeFromSegment(''), { message: 'segmentId is required' });
-  t.throws(() => t.context.client.removeFromSegment(1, []), { message: 'customerIds is required' });
-
-  [
-    [1, '1'],
-    ['1 ', encodeURIComponent('1 ')],
-    ['1/', encodeURIComponent('1/')],
-  ].forEach(([input, expected]) => {
-    t.context.client.removeFromSegment(input, ids);
-    t.truthy(t.context.client.request.post.calledWith(`${trackRoot}/segments/${expected}/remove_customers`, { ids }));
-  });
-});
