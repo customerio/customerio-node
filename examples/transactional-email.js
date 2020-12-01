@@ -3,12 +3,12 @@ const fs = require('fs');
 // In actual use require the node module: let APIClient = require('customerio-node/api');
 const APIClient = require('../lib/api');
 const { SendEmailRequest } = require('../lib/api/requests');
-const { appKey, transactionalMessageId, customerId, customerEmail } = require('./config');
+const { appKey, transactionalMessageId, customerEmail } = require('./config');
 
 const api = new APIClient(appKey);
 
 // Create a message: "to" is a required field.
-let message = new SendEmailRequest({
+let req = new SendEmailRequest({
   to: customerEmail,
 
   // To identify a customer, send an identifiers object, including na `id`. If
@@ -45,7 +45,7 @@ let message = new SendEmailRequest({
 
 // To send attachments with the message, pass in a pathname or a Buffer
 // object.
-message.attach('attachment-1', 'attachment-1.pdf');
-message.attach('attachment-2', fs.readFileSync('attachment-2.pdf'));
+req.attach('attachment-1', 'attachment-1.pdf');
+req.attach('attachment-2', fs.readFileSync('attachment-2.pdf'));
 
-api.sendEmail(message).catch((err) => console.log(err.message, err.statusCode));
+api.sendEmail(req).catch((err) => console.log(err.message, err.statusCode));
