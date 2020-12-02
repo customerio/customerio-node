@@ -43,9 +43,12 @@ let req = new SendEmailRequest({
   queue_draft: false,
 });
 
-// To send attachments with the message, pass in a pathname or a Buffer
-// object.
-req.attach('attachment-1', 'attachment-1.pdf');
+// To send attachments with the message, pass in a string or a Buffer object.
 req.attach('attachment-2', fs.readFileSync('attachment-2.pdf'));
+
+// The `attach` helper method will encode the file's contents as a base64 string.
+// If you have an already encoded value, you can pass an options object with encode
+// set to false.
+req.attach('attachment-2', fs.readFileSync('attachment-2.pdf'), { encode: false });
 
 api.sendEmail(req).catch((err) => console.log(err.message, err.statusCode));

@@ -30,41 +30,29 @@ test('#sendEmail: success', (t) => {
   t.truthy(t.context.client.request.post.calledWith(`${apiRoot}/send/email`, req.message));
 });
 
-test('#sendEmail: adding attachments using a buffer object', (t) => {
-  let buf = Buffer.from('hello world!');
-
+test('#sendEmail: adding attachments with encoding (default)', (t) => {
   sinon.stub(t.context.client.request, 'post');
   let req = new SendEmailRequest({ identifiers: { id: '2' }, transactional_message_id: 1 });
 
-  req.attach('test', buf);
-  t.truthy(req.message.attachments.test, buf.toString('base64'));
-
-  t.context.client.sendEmail(req);
-  t.truthy(t.context.client.request.post.calledWith(`${apiRoot}/send/email`, req.message));
+  req.attach('test', 'hello world');
+  t.is(req.message.attachments.test, Buffer.from('hello world').toString('base64'));
 });
 
-test('#sendEmail: adding attachments using filepath', (t) => {
-  let buf = Buffer.from('hello world!');
-  sinon.stub(fs, 'readFileSync').withArgs('test.pdf', 'base64').returns(buf.toString('base64'));
+test('#sendEmail: adding attachments without encoding', (t) => {
   sinon.stub(t.context.client.request, 'post');
-
   let req = new SendEmailRequest({ identifiers: { id: '2' }, transactional_message_id: 1 });
 
-  req.attach('file', 'test.pdf');
-  t.truthy(req.message.attachments.file, buf.toString('base64'));
-
-  t.context.client.sendEmail(req);
-  t.truthy(t.context.client.request.post.calledWith(`${apiRoot}/send/email`, req.message));
+  req.attach('file', 'test content', { encode: false });
+  t.truthy(req.message.attachments.file, 'test content');
 });
 
-test('#sendEmail: adding unknown attachments', (t) => {
+test('#sendEmail: adding attachments twice throws an error', (t) => {
   sinon.stub(t.context.client.request, 'post');
   let req = new SendEmailRequest({ identifiers: { id: '2' }, transactional_message_id: 1 });
 
-  t.throws(() => req.attach('file', {}), { message: /unknown attachment type/ });
-
-  t.context.client.sendEmail(req);
-  t.truthy(t.context.client.request.post.calledWith(`${apiRoot}/send/email`, req.message));
+  req.attach('test', 'test content');
+  t.throws(() => req.attach('test', 'test content 2'), { message: /attachment test already exists/ });
+  t.is(req.message.attachments.test, Buffer.from('test content').toString('base64'));
 });
 
 test('#sendEmail: error', async (t) => {
