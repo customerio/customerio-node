@@ -10,7 +10,7 @@ const api = new APIClient(appKey);
 let req = new SendEmailRequest({
   to: customerEmail,
 
-  // To identify a customer, send an identifiers object, including na `id`. If
+  // To identify a customer, send an identifiers object, including an `id`. If
   // your message uses customer variables, they will be replaced by this
   // customer's attributes.
   identifiers: {
