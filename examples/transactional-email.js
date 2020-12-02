@@ -37,7 +37,10 @@ let req = new SendEmailRequest({
   amp_body: '',
   fake_bcc: '',
 
-  hide_body: false, // Hides the message body from displaying in Customer.io when viewing deliveries.
+  disable_message_retention: false,
+  send_to_unsubscribed: false,
+  tracked: false,
+  queue_draft: false,
 });
 
 // To send attachments with the message, pass in a pathname or a Buffer
