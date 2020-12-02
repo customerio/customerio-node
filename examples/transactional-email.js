@@ -29,9 +29,7 @@ let req = new SendEmailRequest({
   transactional_message_id: transactionalMessageId,
 
   from: '',
-  from_id: '',
   reply_to: '',
-  reply_to_id: '',
   bcc: '',
   subject: '',
   body: '',
