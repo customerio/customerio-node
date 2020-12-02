@@ -217,7 +217,7 @@ cio.identify(customerId, { first_name: 'Finn' }).then(() => {
 
 To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), import our API client and initialize it with an [app key](https://customer.io/docs/managing-credentials#app-api-keys).
 
-Create a new `sendEmailRequest` object containing:
+Create a new `SendEmailRequest` object containing:
 
 * `transactional_message_id`: the ID of the transactional message you want to send
 * `to`: the email address of your recipients 
