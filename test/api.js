@@ -1,5 +1,4 @@
 const test = require('ava');
-const fs = require('fs');
 const sinon = require('sinon');
 const { APIClient, SendEmailRequest } = require('../lib/api');
 

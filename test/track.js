@@ -9,6 +9,13 @@ test.beforeEach((t) => {
   t.context.client = new CIO(123, 'abc');
 });
 
+const ID_INPUTS = Object.freeze([
+  [1, '1'],
+  ['2 ', encodeURIComponent('2 ')],
+  ['3/', encodeURIComponent('3/')],
+  ['%&*/test.#@!~', encodeURIComponent('%&*/test.#@!~')],
+]);
+
 test('constructor sets necessary variables', (t) => {
   t.is(t.context.client.siteid, 123);
   t.is(t.context.client.apikey, 'abc');
@@ -17,57 +24,41 @@ test('constructor sets necessary variables', (t) => {
   t.is(t.context.client.request.apikey, 'abc');
 });
 
-test('#identify works', (t) => {
-  sinon.stub(t.context.client.request, 'put');
-  t.throws(() => t.context.client.identify(''), { message: 'customerId is required' });
+ID_INPUTS.forEach(([input, expected]) => {
+  test(`#identify works for ${input}`, (t) => {
+    sinon.stub(t.context.client.request, 'put');
+    t.throws(() => t.context.client.identify(''), { message: 'customerId is required' });
 
-  [
-    [1, '1'],
-    ['1 ', encodeURIComponent('1 ')],
-    ['1/', encodeURIComponent('1/')],
-  ].forEach(([input, expected]) => {
     t.context.client.identify(input);
     t.truthy(t.context.client.request.put.calledWith(`${trackRoot}/customers/${expected}`, {}));
   });
 });
 
-test('#destroy works', (t) => {
-  sinon.stub(t.context.client.request, 'destroy');
-  t.throws(() => t.context.client.destroy(''), { message: 'customerId is required' });
+ID_INPUTS.forEach(([input, expected]) => {
+  test(`#destroy works for ${input}`, (t) => {
+    sinon.stub(t.context.client.request, 'destroy');
+    t.throws(() => t.context.client.destroy(''), { message: 'customerId is required' });
 
-  [
-    [1, '1'],
-    ['1 ', encodeURIComponent('1 ')],
-    ['1/', encodeURIComponent('1/')],
-  ].forEach(([input, expected]) => {
     t.context.client.destroy(input);
     t.truthy(t.context.client.request.destroy.calledWith(`${trackRoot}/customers/${expected}`));
   });
 });
 
-test('#suppress works', (t) => {
-  sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.suppress(''), { message: 'customerId is required' });
+ID_INPUTS.forEach(([input, expected]) => {
+  test(`#suppress works for ${input}`, (t) => {
+    sinon.stub(t.context.client.request, 'post');
+    t.throws(() => t.context.client.suppress(''), { message: 'customerId is required' });
 
-  [
-    [1, '1'],
-    ['1 ', encodeURIComponent('1 ')],
-    ['1/', encodeURIComponent('1/')],
-  ].forEach(([input, expected]) => {
     t.context.client.suppress(input);
     t.truthy(t.context.client.request.post.calledWith(`${trackRoot}/customers/${expected}/suppress`));
   });
 });
 
-test('#track with customer id works', (t) => {
-  sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.track(''), { message: 'customerId is required' });
+ID_INPUTS.forEach(([input, expected]) => {
+  test(`#track with customer id works for ${input}`, (t) => {
+    sinon.stub(t.context.client.request, 'post');
+    t.throws(() => t.context.client.track(''), { message: 'customerId is required' });
 
-  [
-    [1, '1'],
-    ['1 ', encodeURIComponent('1 ')],
-    ['1/', encodeURIComponent('1/')],
-  ].forEach(([input, expected]) => {
     t.throws(() => t.context.client.track(input, { data: {} }), { message: 'data.name is required' });
     t.context.client.track(input, { name: 'purchase', data: 'yep' });
     t.truthy(
@@ -91,15 +82,11 @@ test('#trackAnonymous works', (t) => {
   );
 });
 
-test('#trackPageView works', (t) => {
-  sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.trackPageView(''), { message: 'customerId is required' });
+ID_INPUTS.forEach(([input, expected]) => {
+  test(`#trackPageView works for ${input}`, (t) => {
+    sinon.stub(t.context.client.request, 'post');
+    t.throws(() => t.context.client.trackPageView(''), { message: 'customerId is required' });
 
-  [
-    [1, '1'],
-    ['1 ', encodeURIComponent('1 ')],
-    ['1/', encodeURIComponent('1/')],
-  ].forEach(([input, expected]) => {
     t.throws(() => t.context.client.trackPageView(input, ''), { message: 'path is required' });
     t.context.client.trackPageView(input, '#home');
     t.truthy(
@@ -202,14 +189,10 @@ test('#triggerBroadcast discards extraneous fields', (t) => {
   );
 });
 
-test('#addDevice works', (t) => {
-  sinon.stub(t.context.client.request, 'put');
+ID_INPUTS.forEach(([input, expected]) => {
+  test(`#addDevice works for ${input}`, (t) => {
+    sinon.stub(t.context.client.request, 'put');
 
-  [
-    [1, '1'],
-    ['1 ', encodeURIComponent('1 ')],
-    ['1/', encodeURIComponent('1/')],
-  ].forEach(([input, expected]) => {
     t.throws(() => t.context.client.addDevice(input, '', 'ios', { primary: true }), {
       message: 'device_id is required',
     });
