@@ -17,7 +17,7 @@ const baseOptions = {
 };
 
 test.beforeEach((t) => {
-  t.context.req = new Request(123, 'abc', { timeout: 5000 });
+  t.context.req = new Request({ siteid: 123, apikey: 'abc' }, { timeout: 5000 });
 });
 
 // tests begin here

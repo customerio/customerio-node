@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.0]
+### Added
+- Support for the Transactional API
+
+### Removed
+- `addToSegment` and `removeFromSegment` methods
+
+### Changed
+- IDs in the URLs are now escaped.
+- Improved validations for data that's passed in.
+
 ## [0.7.0]
 ### Changed
 - Catch scenarios where a response body is unexpectedly `null` ([#25](https://github.com/customerio/customerio-node/pull/25))
@@ -27,7 +38,7 @@ All notable changes to this project will be documented in this file.
 
 ## [0.3.0]
 ### Changed
-- Huge thanks to [@jescalan](https://github.com/jescalan) for his work in modernizing the Javascript to es6 along with updating dependancies. ([#13](https://github.com/customerio/customerio-node/pull/13))
+- Huge thanks to [@jescalan](https://github.com/jescalan) for his work in modernizing the Javascript to es6 along with updating dependencies. ([#13](https://github.com/customerio/customerio-node/pull/13))
 - README now has the correct Travis-CI badge
 - README has standardized and expanded examples ([#10](https://github.com/customerio/customerio-node/issues/10))
 - Fixed link in README to official Customer.io API docs
@@ -65,7 +76,7 @@ All notable changes to this project will be documented in this file.
   - Test suite for middleware
 
 
-[Unreleased]: https://github.com/customerio/customerio-node/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/customerio/customerio-node/compare/v1.0.0...HEAD
 [0.3.0]: https://github.com/customerio/customerio-node/compare/d3df250...v0.3.0
 [0.2.0]: https://github.com/customerio/customerio-node/compare/54e7c68...d3df250
 [0.1.0]: https://github.com/customerio/customerio-node/compare/943668e...54e7c68

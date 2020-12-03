@@ -184,30 +184,6 @@ cio.deleteDevice(1, "device_token")
 * **customer_id**: String (required)
 * **device_token**: String (required)
 
-### cio.addToSegment(id, customer_ids)
-Add customers to a manual segment.
-
-```
-cio.addToSegment(1, ["1", "2", "3"])
-```
-
-#### Options
-
-* **segment_id**: String (required)
-* **customer_ids**: Array (required)
-
-### cio.removeFromSegment(id, customer_ids)
-Remove customers from a manual segment.
-
-```
-cio.removeFromSegment(1, ["1", "2", "3"])
-```
-
-#### Options
-
-* **segment_id**: String (required)
-* **customer_ids**: Array (required)
-
 ### cio.suppress(id)
 Suppress a customer.
 
@@ -235,6 +211,49 @@ cio.identify(customerId, { first_name: 'Finn' }).then(() => {
     }
   });
 });
+```
+
+### Transactional API
+
+To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), import our API client and initialize it with an [app key](https://customer.io/docs/managing-credentials#app-api-keys).
+
+Create a new `SendEmailRequest` object containing:
+
+* `transactional_message_id`: the ID of the transactional message you want to send, or the `body`, `from`, and `subject` of a new message.
+* `to`: the email address of your recipients 
+* an `identifiers` object containing the `id` of your recipient. If the `id` does not exist, Customer.io will create it.
+* a `message_data` object containing properties that you want reference in your message using Liquid. 
+* You can also send attachments with your message. Use `attach` to encode attachments.
+
+Use `sendEmail` referencing your request to send a transactional message. [Learn more about transactional messages and `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
+
+```
+const { APIClient, SendEmailRequest } = require("customerio-node/api");
+
+const client = new APIClient("your API key");
+
+const request = new SendEmailRequest({
+  to: "person@example.com",
+  transactional_message_id: "3",
+  message_data: {
+    name: "Person",
+    items: {
+      name: "shoes",
+      price: "59.99",
+    },
+    products: [],
+  },
+  identifiers: {
+    id: "2",
+  },
+});
+
+// (optional) attach a file to your message.
+request.attach("receipt.pdf", fs.readFileSync("receipt.pdf"));
+
+client.sendEmail(request)
+  .then(res => console.log(res))
+  .catch(err => console.log(err.statusCode, err.message))
 ```
 
 ## Further examples
