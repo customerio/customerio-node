@@ -219,12 +219,13 @@ To use the Customer.io [Transactional API](https://customer.io/docs/transactiona
 
 Create a new `SendEmailRequest` object containing:
 
-* `transactional_message_id`: the ID of the transactional message you want to send
+* `transactional_message_id`: the ID of the transactional message you want to send, or the `body`, `from`, and `subject` of a new message.
 * `to`: the email address of your recipients 
 * an `identifiers` object containing the `id` of your recipient. If the `id` does not exist, Customer.io will create it.
 * a `message_data` object containing properties that you want reference in your message using Liquid. 
+* You can also send attachments with your message. Use `attach` to encode attachments.
 
-Use `sendEmail` referencing your request object to send a transactional message. [Learn more about transactional messages and `sendEmailRequest` properties](https://customer.io/docs/transactional-api).
+Use `sendEmail` referencing your request to send a transactional message. [Learn more about transactional messages and `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
 
 ```
 const { APIClient, SendEmailRequest } = require("customerio-node/api");
@@ -246,6 +247,9 @@ const request = new SendEmailRequest({
     id: "2",
   },
 });
+
+// (optional) attach a file to your message.
+request.attach("test", fs.readFileSync("receipt.pdf"));
 
 client.sendEmail(request)
   .then(res => console.log(res))
