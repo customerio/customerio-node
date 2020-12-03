@@ -249,7 +249,7 @@ const request = new SendEmailRequest({
 });
 
 // (optional) attach a file to your message.
-request.attach("test", fs.readFileSync("receipt.pdf"));
+request.attach("receipt.pdf", fs.readFileSync("receipt.pdf"));
 
 client.sendEmail(request)
   .then(res => console.log(res))
