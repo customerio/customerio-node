@@ -1,6 +1,6 @@
 const test = require('ava');
 const sinon = require('sinon');
-const CIO = require('../lib');
+const CIO = require('../track');
 
 const trackRoot = 'https://track.customer.io/api/v1';
 const apiRoot = 'https://api.customer.io/v1/api';
