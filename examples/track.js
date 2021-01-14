@@ -9,14 +9,14 @@ cio.track(customerId, {
   name: 'purchase',
   data: {
     price: '23.45',
-    product: 'socks'
-  }
+    product: 'socks',
+  },
 });
 
 cio.trackAnonymous({
   name: 'purchase',
   data: {
     price: '23.45',
-    product: 'socks'
-  }
+    product: 'socks',
+  },
 });

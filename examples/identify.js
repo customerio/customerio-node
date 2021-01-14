@@ -9,5 +9,5 @@ cio.identify(customerId, {
   email: 'customer@example.com',
   created_at: 1361205308,
   first_name: 'Bob',
-  plan: 'basic'
+  plan: 'basic',
 });

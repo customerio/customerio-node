@@ -1,11 +1,13 @@
 {
   "name": "customerio-node",
   "description": "A node client for the Customer.io event API. http://customer.io",
-  "version": "0.6.0",
-  "author": "Customer.io (https://customer.io",
+  "version": "1.0.1",
+  "author": "Customer.io (https://customer.io)",
   "contributors": [
     "Alvin Crespo (https://github.com/alvincrespo)",
-    "Jeff Escalante (https://github.com/jescalan)"
+    "Jeff Escalante (https://github.com/jescalan)",
+    "Artem Ivanov (https://github.com/ivanovart)",
+    "Nuno Sousa (https://github.com/nunofgs)"
   ],
   "ava": {
     "verbose": true
@@ -15,8 +17,9 @@
     "request": "^2.58.0"
   },
   "devDependencies": {
-    "ava": "^0.25.0",
+    "ava": "^3.13.0",
     "nyc": "^11.4.1",
+    "prettier": "2.2.0",
     "sinon": "^4.3.0"
   },
   "homepage": "https://github.com/customerio/customerio-node",
@@ -25,7 +28,7 @@
     "node"
   ],
   "license": "MIT",
-  "main": "lib",
+  "main": "track",
   "repository": "customerio/customerio-node",
   "scripts": {
     "test": "nyc ava"
