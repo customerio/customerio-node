@@ -14,7 +14,7 @@ npm i --save customerio-node
 
 To start using the library, you first need to create an instance of the CIO class:
 
-```
+```javascript
 const CIO = require('customerio-node');
 const { RegionUS, RegionEU } = require("customerio-node/regions");
 let cio = new CIO(siteId, apiKey, { region: RegionUS }, [ defaults ]);
@@ -78,13 +78,13 @@ The track method will trigger events within Customer.io. When sending data along
 
 **Simple event tracking**
 
-```
+```javascript
 cio.track(1, { name: 'updated' });
 ```
 
 **Sending data with an event**
 
-```
+```javascript
 cio.track(1, {
   name: 'purchase',
   data: {
@@ -107,7 +107,7 @@ cio.track(1, {
 
 Anonymous event tracking does not require a customer ID and these events will not be associated with a tracked profile in Customer.io
 
-```
+```javascript
 cio.trackAnonymous({
   name: 'updated',
   data: {
@@ -129,7 +129,7 @@ cio.trackAnonymous({
 
 Sending a page event includes sending over the customers id and the name of the page.
 
-```
+```javascript
 cio.trackPageView(1, '/home');
 ```
 
@@ -141,7 +141,7 @@ cio.trackPageView(1, '/home');
 ### cio.addDevice(id, device_id, platform, data)
 Add a device to send push notifications.
 
-```
+```javascript
 cio.addDevice(1, "device_id", "ios", { primary: true });
 ```
 
@@ -155,7 +155,7 @@ cio.addDevice(1, "device_id", "ios", { primary: true });
 ### cio.deleteDevice(id, device_id)
 Delete a device to remove it from the associated customer and stop sending push notifications to it.
 
-```
+```javascript
 cio.deleteDevice(1, "device_token")
 ```
 
@@ -167,7 +167,7 @@ cio.deleteDevice(1, "device_token")
 ### cio.suppress(id)
 Suppress a customer.
 
-```
+```javascript
 cio.suppress(1)
 ```
 
@@ -179,7 +179,7 @@ cio.suppress(1)
 
 All calls to the library will return a native promise, allowing you to chain calls as such:
 
-```
+```javascript
 const customerId = 1;
 
 cio.identify(customerId, { first_name: 'Finn' }).then(() => {
@@ -207,7 +207,7 @@ Create a new `SendEmailRequest` object containing:
 
 Use `sendEmail` referencing your request to send a transactional message. [Learn more about transactional messages and `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
 
-```
+```javascript
 const { APIClient, SendEmailRequest } = require("customerio-node/api");
 const { RegionUS, RegionEU } = require("customerio-node/regions");
 let api = new APIClient('app-key', { region: RegionUS });
@@ -240,13 +240,13 @@ api.sendEmail(request)
 
 Trigger an email broadcast using the email campaign's id. You can also optionally pass along custom data that will be merged with the liquid template, and additional conditions to filter recipients.
 
-```
+```javascript
 api.triggerBroadcast(1, { name: 'foo'}, { segment: { id: 7 }});
 ```
 
 You can also use emails or ids to select recipients, and pass optional API parameters such as `email_ignore_missing`.
 
-```
+```javascript
 api.triggerBroadcast(1, { name: 'foo'},  { emails: ['example@emails.com'], email_ignore_missing: true }
 );
 ```
@@ -265,7 +265,7 @@ We've included functional examples in the [examples/ directory](https://github.c
 
 ## Tests
 
-```
+```bash
 npm install && npm test
 ```
 
