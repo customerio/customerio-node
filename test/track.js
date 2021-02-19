@@ -1,12 +1,19 @@
 const test = require('ava');
 const sinon = require('sinon');
-const CIO = require('../track');
+const TrackClient = require('../track');
 
-const trackRoot = 'https://track.customer.io/api/v1';
-const apiRoot = 'https://api.customer.io/v1/api';
+const trackRoot = {
+  us: 'https://track.customer.io/api/v1',
+  eu: 'https://track-eu.customer.io/api/v1',
+};
+
+const apiRoot = {
+  us: 'https://api.customer.io/v1',
+  eu: 'https://api-eu.customer.io/v1',
+};
 
 test.beforeEach((t) => {
-  t.context.client = new CIO(123, 'abc');
+  t.context.client = new TrackClient(123, 'abc');
 });
 
 const ID_INPUTS = Object.freeze([
@@ -19,9 +26,27 @@ const ID_INPUTS = Object.freeze([
 test('constructor sets necessary variables', (t) => {
   t.is(t.context.client.siteid, 123);
   t.is(t.context.client.apikey, 'abc');
+  t.is(t.context.client.trackRoot, trackRoot.us);
+  t.is(t.context.client.apiRoot, apiRoot.us);
+
   t.truthy(t.context.client.request);
   t.is(t.context.client.request.siteid, 123);
   t.is(t.context.client.request.apikey, 'abc');
+});
+
+test('constructor sets correct URL for different regions', (t) => {
+  ['us', 'eu'].forEach((region) => {
+    let client = new TrackClient(123, 'abc', { region });
+
+    t.is(client.siteid, 123);
+    t.is(client.apikey, 'abc');
+    t.is(client.trackRoot, trackRoot[region]);
+    t.is(client.apiRoot, apiRoot[region]);
+
+    t.truthy(client.request);
+    t.is(client.request.siteid, 123);
+    t.is(client.request.apikey, 'abc');
+  });
 });
 
 ID_INPUTS.forEach(([input, expected]) => {
@@ -30,7 +55,7 @@ ID_INPUTS.forEach(([input, expected]) => {
     t.throws(() => t.context.client.identify(''), { message: 'customerId is required' });
 
     t.context.client.identify(input);
-    t.truthy(t.context.client.request.put.calledWith(`${trackRoot}/customers/${expected}`, {}));
+    t.truthy(t.context.client.request.put.calledWith(`${trackRoot.us}/customers/${expected}`, {}));
   });
 });
 
@@ -40,7 +65,7 @@ ID_INPUTS.forEach(([input, expected]) => {
     t.throws(() => t.context.client.destroy(''), { message: 'customerId is required' });
 
     t.context.client.destroy(input);
-    t.truthy(t.context.client.request.destroy.calledWith(`${trackRoot}/customers/${expected}`));
+    t.truthy(t.context.client.request.destroy.calledWith(`${trackRoot.us}/customers/${expected}`));
   });
 });
 
@@ -50,7 +75,7 @@ ID_INPUTS.forEach(([input, expected]) => {
     t.throws(() => t.context.client.suppress(''), { message: 'customerId is required' });
 
     t.context.client.suppress(input);
-    t.truthy(t.context.client.request.post.calledWith(`${trackRoot}/customers/${expected}/suppress`));
+    t.truthy(t.context.client.request.post.calledWith(`${trackRoot.us}/customers/${expected}/suppress`));
   });
 });
 
@@ -62,7 +87,7 @@ ID_INPUTS.forEach(([input, expected]) => {
     t.throws(() => t.context.client.track(input, { data: {} }), { message: 'data.name is required' });
     t.context.client.track(input, { name: 'purchase', data: 'yep' });
     t.truthy(
-      t.context.client.request.post.calledWith(`${trackRoot}/customers/${expected}/events`, {
+      t.context.client.request.post.calledWith(`${trackRoot.us}/customers/${expected}/events`, {
         name: 'purchase',
         data: 'yep',
       }),
@@ -75,7 +100,7 @@ test('#trackAnonymous works', (t) => {
   t.throws(() => t.context.client.trackAnonymous({ data: {} }), { message: 'data.name is required' });
   t.context.client.trackAnonymous({ name: 'purchase', data: 'yep' });
   t.truthy(
-    t.context.client.request.post.calledWith(`${trackRoot}/events`, {
+    t.context.client.request.post.calledWith(`${trackRoot.us}/events`, {
       name: 'purchase',
       data: 'yep',
     }),
@@ -90,7 +115,7 @@ ID_INPUTS.forEach(([input, expected]) => {
     t.throws(() => t.context.client.trackPageView(input, ''), { message: 'path is required' });
     t.context.client.trackPageView(input, '#home');
     t.truthy(
-      t.context.client.request.post.calledWith(`${trackRoot}/customers/${expected}/events`, {
+      t.context.client.request.post.calledWith(`${trackRoot.us}/customers/${expected}/events`, {
         type: 'page',
         name: '#home',
       }),
@@ -102,7 +127,7 @@ test('#triggerBroadcast works', (t) => {
   sinon.stub(t.context.client.request, 'post');
   t.context.client.triggerBroadcast(1, { type: 'data' }, { type: 'recipients' });
   t.truthy(
-    t.context.client.request.post.calledWith(`${apiRoot}/campaigns/1/triggers`, {
+    t.context.client.request.post.calledWith(`${apiRoot.us}/api/campaigns/1/triggers`, {
       data: { type: 'data' },
       recipients: { type: 'recipients' },
     }),
@@ -121,7 +146,7 @@ test('#triggerBroadcast works with emails', (t) => {
     },
   );
   t.truthy(
-    t.context.client.request.post.calledWith(`${apiRoot}/campaigns/1/triggers`, {
+    t.context.client.request.post.calledWith(`${apiRoot.us}/api/campaigns/1/triggers`, {
       data: { type: 'data' },
       emails: ['test@email.com'],
       email_ignore_missing: true,
@@ -134,7 +159,7 @@ test('#triggerBroadcast works with ids', (t) => {
   sinon.stub(t.context.client.request, 'post');
   t.context.client.triggerBroadcast(1, { type: 'data' }, { ids: [1], id_ignore_missing: true });
   t.truthy(
-    t.context.client.request.post.calledWith(`${apiRoot}/campaigns/1/triggers`, {
+    t.context.client.request.post.calledWith(`${apiRoot.us}/api/campaigns/1/triggers`, {
       data: { type: 'data' },
       ids: [1],
       id_ignore_missing: true,
@@ -147,7 +172,7 @@ test('#triggerBroadcast works with per_user_data', (t) => {
   const per_user_data = [{ id: 1, data: { very: 'important' } }];
   t.context.client.triggerBroadcast(1, { type: 'data' }, { per_user_data, id_ignore_missing: true });
   t.truthy(
-    t.context.client.request.post.calledWith(`${apiRoot}/campaigns/1/triggers`, {
+    t.context.client.request.post.calledWith(`${apiRoot.us}/api/campaigns/1/triggers`, {
       data: { type: 'data' },
       per_user_data,
       id_ignore_missing: true,
@@ -160,7 +185,7 @@ test('#triggerBroadcast works with data_file_url', (t) => {
   const data_file_url = 'https://my.s3.bucket.com';
   t.context.client.triggerBroadcast(1, { type: 'data' }, { data_file_url, id_ignore_missing: true });
   t.truthy(
-    t.context.client.request.post.calledWith(`${apiRoot}/campaigns/1/triggers`, {
+    t.context.client.request.post.calledWith(`${apiRoot.us}/api/campaigns/1/triggers`, {
       data: { type: 'data' },
       data_file_url,
       id_ignore_missing: true,
@@ -181,7 +206,7 @@ test('#triggerBroadcast discards extraneous fields', (t) => {
     },
   );
   t.truthy(
-    t.context.client.request.post.calledWith(`${apiRoot}/campaigns/1/triggers`, {
+    t.context.client.request.post.calledWith(`${apiRoot.us}/api/campaigns/1/triggers`, {
       data: { type: 'data' },
       ids: [1],
       id_ignore_missing: true,
@@ -200,7 +225,7 @@ ID_INPUTS.forEach(([input, expected]) => {
 
     t.context.client.addDevice(input, 123, 'ios', { primary: true });
     t.truthy(
-      t.context.client.request.put.calledWith(`${trackRoot}/customers/${expected}/devices`, {
+      t.context.client.request.put.calledWith(`${trackRoot.us}/customers/${expected}/devices`, {
         device: {
           id: 123,
           platform: 'ios',
@@ -215,7 +240,7 @@ test('#addDevice works with an empty data parameter', (t) => {
   sinon.stub(t.context.client.request, 'put');
   t.context.client.addDevice(1, 123, 'ios', null);
   t.truthy(
-    t.context.client.request.put.calledWith(`${trackRoot}/customers/1/devices`, {
+    t.context.client.request.put.calledWith(`${trackRoot.us}/customers/1/devices`, {
       device: {
         id: 123,
         platform: 'ios',
@@ -246,7 +271,7 @@ test('#deleteDevice works', (t) => {
     t.context.client.deleteDevice(customerId, token);
     t.truthy(
       t.context.client.request.destroy.calledWith(
-        `${trackRoot}/customers/${encodedCustomerId}/devices/${encodedToken}`,
+        `${trackRoot.us}/customers/${encodedCustomerId}/devices/${encodedToken}`,
       ),
     );
   });
