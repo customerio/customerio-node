@@ -15,4 +15,4 @@ examples/config.js
 coverage.html
 .nyc_output
 
-lib/.DS_Store
+.DS_Store
