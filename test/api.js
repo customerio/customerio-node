@@ -2,7 +2,10 @@ const test = require('ava');
 const sinon = require('sinon');
 const { APIClient, SendEmailRequest } = require('../api');
 
-const apiRoot = 'https://api.customer.io/v1';
+const apiRoot = {
+  us: 'https://api.customer.io/v1',
+  eu: 'https://api-eu.customer.io/v1',
+};
 
 test.beforeEach((t) => {
   t.context.client = new APIClient('appKey');
@@ -11,6 +14,17 @@ test.beforeEach((t) => {
 test('constructor sets necessary variables', (t) => {
   t.is(t.context.client.appKey, 'appKey');
   t.truthy(t.context.client.request);
+  t.is(t.context.client.apiRoot, apiRoot.us);
+});
+
+test('constructor sets correct URL for different regions', (t) => {
+  ['us', 'eu'].forEach((region) => {
+    let client = new APIClient('appKey', { region });
+
+    t.is(client.appKey, 'appKey');
+    t.truthy(client.request);
+    t.is(client.apiRoot, apiRoot[region]);
+  });
 });
 
 test('sendEmail: passing in a plain object throws an error', (t) => {
@@ -19,14 +33,14 @@ test('sendEmail: passing in a plain object throws an error', (t) => {
   t.throws(() => t.context.client.sendEmail(req), {
     message: /"request" must be an instance of SendEmailRequest/,
   });
-  t.falsy(t.context.client.request.post.calledWith(`${apiRoot}/send/email`));
+  t.falsy(t.context.client.request.post.calledWith(`${apiRoot.us}/send/email`));
 });
 
 test('#sendEmail: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
   let req = new SendEmailRequest({ identifiers: { id: '2' }, transactional_message_id: 1 });
   t.context.client.sendEmail(req);
-  t.truthy(t.context.client.request.post.calledWith(`${apiRoot}/send/email`, req.message));
+  t.truthy(t.context.client.request.post.calledWith(`${apiRoot.us}/send/email`, req.message));
 });
 
 test('#sendEmail: adding attachments with encoding (default)', (t) => {
@@ -63,5 +77,5 @@ test('#sendEmail: error', async (t) => {
     t.is(err.statusCode, 400);
   });
 
-  t.truthy(t.context.client.request.post.calledWith(`${apiRoot}/send/email`, req.message));
+  t.truthy(t.context.client.request.post.calledWith(`${apiRoot.us}/send/email`, req.message));
 });
