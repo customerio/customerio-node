@@ -1,11 +1,7 @@
 const test = require('ava');
 const sinon = require('sinon');
 const { APIClient, SendEmailRequest } = require('../api');
-
-const apiRoot = {
-  us: 'https://api.customer.io/v1',
-  eu: 'https://api-eu.customer.io/v1',
-};
+const { apiRoot } = require('../lib/common');
 
 test.beforeEach((t) => {
   t.context.client = new APIClient('appKey');

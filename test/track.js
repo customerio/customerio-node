@@ -1,16 +1,7 @@
 const test = require('ava');
 const sinon = require('sinon');
 const TrackClient = require('../track');
-
-const trackRoot = {
-  us: 'https://track.customer.io/api/v1',
-  eu: 'https://track-eu.customer.io/api/v1',
-};
-
-const apiRoot = {
-  us: 'https://api.customer.io/v1',
-  eu: 'https://api-eu.customer.io/v1',
-};
+const { trackRoot, apiRoot } = require('../lib/common');
 
 test.beforeEach((t) => {
   t.context.client = new TrackClient(123, 'abc');
