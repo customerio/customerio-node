@@ -1,0 +1,29 @@
+name: test
+
+on: [ push ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [ '12', '10', '14','15' ]
+    steps:
+    - uses: actions/checkout@v2
+    - name: setup node 
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node }}
+    - uses: actions/cache@v2
+      with:
+        path: node_modules
+        key: customerio-${{ matrix.node }}-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          customerio-${{ matrix.node }}
+    - name: install yarn
+      run: |
+        curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+        echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+        sudo apt-get update && sudo apt-get install --no-install-recommends yarn -y
+    - run: yarn install
+    - run: yarn test
