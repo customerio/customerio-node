@@ -1,7 +1,7 @@
 const test = require('ava');
 const sinon = require('sinon');
 const { APIClient, SendEmailRequest } = require('../api');
-const { RegionEU, RegionUS } = require('../lib/regions');
+const Regions = require('../lib/regions');
 
 test.beforeEach((t) => {
   t.context.client = new APIClient('appKey');
@@ -10,16 +10,16 @@ test.beforeEach((t) => {
 test('constructor sets necessary variables', (t) => {
   t.is(t.context.client.appKey, 'appKey');
   t.truthy(t.context.client.request);
-  t.is(t.context.client.apiRoot, RegionUS.apiUrl);
+  t.is(t.context.client.apiRoot, Regions.us.apiUrl);
 });
 
 test('constructor sets correct URL for different regions', (t) => {
-  [RegionUS, RegionEU].forEach((region) => {
+  Object.entries(Regions).forEach(([region, details]) => {
     let client = new APIClient('appKey', { region });
 
     t.is(client.appKey, 'appKey');
     t.truthy(client.request);
-    t.is(client.apiRoot, region.apiUrl);
+    t.is(client.apiRoot, details.apiUrl);
   });
 });
 
@@ -29,14 +29,14 @@ test('sendEmail: passing in a plain object throws an error', (t) => {
   t.throws(() => t.context.client.sendEmail(req), {
     message: /"request" must be an instance of SendEmailRequest/,
   });
-  t.falsy(t.context.client.request.post.calledWith(`${RegionUS.apiUrl}/send/email`));
+  t.falsy(t.context.client.request.post.calledWith(`${Regions.us.apiUrl}/send/email`));
 });
 
 test('#sendEmail: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
   let req = new SendEmailRequest({ identifiers: { id: '2' }, transactional_message_id: 1 });
   t.context.client.sendEmail(req);
-  t.truthy(t.context.client.request.post.calledWith(`${RegionUS.apiUrl}/send/email`, req.message));
+  t.truthy(t.context.client.request.post.calledWith(`${Regions.us.apiUrl}/send/email`, req.message));
 });
 
 test('#sendEmail: adding attachments with encoding (default)', (t) => {
@@ -73,5 +73,5 @@ test('#sendEmail: error', async (t) => {
     t.is(err.statusCode, 400);
   });
 
-  t.truthy(t.context.client.request.post.calledWith(`${RegionUS.apiUrl}/send/email`, req.message));
+  t.truthy(t.context.client.request.post.calledWith(`${Regions.us.apiUrl}/send/email`, req.message));
 });
