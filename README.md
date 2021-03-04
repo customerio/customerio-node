@@ -22,7 +22,7 @@ let cio = new CIO(siteId, apiKey, { region: RegionUS }, [ defaults ]);
 
 Both the `siteId` and `apiKey` are **required** in order to create a Basic Authorization header, allowing us to associate the data with your account.
 
-Your account `region` is not required. If you do not specify your region, we assume that your account is based in the US (`RegionUS`). If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `RegionEU` accordingly, however this may cause data to be logged in the US. 
+Your account `region` is optional. If you do not specify your region, we assume that your account is based in the US (`RegionUS`). If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `RegionEU` accordingly, however this may cause data to be logged in the US. 
 
 Optionally you can pass `defaults` as an object that will be passed to the underlying request instance. A list of the possible options are listed [here](https://github.com/request/request#requestoptions-callback).
 
