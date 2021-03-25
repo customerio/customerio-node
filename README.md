@@ -12,16 +12,19 @@ npm i --save customerio-node
 
 ### Creating a new instance
 
-In order to start using the library, you first need to create an instance of the CIO class:
+To start using the library, you first need to create an instance of the CIO class:
 
 ```
-let CIO = require('customerio-node');
-const cio = new CIO(siteId, apiKey, [defaults]);
+const CIO = require('customerio-node');
+const { RegionUS, RegionEU } = require("customerio-node/regions");
+let cio = new CIO(siteId, apiKey, { region: RegionUS }, [ defaults ]);
 ```
 
 Both the `siteId` and `apiKey` are **required** in order to create a Basic Authorization header, allowing us to associate the data with your account.
 
-Optionally you may pass `defaults` as an object that will be passed to the underlying request instance. A list of the possible options are listed [here](https://github.com/request/request#requestoptions-callback).
+Your account `region` is optional. If you do not specify your region, we assume that your account is based in the US (`RegionUS`). If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `RegionEU` accordingly, however this may cause data to be logged in the US. 
+
+Optionally you can pass `defaults` as an object that will be passed to the underlying request instance. A list of the possible options are listed [here](https://github.com/request/request#requestoptions-callback).
 
 This is useful to override the default 10s timeout. Example:
 
@@ -229,8 +232,8 @@ Use `sendEmail` referencing your request to send a transactional message. [Learn
 
 ```
 const { APIClient, SendEmailRequest } = require("customerio-node/api");
-
-const client = new APIClient("your API key");
+const { RegionUS, RegionEU } = require("customerio-node/regions");
+let api = new APIClient('app-key', { region: RegionUS });
 
 const request = new SendEmailRequest({
   to: "person@example.com",
@@ -251,7 +254,7 @@ const request = new SendEmailRequest({
 // (optional) attach a file to your message.
 request.attach("receipt.pdf", fs.readFileSync("receipt.pdf"));
 
-client.sendEmail(request)
+api.sendEmail(request)
   .then(res => console.log(res))
   .catch(err => console.log(err.statusCode, err.message))
 ```
