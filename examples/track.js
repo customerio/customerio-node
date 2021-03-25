@@ -1,4 +1,4 @@
-let CIO = require('../lib/track.js');
+let CIO = require('../lib/track');
 // In actual use require the node module: let CIO = require('customerio-node');
 const siteId = require('./config').siteId;
 const apiKey = require('./config').apiKey;
