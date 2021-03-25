@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.1.0]
+### Added
+- Support for the EU region
+
 ## [1.0.0]
 ### Added
 - Support for the Transactional API
