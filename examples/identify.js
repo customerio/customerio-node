@@ -1,6 +1,6 @@
-let CIO = require('../lib/track.js');
+let CIO = require('../lib/track');
 // In actual use require the node module: let CIO = require('customerio-node');
-const siteId = "require('./config').siteId";
+const siteId = require('./config').siteId;
 const apiKey = require('./config').apiKey;
 const customerId = require('./config').customerId;
 // In actual use, specify your specific region and require node module: const { RegionUS, RegionEU } = require('customerio-node/regions')
