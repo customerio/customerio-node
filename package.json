@@ -1,7 +1,7 @@
 {
   "name": "customerio-node",
   "description": "A node client for the Customer.io event API. http://customer.io",
-  "version": "1.1.0",
+  "version": "2.1.0",
   "author": "Customer.io (https://customer.io)",
   "contributors": [
     "Alvin Crespo (https://github.com/alvincrespo)",
