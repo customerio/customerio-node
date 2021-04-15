@@ -241,17 +241,17 @@ api.sendEmail(request)
 Trigger an email broadcast using the email campaign's id. You can also optionally pass along custom data that will be merged with the liquid template, and additional conditions to filter recipients.
 
 ```
-cio.triggerBroadcast(1, { name: 'foo'}, { segment: { id: 7 }});
+api.triggerBroadcast(1, { name: 'foo'}, { segment: { id: 7 }});
 ```
 
 You can also use emails or ids to select recipients, and pass optional API parameters such as `email_ignore_missing`.
 
 ```
-cio.triggerBroadcast(1, { name: 'foo'},  { emails: ['example@emails.com'], email_ignore_missing: true }
+api.triggerBroadcast(1, { name: 'foo'},  { emails: ['example@emails.com'], email_ignore_missing: true }
 );
 ```
 
-[You can learn more about the recipient fields available here](https://customer.io/docs/api/#apicorecampaignscampaigns_trigger).
+[You can learn more about the available recipient fields here](https://customer.io/docs/api/#operation/triggerBroadcast).
 
 #### Options
 
