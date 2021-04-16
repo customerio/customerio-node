@@ -1,3 +1,9 @@
+type Message = {
+  [key: string]: unknown;
+  headers: Record<string, string>;
+  attachments: Record<string, unknown>;
+};
+
 const REQUIRED_FIELDS = Object.freeze(['to', 'identifiers']);
 const OPTIONAL_FIELDS = Object.freeze([
   'transactional_message_id',
@@ -18,8 +24,10 @@ const OPTIONAL_FIELDS = Object.freeze([
   'queue_draft',
 ]);
 
-class SendEmailRequest {
-  constructor(opts) {
+export class SendEmailRequest {
+  message: Message;
+
+  constructor(opts: Record<string, unknown>) {
     this.message = {
       headers: {},
       attachments: {},
@@ -34,7 +42,9 @@ class SendEmailRequest {
     });
   }
 
-  attach(name, data, { encode = true } = {}) {
+  // Use `any` for data here, because union types and overloads in Typescript
+  // don't work well together.
+  attach(name: string, data: any, { encode = true } = {}) {
     if (this.message.attachments[name]) {
       throw new Error(`attachment ${name} already exists`);
     }
@@ -46,7 +56,3 @@ class SendEmailRequest {
     }
   }
 }
-
-module.exports = {
-  SendEmailRequest,
-};

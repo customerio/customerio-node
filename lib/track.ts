@@ -1,16 +1,25 @@
-const Request = require('./request');
-const { Region, RegionUS } = require('./regions');
-const { isEmpty } = require('./utils');
+import Request, { BasicAuth, RequestData, RequestDefaults } from './request';
+import { Region, RegionUS } from './regions';
+import { isEmpty } from './utils';
+
+type TrackDefaults = RequestDefaults & { region: Region; url?: string; apiUrl?: string };
 
 class MissingParamError extends Error {
-  constructor(param) {
+  constructor(param: string) {
     super(param);
     this.message = `${param} is required`;
   }
 }
 
-module.exports = class TrackClient {
-  constructor(siteid, apikey, defaults = {}) {
+export default class TrackClient {
+  siteid: BasicAuth['siteid'];
+  apikey: BasicAuth['apikey'];
+  defaults: TrackDefaults;
+  request: Request;
+  trackRoot: string;
+  apiRoot: string;
+
+  constructor(siteid: BasicAuth['siteid'], apikey: BasicAuth['apikey'], defaults: Partial<TrackDefaults> = {}) {
     if (defaults.region && !(defaults.region instanceof Region)) {
       throw new Error('region must be one of Regions.US or Regions.EU');
     }
@@ -24,7 +33,7 @@ module.exports = class TrackClient {
     this.apiRoot = this.defaults.apiUrl ? this.defaults.apiUrl : this.defaults.region.apiUrl;
   }
 
-  identify(customerId, data = {}) {
+  identify(customerId: string | number, data: RequestData = {}) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
     }
@@ -32,7 +41,7 @@ module.exports = class TrackClient {
     return this.request.put(`${this.trackRoot}/customers/${encodeURIComponent(customerId)}`, data);
   }
 
-  destroy(customerId) {
+  destroy(customerId: string | number) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
     }
@@ -40,7 +49,7 @@ module.exports = class TrackClient {
     return this.request.destroy(`${this.trackRoot}/customers/${encodeURIComponent(customerId)}`);
   }
 
-  suppress(customerId) {
+  suppress(customerId: string | number) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
     }
@@ -48,7 +57,7 @@ module.exports = class TrackClient {
     return this.request.post(`${this.trackRoot}/customers/${encodeURIComponent(customerId)}/suppress`);
   }
 
-  track(customerId, data = {}) {
+  track(customerId: string | number, data: RequestData = {}) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
     }
@@ -60,7 +69,7 @@ module.exports = class TrackClient {
     return this.request.post(`${this.trackRoot}/customers/${encodeURIComponent(customerId)}/events`, data);
   }
 
-  trackAnonymous(data = {}) {
+  trackAnonymous(data: RequestData = {}) {
     if (isEmpty(data.name)) {
       throw new MissingParamError('data.name');
     }
@@ -68,7 +77,7 @@ module.exports = class TrackClient {
     return this.request.post(`${this.trackRoot}/events`, data);
   }
 
-  trackPageView(customerId, path) {
+  trackPageView(customerId: string | number, path: string) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
     }
@@ -83,7 +92,7 @@ module.exports = class TrackClient {
     });
   }
 
-  addDevice(customerId, device_id, platform, data = {}) {
+  addDevice(customerId: string | number, device_id: string, platform: string, data = {}) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
     }
@@ -101,7 +110,7 @@ module.exports = class TrackClient {
     });
   }
 
-  deleteDevice(customerId, deviceToken) {
+  deleteDevice(customerId: string | number, deviceToken: string | number) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
     }
@@ -114,4 +123,4 @@ module.exports = class TrackClient {
       `${this.trackRoot}/customers/${encodeURIComponent(customerId)}/devices/${encodeURIComponent(deviceToken)}`,
     );
   }
-};
+}

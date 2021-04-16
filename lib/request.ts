@@ -1,8 +1,30 @@
-const request = require('request');
-const TIMEOUT = 10000;
+import request from 'request';
+import type { Request, RequiredUriUrl, RequestAPI, CoreOptions } from 'request';
 
-class Request {
-  constructor(auth, defaults) {
+export type BasicAuth = {
+  apikey: string;
+  siteid: string;
+};
+
+export type BearerAuth = string;
+
+export type RequestAuth = BasicAuth | BearerAuth;
+export type RequestDefaults = CoreOptions;
+export type RequestOptions = CoreOptions & RequiredUriUrl;
+export type RequestData = Record<string, any> | undefined;
+
+const TIMEOUT = 10_000;
+
+export default class CIORequest {
+  apikey?: BasicAuth['apikey'];
+  siteid?: BasicAuth['siteid'];
+  appKey?: BearerAuth;
+  auth: string;
+  defaults: RequestDefaults;
+
+  private request: RequestAPI<Request, CoreOptions, RequiredUriUrl>;
+
+  constructor(auth: RequestAuth, defaults?: RequestDefaults) {
     if (typeof auth === 'object') {
       this.apikey = auth.apikey;
       this.siteid = auth.siteid;
@@ -19,25 +41,26 @@ class Request {
       },
       defaults,
     );
-    this._request = request.defaults(this.defaults);
+
+    this.request = request.defaults(this.defaults);
   }
 
-  options(uri, method, data) {
+  options(uri: string, method: CoreOptions['method'], data?: RequestData) {
     const headers = {
       Authorization: this.auth,
       'Content-Type': 'application/json',
     };
     const body = data ? JSON.stringify(data) : null;
-    const options = { method, uri, headers, body };
+    const options: RequestOptions = { method, uri, headers, body };
 
     if (!body) delete options.body;
 
     return options;
   }
 
-  handler(options) {
+  handler(options: RequestOptions) {
     return new Promise((resolve, reject) => {
-      this._request(options, (error, response, body) => {
+      this.request(options, (error, response, body) => {
         if (error) return reject(error);
 
         let json = null;
@@ -62,17 +85,15 @@ class Request {
     });
   }
 
-  put(uri, data = {}) {
+  put(uri: string, data: RequestData = {}) {
     return this.handler(this.options(uri, 'PUT', data));
   }
 
-  destroy(uri) {
+  destroy(uri: string) {
     return this.handler(this.options(uri, 'DELETE'));
   }
 
-  post(uri, data = {}) {
+  post(uri: string, data: RequestData = {}) {
     return this.handler(this.options(uri, 'POST', data));
   }
 }
-
-module.exports = Request;

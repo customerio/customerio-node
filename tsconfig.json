@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "alwaysStrict": true,
+    "baseUrl": ".",
+    "declaration": true,
+    "esModuleInterop": true,
+    "inlineSourceMap": false,
+    "inlineSources": false,
+    "lib": ["es2020", "es2020.promise"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noEmit": false,
+    "noEmitOnError": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "outDir": "dist",
+    "paths": {},
+    "sourceMap": false,
+    "strict": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "target": "es2017"
+  },
+  "include": ["lib/**/*"]
+}
