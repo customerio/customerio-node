@@ -1,4 +1,4 @@
-# Customerio [![CircleCI](https://circleci.com/gh/customerio/customerio-node.svg?style=svg)](https://circleci.com/gh/customerio/customerio-node)
+# Customerio [![test](https://github.com/customerio/customerio-node/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/customerio-node/actions/workflows/main.yml)
 
 A node client for the Customer.io [REST API](https://learn.customer.io/api/).
 
@@ -22,7 +22,7 @@ let cio = new CIO(siteId, apiKey, { region: RegionUS }, [ defaults ]);
 
 Both the `siteId` and `apiKey` are **required** in order to create a Basic Authorization header, allowing us to associate the data with your account.
 
-Your account `region` is optional. If you do not specify your region, we assume that your account is based in the US (`RegionUS`). If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `RegionEU` accordingly, however this may cause data to be logged in the US. 
+Your account `region` is optional. If you do not specify your region, we assume that your account is based in the US (`RegionUS`). If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `RegionEU` accordingly, however this may cause data to be logged in the US.
 
 Optionally you can pass `defaults` as an object that will be passed to the underlying request instance. A list of the possible options are listed [here](https://github.com/request/request#requestoptions-callback).
 
@@ -200,9 +200,9 @@ To use the Customer.io [Transactional API](https://customer.io/docs/transactiona
 Create a new `SendEmailRequest` object containing:
 
 * `transactional_message_id`: the ID of the transactional message you want to send, or the `body`, `from`, and `subject` of a new message.
-* `to`: the email address of your recipients 
+* `to`: the email address of your recipients
 * an `identifiers` object containing the `id` of your recipient. If the `id` does not exist, Customer.io will create it.
-* a `message_data` object containing properties that you want reference in your message using Liquid. 
+* a `message_data` object containing properties that you want reference in your message using Liquid.
 * You can also send attachments with your message. Use `attach` to encode attachments.
 
 Use `sendEmail` referencing your request to send a transactional message. [Learn more about transactional messages and `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
