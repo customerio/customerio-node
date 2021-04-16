@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.0]
 ### Changed
-- (Breaking) Move triggerBroadcast method from Track to API class (#46)
+- (Breaking) Move triggerBroadcast method from Track to API class ([#46](https://github.com/customerio/customerio-node/pull/46))
 
 ## [1.1.0]
 ### Added
