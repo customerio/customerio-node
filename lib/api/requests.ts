@@ -1,49 +1,77 @@
-type Message = {
-  [key: string]: unknown;
-  headers: Record<string, string>;
-  attachments: Record<string, unknown>;
+type Identifiers = { id: string | number } | { email: string };
+
+type SendEmailRequestRequiredOptions = {
+  to: string;
+  identifiers: Identifiers;
 };
 
-const REQUIRED_FIELDS = Object.freeze(['to', 'identifiers']);
-const OPTIONAL_FIELDS = Object.freeze([
-  'transactional_message_id',
-  'message_data',
-  'headers',
-  'preheader',
-  'from',
-  'reply_to',
-  'bcc',
-  'subject',
-  'body',
-  'plaintext_body',
-  'amp_body',
-  'fake_bcc',
-  'disable_message_retention',
-  'send_to_unsubscribed',
-  'tracked',
-  'queue_draft',
-]);
+type SendEmailRequestOptionalOptions = Partial<{
+  message_data: Record<string, any>;
+  headers: Record<string, any>;
+  preheader: string;
+  reply_to: string;
+  bcc: string;
+  plaintext_body: string;
+  amp_body: string;
+  fake_bcc: string;
+  disable_message_retention: boolean;
+  send_to_unsubscribed: boolean;
+  tracked: boolean;
+  queue_draft: boolean;
+}>;
 
+type SendEmailRequestWithTemplate = SendEmailRequestRequiredOptions &
+  SendEmailRequestOptionalOptions & {
+    transactional_message_id: string | number;
+  };
+
+type SendEmailRequestWithoutTemplate = SendEmailRequestRequiredOptions &
+  SendEmailRequestOptionalOptions & {
+    body: string;
+    subject: string;
+    from: string;
+  };
+
+type SendEmailRequestOptions = SendEmailRequestWithTemplate | SendEmailRequestWithoutTemplate;
+
+type Message = Partial<SendEmailRequestWithTemplate & SendEmailRequestWithoutTemplate> & {
+  attachments: Record<string, string>;
+};
 export class SendEmailRequest {
   message: Message;
 
-  constructor(opts: Record<string, unknown>) {
+  constructor(opts: SendEmailRequestOptions) {
     this.message = {
-      headers: {},
+      to: opts.to,
+      identifiers: opts.identifiers,
       attachments: {},
+      message_data: opts.message_data,
+      headers: opts.headers || {},
+      preheader: opts.preheader,
+      reply_to: opts.reply_to,
+      bcc: opts.bcc,
+      plaintext_body: opts.plaintext_body,
+      amp_body: opts.amp_body,
+      fake_bcc: opts.fake_bcc,
+      disable_message_retention: opts.disable_message_retention,
+      send_to_unsubscribed: opts.send_to_unsubscribed,
+      tracked: opts.tracked,
+      queue_draft: opts.queue_draft,
     };
 
-    REQUIRED_FIELDS.forEach((field) => {
-      this.message[field] = opts[field];
-    });
+    if ('transactional_message_id' in opts) {
+      this.message.transactional_message_id = opts.transactional_message_id;
+    }
 
-    OPTIONAL_FIELDS.forEach((field) => {
-      this.message[field] = opts[field];
-    });
+    if ('from' in opts) {
+      this.message.from = opts.from;
+      this.message.subject = opts.subject;
+      this.message.body = opts.body;
+    }
   }
 
   // Use `any` for data here, because union types and overloads in Typescript
-  // don't work well together.
+  // don't work well together for `Buffer.from`.
   attach(name: string, data: any, { encode = true } = {}) {
     if (this.message.attachments[name]) {
       throw new Error(`attachment ${name} already exists`);
