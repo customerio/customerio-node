@@ -27,6 +27,14 @@ test('constructor sets correct URL for different regions', (t) => {
   });
 });
 
+test('constructor sets correct URL for a custom URL', (t) => {
+  let client = new APIClient('appKey', { url: 'https://example.com' });
+
+  t.is(client.appKey, 'appKey');
+  t.truthy(client.request);
+  t.is(client.apiRoot, 'https://example.com');
+});
+
 test('passing in an invalid region throws an error', (t) => {
   t.throws(
     () => {

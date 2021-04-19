@@ -44,6 +44,19 @@ test('constructor sets correct URL for different regions', (t) => {
   });
 });
 
+test('constructor sets correct URL for custom URLs', (t) => {
+  let client = new TrackClient('123', 'abc', { url: 'https://example.com/url', apiUrl: 'https://example.com/apiUrl' });
+
+  t.is(client.siteid, '123');
+  t.is(client.apikey, 'abc');
+  t.is(client.trackRoot, 'https://example.com/url');
+  t.is(client.apiRoot, 'https://example.com/apiUrl');
+
+  t.truthy(client.request);
+  t.is(client.request.siteid, '123');
+  t.is(client.request.apikey, 'abc');
+});
+
 test('passing in an invalid region throws an error', (t) => {
   t.throws(
     () => {
@@ -105,6 +118,7 @@ ID_INPUTS.forEach(([input, expected]) => {
 
 test('#trackAnonymous works', (t) => {
   sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.trackAnonymous(), { message: 'data.name is required' });
   t.throws(() => t.context.client.trackAnonymous({ data: {} }), { message: 'data.name is required' });
   t.context.client.trackAnonymous({ name: 'purchase', data: 'yep' });
   t.truthy(
@@ -135,6 +149,9 @@ ID_INPUTS.forEach(([input, expected]) => {
   test(`#addDevice works for ${input}`, (t) => {
     sinon.stub(t.context.client.request, 'put');
 
+    t.throws(() => t.context.client.addDevice(null as any, '', 'ios', { primary: true }), {
+      message: 'customerId is required',
+    });
     t.throws(() => t.context.client.addDevice(input, '', 'ios', { primary: true }), {
       message: 'device_id is required',
     });

@@ -18,6 +18,28 @@
       "ts-node/register"
     ]
   },
+  "nyc": {
+    "extension": [
+      ".ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "coverage/",
+      "test/"
+    ],
+    "reporter": [
+      "text"
+    ],
+    "cache": false,
+    "check-coverage": true,
+    "branches": 100,
+    "lines": 100,
+    "functions": 100,
+    "statements": 100
+  },
   "bugs": "https://github.com/customerio/customerio-node/issues",
   "dependencies": {
     "request": "^2.58.0"
