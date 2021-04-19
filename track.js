@@ -1,2 +1,2 @@
 const Track = require('./dist/track');
-module.exports = Track;
+module.exports = Track.default;

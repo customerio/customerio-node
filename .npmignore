@@ -1,5 +1,7 @@
 examples
 test
 CHANGELOG.md
-.travis.yml
 yarn.lock
+.nyc_output
+.github
+.prettierrc.js

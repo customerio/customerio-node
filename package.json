@@ -65,6 +65,7 @@
   "repository": "customerio/customerio-node",
   "scripts": {
     "test": "nyc ava",
-    "prepublish": "tsc -p ."
+    "build": "tsc -p tsconfig.json",
+    "prepublish": "npm run build"
   }
 }
