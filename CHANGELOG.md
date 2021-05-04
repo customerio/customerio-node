@@ -2,8 +2,12 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+## [2.1.0]
 
+### Changed
 - Upgrade `ini` from 1.3.5 to 1.3.8 ([#36](https://github.com/customerio/customerio-node/pull/36))
+
+### Added
 - Convert `customerio-node` to Typescript ([#49](https://github.com/customerio/customerio-node/pull/49))
 
 ## [2.0.0]
