@@ -1,2 +1,2 @@
-const Track = require('./lib/track');
-module.exports = Track;
+const Track = require('./dist/track');
+module.exports = Track.default;

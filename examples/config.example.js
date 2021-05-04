@@ -8,4 +8,4 @@ const config = {
   campaignId: '1',
 };
 
-export default config;
+module.exports = config;

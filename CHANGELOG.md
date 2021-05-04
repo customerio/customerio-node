@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+- Upgrade `ini` from 1.3.5 to 1.3.8 ([#36](https://github.com/customerio/customerio-node/pull/36))
+- Convert `customerio-node` to Typescript ([#49](https://github.com/customerio/customerio-node/pull/49))
+
 ## [2.0.0]
 ### Changed
 - (Breaking) Move triggerBroadcast method from Track to API class ([#46](https://github.com/customerio/customerio-node/pull/46))

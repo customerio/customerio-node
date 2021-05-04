@@ -1,2 +1,2 @@
-const Regions = require('./lib/regions');
+const Regions = require('./dist/regions');
 module.exports = Regions;

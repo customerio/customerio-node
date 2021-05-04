@@ -1,5 +1,9 @@
-const test = require('ava');
-const Request = require('../lib/request');
+import avaTest, { TestInterface } from 'ava';
+import Request from '../lib/request';
+
+type TestContext = { req: Request };
+
+const test = avaTest as TestInterface<TestContext>;
 
 // setup & fixture data
 const appKey = 'abc';
@@ -17,6 +21,6 @@ test('constructor sets all properties correctly', (t) => {
 });
 
 test('constructor sets default timeout correctly', (t) => {
-  const req = new Request();
+  const req = new Request(appKey);
   t.deepEqual(req.defaults, { timeout: 10000 });
 });
