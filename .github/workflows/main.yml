@@ -21,4 +21,5 @@ jobs:
           restore-keys: |
             customerio-${{ matrix.node }}
       - run: npm ci
+      - run: npm run build
       - run: npm test

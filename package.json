@@ -61,7 +61,8 @@
     "node"
   ],
   "license": "MIT",
-  "main": "track",
+  "main": "dist/track.js",
+  "typings": "dist/track.d.ts",
   "repository": "customerio/customerio-node",
   "scripts": {
     "test": "nyc ava",
