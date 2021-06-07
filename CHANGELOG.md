@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+## [2.1.1]
+
+### Changed
+- Fix exported typings for folks using `customerio-node` with Typescript ([#56](https://github.com/customerio/customerio-node/pull/56))
+
 ## [2.1.0]
 
 ### Changed
