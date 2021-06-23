@@ -24,7 +24,7 @@ Both the `siteId` and `apiKey` are **required** in order to create a Basic Autho
 
 Your account `region` is optional. If you do not specify your region, we assume that your account is based in the US (`RegionUS`). If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `RegionEU` accordingly, however this may cause data to be logged in the US.
 
-Optionally you can pass `defaults` as an object that will be passed to the underlying request instance. A list of the possible options are listed [here](https://github.com/request/request#requestoptions-callback).
+Optionally you can pass `defaults` as an object that will be passed to the underlying request instance. A list of the possible options are listed [here](https://nodejs.org/api/http.html#http_http_request_options_callback).
 
 This is useful to override the default 10s timeout. Example:
 
@@ -96,7 +96,7 @@ cio.track(1, {
 
 #### Options
 
-- **id**: String (requiredl)
+- **id**: String (required)
 - **data**: Object (required)
   - _name_ is a required key on the Object
   - _data_ is an optional key for additional data sent over with the event

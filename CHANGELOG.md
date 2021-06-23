@@ -3,9 +3,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-- (**BREAKING**) Remove the dependency on `request`
-- (**BREAKING**) Return an `Error` instance for non-`2XX` status codes
-- Return a readable message when the server returns an array of errors instead of `Unknown error`
+- (**BREAKING**) Remove the dependency on `request` ([#62](https://github.com/customerio/customerio-node/pull/62))
+  - We don't expect this to break many consumers of `customerio-node`. Unless you were using [`request`](https://github.com/request/request#requestoptions-callback) specific options, you don't need to make any changes.
+
+- (**BREAKING**) Return an `Error` instance for non-`2XX` status codes ([#62](https://github.com/customerio/customerio-node/pull/62))
+  - We don't expect this to break many consumers of `customerio-node`. Unless you were using `instanceof` to check the type of error returned from track or api methods, you don't need to make any changed. `message`, `statusCode`, `response`, and `body` are still accessible as properties on the error.
+  
+- Return a readable message when the server returns an array of errors instead of `Unknown error` ([#62](https://github.com/customerio/customerio-node/pull/62))
 
 ## [2.1.1]
 
