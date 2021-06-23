@@ -1,9 +1,10 @@
 import avaTest, { TestInterface } from 'ava';
-import { RequestOptions } from 'node:https';
+import https, { RequestOptions } from 'https';
 import sinon, { SinonStub } from 'sinon';
+import { PassThrough } from 'stream';
 import Request from '../lib/request';
 
-type TestContext = { req: Request };
+type TestContext = { req: Request; httpsReq: sinon.SinonStub };
 
 const test = avaTest as TestInterface<TestContext>;
 
@@ -18,15 +19,56 @@ const baseOptions = {
   headers: {
     Authorization: auth,
     'Content-Type': 'application/json',
+    'Content-Length': 0,
   },
 };
 const putOptions = Object.assign({}, baseOptions, {
   method: 'PUT',
   body: JSON.stringify(data),
+  headers: Object.assign({}, baseOptions.headers, {
+    'Content-Length': JSON.stringify(data).length,
+  }),
+});
+
+const createMockRequest = (
+  httpsReq: SinonStub,
+  statusCode: number,
+  body: Record<string, any> | string | null = '',
+  error?: Error,
+): SinonStub => {
+  const response = new PassThrough();
+  const request = new PassThrough();
+
+  // Don't start writing response until request has ended
+  // Use `finish` here, because calling `.end()` on a `PassThrough` doesn't emit the `end` event
+  // https://stackoverflow.com/questions/41155877/node-js-passthrough-stream-not-closing-properly
+  request.on('finish', () => {
+    // Cast to any because PassThrough doesn't have ClientResponse properties types
+    (response as any).statusCode = statusCode;
+    if (error) {
+      request.destroy(error);
+    } else {
+      response.write(typeof body === 'object' ? JSON.stringify(body) : body);
+      response.end();
+    }
+  });
+
+  // Cast to any because PassThrough doesn't conform to ClientRequest
+  httpsReq.callsArgWith(2, response).returns(request as any);
+
+  return httpsReq;
+};
+
+test.before((t) => {
+  t.context.httpsReq = sinon.stub(https, 'request');
 });
 
 test.beforeEach((t) => {
   t.context.req = new Request({ siteid: '123', apikey: 'abc' }, { timeout: 5000 });
+});
+
+test.after((t) => {
+  t.context.httpsReq.restore();
 });
 
 // tests begin here
@@ -43,23 +85,21 @@ test('constructor sets default timeout correctly', (t) => {
 });
 
 test('#options returns a correctly formatted object', (t) => {
-  const expectedOptions = Object.assign(baseOptions, { method: 'POST' });
+  const expectedOptions = Object.assign({}, baseOptions, { method: 'POST', body: null });
   const resultOptions = t.context.req.options(uri, 'POST');
 
   t.deepEqual(resultOptions, expectedOptions);
 });
 
 test('#handler returns a promise', (t) => {
+  createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.handler(putOptions);
-  (t.context.req as any).request = () => {};
   t.is(promise.constructor.name, 'Promise');
 });
 
 test('#handler makes a request and resolves a promise on success', async (t) => {
   const body = {};
-  (t.context.req as any).request = (_: RequestOptions, cb: (...args: any[]) => unknown) => {
-    cb(null, { statusCode: 200 }, JSON.stringify(body));
-  };
+  createMockRequest(t.context.httpsReq, 200, body);
 
   try {
     const res = await t.context.req.handler(putOptions);
@@ -75,15 +115,13 @@ test('#handler makes a request and rejects with an error on failure', async (t) 
     ...{
       uri: 'https://track.customer.io/api/v1/customers/1/events',
       body: JSON.stringify({ title: 'The Batman' }),
+      method: 'POST',
     },
   };
 
   const message = 'test error message';
   const body = { meta: { error: message } };
-
-  (t.context.req as any).request = (_: RequestOptions, cb: (...args: any[]) => unknown) => {
-    cb(null, { statusCode: 400 }, JSON.stringify(body));
-  };
+  createMockRequest(t.context.httpsReq, 400, body);
 
   try {
     await t.context.req.handler(customOptions);
@@ -98,11 +136,10 @@ test('#handler makes a request and rejects with `null` as body', async (t) => {
   const customOptions = Object.assign({}, baseOptions, {
     uri: 'https://track.customer.io/api/v1/customers/1/events',
     body: JSON.stringify({ title: 'The Batman' }),
+    method: 'POST',
   });
 
-  (t.context.req as any).request = (_: RequestOptions, cb: (...args: any[]) => unknown) => {
-    cb(null, { statusCode: 500 });
-  };
+  createMockRequest(t.context.httpsReq, 500, null);
 
   try {
     await t.context.req.handler(customOptions);
@@ -117,11 +154,10 @@ test('#handler makes a request and rejects with a bad JSON response', async (t) 
   const customOptions = Object.assign({}, baseOptions, {
     uri: 'https://track.customer.io/api/v1/customers/1/events',
     body: JSON.stringify({ title: 'The Batman' }),
+    method: 'POST',
   });
 
-  (t.context.req as any).request = (_: RequestOptions, cb: (...args: any[]) => unknown) => {
-    cb(null, { statusCode: 200 }, '<html></html>');
-  };
+  createMockRequest(t.context.httpsReq, 200, '<html></html>');
 
   try {
     await t.context.req.handler(customOptions);
@@ -141,6 +177,7 @@ test('#handler makes a request and rejects with timeout error', async (t) => {
     body: JSON.stringify(data),
     timeout: 1,
   });
+  createMockRequest(t.context.httpsReq, 200, null, new Error('ETIMEDOUT'));
 
   try {
     await t.context.req.handler(customOptions);
@@ -152,31 +189,44 @@ test('#handler makes a request and rejects with timeout error', async (t) => {
 });
 
 test('#put calls the handler, makes PUT request with the correct args', (t) => {
+  createMockRequest(t.context.httpsReq, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.put(uri, data);
   t.truthy((t.context.req.handler as SinonStub).calledWith(putOptions));
 });
 
 test('#put calls the handler, makes PUT request with default data', (t) => {
+  createMockRequest(t.context.httpsReq, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.put(uri);
-  t.truthy((t.context.req.handler as SinonStub).calledWith({ ...putOptions, body: JSON.stringify({}) }));
+  t.truthy(
+    (t.context.req.handler as SinonStub).calledWith({
+      ...putOptions,
+      body: JSON.stringify({}),
+      headers: Object.assign({}, baseOptions.headers, {
+        'Content-Length': 2,
+      }),
+    }),
+  );
 });
 
 test('#put returns the promise generated by the handler', (t) => {
+  createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.put(uri, data);
   t.is(promise.constructor.name, 'Promise');
 });
 
-const deleteOptions = Object.assign({}, baseOptions, { method: 'DELETE' });
+const deleteOptions = Object.assign({}, baseOptions, { method: 'DELETE', body: null });
 
 test('#destroy calls the handler, makes a DELETE request with the correct args', (t) => {
+  createMockRequest(t.context.httpsReq, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.destroy(uri);
   t.truthy((t.context.req.handler as SinonStub).calledWith(deleteOptions));
 });
 
 test('#destroy returns the promise generated by the handler', (t) => {
+  createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.destroy(uri);
   t.is(promise.constructor.name, 'Promise');
 });
@@ -184,15 +234,20 @@ test('#destroy returns the promise generated by the handler', (t) => {
 const postOptions = Object.assign({}, baseOptions, {
   method: 'POST',
   body: JSON.stringify(data),
+  headers: Object.assign({}, baseOptions.headers, {
+    'Content-Length': JSON.stringify(data).length,
+  }),
 });
 
 test('#post calls the handler, makes a POST request with the correct args', (t) => {
+  createMockRequest(t.context.httpsReq, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.post(uri, data);
   t.truthy((t.context.req.handler as SinonStub).calledWith(postOptions));
 });
 
 test('#post returns the promise generated by the handler', (t) => {
+  createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.post(uri);
   t.is(promise.constructor.name, 'Promise');
 });
