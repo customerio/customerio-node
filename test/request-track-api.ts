@@ -32,7 +32,7 @@ const putOptions = Object.assign({}, baseOptions, {
 
 const createMockRequest = (
   httpsReq: SinonStub,
-  statusCode: number,
+  statusCode: number | null,
   body: Record<string, any> | string | null = '',
   error?: Error,
 ): SinonStub => {
@@ -129,6 +129,108 @@ test('#handler makes a request and rejects with an error on failure', async (t) 
     t.fail();
   } catch (err) {
     t.is(err.message, message);
+  }
+});
+
+test('#handler makes a request and rejects with an error on failure that has an error array with multiple errors', async (t) => {
+  const customOptions = {
+    ...baseOptions,
+    ...{
+      uri: 'https://track.customer.io/api/v1/customers/1/events',
+      body: JSON.stringify({ title: 'The Batman' }),
+      method: 'POST',
+    },
+  };
+
+  const messageOne = 'test error message one';
+  const messageTwo = 'test error message two';
+  const body = { meta: { errors: [messageOne, messageTwo] } };
+  createMockRequest(t.context.httpsReq, 400, body);
+
+  try {
+    await t.context.req.handler(customOptions);
+
+    t.fail();
+  } catch (err) {
+    t.is(
+      err.message,
+      `2 errors:
+  - ${messageOne}
+  - ${messageTwo}`,
+    );
+  }
+});
+
+test('#handler makes a request and rejects with an error on failure that has an error array with one error', async (t) => {
+  const customOptions = {
+    ...baseOptions,
+    ...{
+      uri: 'https://track.customer.io/api/v1/customers/1/events',
+      body: JSON.stringify({ title: 'The Batman' }),
+      method: 'POST',
+    },
+  };
+
+  const message = 'test error message';
+  const body = { meta: { errors: [message] } };
+  createMockRequest(t.context.httpsReq, 400, body);
+
+  try {
+    await t.context.req.handler(customOptions);
+
+    t.fail();
+  } catch (err) {
+    t.is(
+      err.message,
+      `1 error:
+  - ${message}`,
+    );
+  }
+});
+
+test('#handler makes a request and rejects with an error on failure that has an unexpected structure', async (t) => {
+  const customOptions = {
+    ...baseOptions,
+    ...{
+      uri: 'https://track.customer.io/api/v1/customers/1/events',
+      body: JSON.stringify({ title: 'The Batman' }),
+      method: 'POST',
+    },
+  };
+
+  const message = 'test error message';
+  const body = { error: message };
+  createMockRequest(t.context.httpsReq, 400, body);
+
+  try {
+    await t.context.req.handler(customOptions);
+
+    t.fail();
+  } catch (err) {
+    t.is(err.message, 'Unknown error');
+  }
+});
+
+test('#handler makes a request and rejects with an error on failure and has no status code', async (t) => {
+  const customOptions = {
+    ...baseOptions,
+    ...{
+      uri: 'https://track.customer.io/api/v1/customers/1/events',
+      body: JSON.stringify({ title: 'The Batman' }),
+      method: 'POST',
+    },
+  };
+
+  const message = 'test error message';
+  const body = { meta: { error: message } };
+  createMockRequest(t.context.httpsReq, null, body);
+
+  try {
+    await t.context.req.handler(customOptions);
+
+    t.fail();
+  } catch (err) {
+    t.is(err.statusCode, 0);
   }
 });
 

@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+- (**BREAKING**) Remove the dependency on `request`
+- (**BREAKING**) Return an `Error` instance for non-`2XX` status codes
+- Return a readable message when the server returns an array of errors instead of `Unknown error`
+
 ## [2.1.1]
 
 ### Changed

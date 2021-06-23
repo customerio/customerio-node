@@ -1,5 +1,6 @@
 import { request } from 'https';
 import type { RequestOptions } from 'https';
+import { CustomerIORequestError } from './utils';
 
 export type BasicAuth = {
   apikey: string;
@@ -83,12 +84,7 @@ export default class CIORequest {
           if (res.statusCode == 200 || res.statusCode == 201) {
             resolve(json);
           } else {
-            reject({
-              message: (json && json.meta && json.meta.error) || 'Unknown error',
-              statusCode: res.statusCode,
-              response: res,
-              body: body,
-            });
+            reject(new CustomerIORequestError(json, res.statusCode || 0, res, body));
           }
         });
       });
