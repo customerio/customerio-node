@@ -12,7 +12,7 @@ class MissingParamError extends Error {
   }
 }
 
-export default class TrackClient {
+export class TrackClient {
   siteid: BasicAuth['siteid'];
   apikey: BasicAuth['apikey'];
   defaults: TrackDefaults;
