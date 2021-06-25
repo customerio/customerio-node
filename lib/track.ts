@@ -1,8 +1,9 @@
-import Request, { BasicAuth, RequestData, RequestDefaults } from './request';
+import type { RequestOptions } from 'https';
+import Request, { BasicAuth, RequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty } from './utils';
 
-type TrackDefaults = RequestDefaults & { region: Region; url?: string; apiUrl?: string };
+type TrackDefaults = RequestOptions & { region: Region; url?: string; apiUrl?: string };
 
 class MissingParamError extends Error {
   constructor(param: string) {

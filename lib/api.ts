@@ -1,8 +1,9 @@
-import Request, { BearerAuth, RequestData, RequestDefaults } from './request';
+import type { RequestOptions } from 'https';
+import Request, { BearerAuth, RequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { SendEmailRequest } from './api/requests';
 
-type APIDefaults = RequestDefaults & { region: Region; url?: string };
+type APIDefaults = RequestOptions & { region: Region; url?: string };
 
 type Recipients = Record<string, unknown>;
 

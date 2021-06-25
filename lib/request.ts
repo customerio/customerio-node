@@ -1,5 +1,6 @@
-import request from 'request';
-import type { Request, RequiredUriUrl, RequestAPI, CoreOptions } from 'request';
+import { request } from 'https';
+import type { RequestOptions } from 'https';
+import { CustomerIORequestError } from './utils';
 
 export type BasicAuth = {
   apikey: string;
@@ -9,9 +10,13 @@ export type BasicAuth = {
 export type BearerAuth = string;
 
 export type RequestAuth = BasicAuth | BearerAuth;
-export type RequestDefaults = CoreOptions;
-export type RequestOptions = CoreOptions & RequiredUriUrl;
 export type RequestData = Record<string, any> | undefined;
+export type RequestHandlerOptions = {
+  method: RequestOptions['method'];
+  uri: string;
+  headers: RequestOptions['headers'];
+  body?: string | null;
+};
 
 const TIMEOUT = 10_000;
 
@@ -20,11 +25,9 @@ export default class CIORequest {
   siteid?: BasicAuth['siteid'];
   appKey?: BearerAuth;
   auth: string;
-  defaults: RequestDefaults;
+  defaults: RequestOptions;
 
-  private request: RequestAPI<Request, CoreOptions, RequiredUriUrl>;
-
-  constructor(auth: RequestAuth, defaults?: RequestDefaults) {
+  constructor(auth: RequestAuth, defaults?: RequestOptions) {
     if (typeof auth === 'object') {
       this.apikey = auth.apikey;
       this.siteid = auth.siteid;
@@ -41,47 +44,60 @@ export default class CIORequest {
       },
       defaults,
     );
-
-    this.request = request.defaults(this.defaults);
   }
 
-  options(uri: string, method: CoreOptions['method'], data?: RequestData) {
+  options(uri: string, method: RequestOptions['method'], data?: RequestData): RequestHandlerOptions {
+    const body = data ? JSON.stringify(data) : null;
     const headers = {
       Authorization: this.auth,
       'Content-Type': 'application/json',
+      'Content-Length': body ? body.length : 0,
     };
-    const body = data ? JSON.stringify(data) : null;
-    const options: RequestOptions = { method, uri, headers, body };
 
-    if (!body) delete options.body;
-
-    return options;
+    return { method, uri, headers, body };
   }
 
-  handler(options: RequestOptions) {
+  handler({ uri, body, method, headers }: RequestHandlerOptions): Promise<Record<string, any>> {
     return new Promise((resolve, reject) => {
-      this.request(options, (error, response, body) => {
-        if (error) return reject(error);
+      let options = Object.assign({}, this.defaults, { method, headers });
+      let req = request(uri, options, (res) => {
+        let chunks: Buffer[] = [];
 
-        let json = null;
-        try {
-          if (body) json = JSON.parse(body);
-        } catch (e) {
-          const message = `Unable to parse JSON. Error: ${e} \nBody:\n ${body}`;
-          return reject(new Error(message));
-        }
+        res.on('data', (data: Buffer) => {
+          chunks.push(data);
+        });
 
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          resolve(json);
-        } else {
-          reject({
-            message: (json && json.meta && json.meta.error) || 'Unknown error',
-            statusCode: response.statusCode,
-            response: response,
-            body: body,
-          });
-        }
+        res.on('end', () => {
+          let body = Buffer.concat(chunks).toString('utf-8');
+          let json = null;
+
+          try {
+            if (body && body.length) {
+              json = JSON.parse(body);
+            }
+          } catch (error) {
+            const message = `Unable to parse JSON. Error: ${error} \nBody:\n ${body}`;
+
+            return reject(new Error(message));
+          }
+
+          if (res.statusCode == 200 || res.statusCode == 201) {
+            resolve(json);
+          } else {
+            reject(new CustomerIORequestError(json, res.statusCode || 0, res, body));
+          }
+        });
       });
+
+      req.on('error', (error: any) => {
+        reject(error);
+      });
+
+      if (body) {
+        req.write(body);
+      }
+
+      req.end();
     });
   }
 
