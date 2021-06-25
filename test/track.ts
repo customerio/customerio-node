@@ -1,6 +1,6 @@
 import avaTest, { TestInterface } from 'ava';
 import sinon, { SinonStub } from 'sinon';
-import TrackClient from '../lib/track';
+import { TrackClient } from '../lib/track';
 import { RegionUS, RegionEU } from '../lib/regions';
 
 type TestContext = { client: TrackClient };
