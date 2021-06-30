@@ -118,11 +118,13 @@ ID_INPUTS.forEach(([input, expected]) => {
 
 test('#trackAnonymous works', (t) => {
   sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.trackAnonymous(''), { message: 'anonymousId is required' });
   t.throws(() => t.context.client.trackAnonymous('123'), { message: 'data.name is required' });
   t.throws(() => t.context.client.trackAnonymous('123', { data: {} }), { message: 'data.name is required' });
   t.context.client.trackAnonymous('123', { name: 'purchase', data: 'yep' });
   t.truthy(
     (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/events`, {
+      anonymous_id: '123',
       name: 'purchase',
       data: 'yep',
     }),
