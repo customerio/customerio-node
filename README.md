@@ -104,7 +104,9 @@ cio.track(1, {
 
 ### cio.trackAnonymous(anonymous_id, data)
 
-Track an anonymous event. An anonymous event is an event associated with a person you haven't identified. The event requires an `anonymous_id` representing the unknown person. When you identify a person, you can set their anonymous_id attribute. If the attribute matches the `anonymous_id` in one or more events that were logged within the last 30 days, we associate those events with the person.
+Track an anonymous event. An anonymous event is an event associated with a person you haven't identified, requiring an `anonymous_id` representing the unknown person and an event `name`. When you identify a person, you can set their `anonymous_id` attribute. If [event merging](https://customer.io/docs/anonymous-events/#turn-on-merging) is turned on in your workspace, and the attribute matches the `anonymous_id` in one or more events that were logged within the last 30 days, we associate those events with the person.
+
+Anonymous events cannot trigger campaigns. If you associate an event with a person within 72 hours of the event timestamp, however, a formerly anonymous event can trigger a campaign.
 
 ```javascript
 cio.trackAnonymous(anonymous_id, {
