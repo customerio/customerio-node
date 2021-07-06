@@ -13,6 +13,11 @@ All notable changes to this project will be documented in this file.
   
 - Return a readable message when the server returns an array of errors instead of `Unknown error` ([#62](https://github.com/customerio/customerio-node/pull/62))
 
+## [2.2.0]
+
+### Changed
+- (Breaking) `trackAnonymous` now requires an `anonymous_id` and cannot trigger campaigns. If you previously used anonymous events to trigger campaigns, you can still do so [directly through the API](https://customer.io/docs/api/#operation/trackAnonymous). We now refer to anonymous events that trigger campaigns as "invite events". 
+
 ## [2.1.1]
 
 ### Changed

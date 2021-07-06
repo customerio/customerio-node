@@ -5,6 +5,7 @@ const config = {
   customerId: '1',
   customerEmail: 'ami@customer.io',
   transactionalMessageId: '1',
+  anonymousId: 'anon',
   campaignId: '1',
 };
 

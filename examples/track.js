@@ -4,6 +4,7 @@ const { TrackClient, RegionUS, RegionEU } = require('../index');
 const siteId = require('./config').siteId;
 const apiKey = require('./config').apiKey;
 const customerId = require('./config').customerId;
+const anonymousId = require('./config').anonymousId;
 const cio = new TrackClient(siteId, apiKey, { region: RegionUS });
 
 cio.track(customerId, {
@@ -14,7 +15,7 @@ cio.track(customerId, {
   },
 });
 
-cio.trackAnonymous({
+cio.trackAnonymous(anonymousId, {
   name: 'purchase',
   data: {
     price: '23.45',
