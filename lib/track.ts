@@ -70,12 +70,16 @@ export class TrackClient {
     return this.request.post(`${this.trackRoot}/customers/${encodeURIComponent(customerId)}/events`, data);
   }
 
-  trackAnonymous(data: RequestData = {}) {
+  trackAnonymous(anonymousId: string | number, data: RequestData = {}) {
+    if (isEmpty(anonymousId)) {
+      throw new MissingParamError('anonymousId');
+    }
+
     if (isEmpty(data.name)) {
       throw new MissingParamError('data.name');
     }
 
-    return this.request.post(`${this.trackRoot}/events`, data);
+    return this.request.post(`${this.trackRoot}/events`, { ...data, anonymous_id: anonymousId });
   }
 
   trackPageView(customerId: string | number, path: string) {
