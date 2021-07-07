@@ -1,10 +1,8 @@
 const fs = require('fs');
 
-// In actual use require the node module: let APIClient = require('customerio-node/api');
-const { APIClient, SendEmailRequest } = require('../api');
-
-// In actual use, specify your specific region and require node module: const { RegionUS, RegionEU } = require('customerio-node/regions')
-const { RegionUS, RegionEU } = require('../regions');
+// In actual use require the node module:
+// const { APIClient, SendEmailRequest } = require('customerio-node');
+const { APIClient, SendEmailRequest } = require('../index');
 const { appKey, transactionalMessageId, customerEmail } = require('./config');
 
 const api = new APIClient(appKey, { region: RegionUS });

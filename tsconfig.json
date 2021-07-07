@@ -26,5 +26,5 @@
     "strictPropertyInitialization": true,
     "target": "es2017"
   },
-  "include": ["lib/**/*"]
+  "include": ["index.ts", "lib/**/*"]
 }

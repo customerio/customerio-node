@@ -15,21 +15,20 @@ npm i --save customerio-node
 To start using the library, you first need to create an instance of the CIO class:
 
 ```javascript
-const CIO = require("customerio-node");
-const { RegionUS, RegionEU } = require("customerio-node/regions");
-let cio = new CIO(siteId, apiKey, { region: RegionUS }, [defaults]);
+const { TrackClient, RegionUS, RegionEU } = require("customerio-node");
+let cio = new TrackClient(siteId, apiKey, { region: RegionUS }, [defaults]);
 ```
 
-Both the `siteId` and `apiKey` are **required** in order to create a Basic Authorization header, allowing us to associate the data with your account.
+Both the `siteId` and `apiKey` are **required** to create a Basic Authorization header, allowing us to associate the data with your account.
 
-Your account `region` is optional. If you do not specify your region, we assume that your account is based in the US (`RegionUS`). If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `RegionEU` accordingly, however this may cause data to be logged in the US.
+Your account `region` is optional. If you do not specify your region, the default will be the US region (`RegionUS`). If your account is in the EU and you do not provide the correct region, we'll route requests from the US to `RegionEU` accordingly. This may cause data to be logged in the US.
 
-Optionally you can pass `defaults` as an object that will be passed to the underlying request instance. A list of the possible options are listed [here](https://nodejs.org/api/http.html#http_http_request_options_callback).
+Optionally you can pass `defaults` as an object that will forwarded to the underlying request instance. The [node `http` docs](https://nodejs.org/api/http.html#http_http_request_options_callback) has a list of the possible options.
 
 This is useful to override the default 10s timeout. Example:
 
 ```
-const cio = new CIO(123, 'abc', {
+const cio = new TrackClient(123, 'abc', {
   timeout: 5000
 });
 ```
@@ -74,7 +73,7 @@ cio.destroy(1);
 
 ### cio.track(id, data)
 
-The track method will trigger events within Customer.io. When sending data along with your event, it is required to send a name key/value pair in you data object.
+The track method will trigger events within Customer.io. Customer.io requires a name key/value pair in you data object when sending data along with your event.
 
 **Simple event tracking**
 
@@ -103,12 +102,14 @@ cio.track(1, {
 
 ---
 
-### cio.trackAnonymous(data)
+### cio.trackAnonymous(anonymous_id, data)
 
-Anonymous event tracking does not require a customer ID and these events will not be associated with a tracked profile in Customer.io
+Track an anonymous event. An anonymous event is an event associated with a person you haven't identified, requiring an `anonymous_id` representing the unknown person and an event `name`. When you identify a person, you can set their `anonymous_id` attribute. If [event merging](https://customer.io/docs/anonymous-events/#turn-on-merging) is turned on in your workspace, and the attribute matches the `anonymous_id` in one or more events that were logged within the last 30 days, we associate those events with the person.
+
+Anonymous events cannot trigger campaigns. If you associate an event with a person within 72 hours of the event timestamp, however, a formerly anonymous event can trigger a campaign.
 
 ```javascript
-cio.trackAnonymous({
+cio.trackAnonymous(anonymous_id, {
   name: "updated",
   data: {
     updated: true,
@@ -119,6 +120,7 @@ cio.trackAnonymous({
 
 #### Options
 
+- **anonymous_id**: String or number (required)
 - **data**: Object (required)
   - _name_ is a required key on the Object
   - _data_ is an optional key for additional data sent over with the event
@@ -196,6 +198,22 @@ cio.identify(customerId, { first_name: "Finn" }).then(() => {
 });
 ```
 
+or use `async/await`:
+
+```javascript
+const customerId = 1;
+
+await cio.identify(customerId, { first_name: "Finn" });
+
+return cio.track(customerId, {
+  name: "updated",
+  data: {
+    updated: true,
+    plan: "free",
+  },
+});
+```
+
 ### Transactional API
 
 To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), import our API client and initialize it with an [app key](https://customer.io/docs/managing-credentials#app-api-keys).
@@ -212,9 +230,8 @@ Use `sendEmail` referencing your request to send a transactional message. [Learn
 
 ```javascript
 const fs = require("fs");
-const { APIClient, SendEmailRequest } = require("customerio-node/api");
-const { RegionUS, RegionEU } = require("customerio-node/regions");
-let api = new APIClient("app-key", { region: RegionUS });
+const { APIClient, SendEmailRequest, RegionUS, RegionEU } = require("customerio-node");
+const api = new APIClient("app-key", { region: RegionUS });
 
 const request = new SendEmailRequest({
   to: "person@example.com",

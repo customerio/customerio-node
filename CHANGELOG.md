@@ -9,7 +9,14 @@ All notable changes to this project will be documented in this file.
 - (**BREAKING**) Return an `Error` instance for non-`2XX` status codes ([#62](https://github.com/customerio/customerio-node/pull/62))
   - We don't expect this to break many consumers of `customerio-node`. Unless you were using `instanceof` to check the type of error returned from track or api methods, you don't need to make any changed. `message`, `statusCode`, `response`, and `body` are still accessible as properties on the error.
   
+- (**BREAKING**) Restructure the package to have a single entry point, rather than three. This is more of a standard package structure, and is more future-proof. ([#63](https://github.com/customerio/customerio-node/pull/63))
+  
 - Return a readable message when the server returns an array of errors instead of `Unknown error` ([#62](https://github.com/customerio/customerio-node/pull/62))
+
+## [3.0.0]
+
+### Changed
+- (Breaking) `trackAnonymous` now requires an `anonymous_id` and cannot trigger campaigns. If you previously used anonymous events to trigger campaigns, you can still do so [directly through the API](https://customer.io/docs/api/#operation/trackAnonymous). We now refer to anonymous events that trigger campaigns as "invite events". 
 
 ## [2.1.1]
 
