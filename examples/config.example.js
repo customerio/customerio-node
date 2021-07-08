@@ -7,6 +7,7 @@ const config = {
   transactionalMessageId: '1',
   anonymousId: 'anon',
   campaignId: '1',
+  segmentId: '1',
 };
 
 module.exports = config;
