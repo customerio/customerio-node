@@ -91,6 +91,23 @@ test('#options returns a correctly formatted object', (t) => {
   t.deepEqual(resultOptions, expectedOptions);
 });
 
+test('#options sets Content-Length using body length in bytes', (t) => {
+  const body = { first_name: 'Wïly Wönka' };
+  const method = 'POST'
+  const expectedOptions = {
+    ...baseOptions,
+    method,
+    headers: {
+      ...baseOptions.headers,
+      'Content-Length': 29,
+    },
+    body: JSON.stringify(body),
+  };
+  const resultOptions = t.context.req.options(uri, method, body);
+
+  t.deepEqual(resultOptions, expectedOptions);
+});
+
 test('#handler returns a promise', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.handler(putOptions);
