@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.0.1]
+
+- Fix an issue calculating the content length of multi-byte utf-8 string characters ([#69](https://github.com/customerio/customerio-node/pull/69))
+
 ## [3.0.0]
 
 - (**BREAKING**) Remove the dependency on `request` ([#62](https://github.com/customerio/customerio-node/pull/62))
