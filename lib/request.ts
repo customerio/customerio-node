@@ -51,7 +51,7 @@ export default class CIORequest {
     const headers = {
       Authorization: this.auth,
       'Content-Type': 'application/json',
-      'Content-Length': body ? Buffer.from(body).length : 0,
+      'Content-Length': body ? Buffer.byteLength(body,'utf8') : 0,
     };
 
     return { method, uri, headers, body };
