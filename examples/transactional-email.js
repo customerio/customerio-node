@@ -2,7 +2,7 @@ const fs = require('fs');
 
 // In actual use require the node module:
 // const { APIClient, SendEmailRequest } = require('customerio-node');
-const { APIClient, SendEmailRequest } = require('../index');
+const { APIClient, SendEmailRequest, RegionUS } = require('../dist/index');
 const { appKey, transactionalMessageId, customerEmail } = require('./config');
 
 const api = new APIClient(appKey, { region: RegionUS });

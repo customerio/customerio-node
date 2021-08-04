@@ -16,19 +16,19 @@ To start using the library, you first need to create an instance of the CIO clas
 
 ```javascript
 const { TrackClient, RegionUS, RegionEU } = require("customerio-node");
-let cio = new TrackClient(siteId, apiKey, { region: RegionUS }, [defaults]);
+let cio = new TrackClient(siteId, apiKey, { region: RegionUS });
 ```
 
 Both the `siteId` and `apiKey` are **required** to create a Basic Authorization header, allowing us to associate the data with your account.
 
 Your account `region` is optional. If you do not specify your region, the default will be the US region (`RegionUS`). If your account is in the EU and you do not provide the correct region, we'll route requests from the US to `RegionEU` accordingly. This may cause data to be logged in the US.
 
-Optionally you can pass `defaults` as an object that will forwarded to the underlying request instance. The [node `http` docs](https://nodejs.org/api/http.html#http_http_request_options_callback) has a list of the possible options.
+Optionally you can specify `defaults` that will forwarded to the underlying request instance. The [node `http` docs](https://nodejs.org/api/http.html#http_http_request_options_callback) has a list of the possible options.
 
 This is useful to override the default 10s timeout. Example:
 
 ```
-const cio = new TrackClient(123, 'abc', {
+const cio = new TrackClient('123', 'abc', {
   timeout: 5000
 });
 ```
@@ -50,7 +50,7 @@ cio.identify(1, {
 
 #### Options
 
-- **id**: String (required)
+- **id**: String or number (required)
 - **data**: Object (optional)
   - _email_ is a required key if you intend to send email messages
   - _created_at_ is a required key if you want to segment based on signed up/created date
@@ -67,7 +67,7 @@ cio.destroy(1);
 
 #### Options
 
-- **id**: String (required)
+- **id**: String or number (required)
 
 ---
 
@@ -95,7 +95,7 @@ cio.track(1, {
 
 #### Options
 
-- **id**: String (required)
+- **id**: String or number (required)
 - **data**: Object (required)
   - _name_ is a required key on the Object
   - _data_ is an optional key for additional data sent over with the event
@@ -137,7 +137,7 @@ cio.trackPageView(1, "/home");
 
 #### Options
 
-- **id**: String (required)
+- **id**: String or number (required)
 - **url**: String (required)
 
 ### cio.addDevice(id, device_id, platform, data)
@@ -150,7 +150,7 @@ cio.addDevice(1, "device_id", "ios", { primary: true });
 
 #### Options
 
-- **customer_id**: String (required)
+- **customer_id**: String or number (required)
 - **device_id**: String (required)
 - **platform**: String (required)
 - **data**: Object (optional)
@@ -165,7 +165,7 @@ cio.deleteDevice(1, "device_token");
 
 #### Options
 
-- **customer_id**: String (required)
+- **customer_id**: String or number (required)
 - **device_token**: String (required)
 
 ### cio.suppress(id)
@@ -178,7 +178,7 @@ cio.suppress(1);
 
 #### Options
 
-- **customer_id**: String (required)
+- **customer_id**: String or number (required)
 
 ### Using Promises
 
@@ -276,7 +276,7 @@ api.triggerBroadcast(1, { name: "foo" }, { emails: ["example@emails.com"], email
 
 #### Options
 
-- **id**: String (required)
+- **id**: String or number (required)
 - **data**: Object (optional)
 - **recipients**: Object (optional)
 

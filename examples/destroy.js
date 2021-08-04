@@ -1,4 +1,4 @@
-const { TrackClient, RegionUS, RegionEU } = require('../index');
+const { TrackClient, RegionUS, RegionEU } = require('../dist/index');
 // In actual use require the node module:
 // const { TrackClient, RegionUS, RegionEU } = require('customerio-node');
 const siteId = require('./config').siteId;
