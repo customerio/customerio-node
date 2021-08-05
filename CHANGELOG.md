@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.0.2]
+
+- Fix a few issues in the README documentation ([#73](https://github.com/customerio/customerio-node/pull/73))
+- Allow `subject` and `body` to be overridden independent of `from` for transactional messages ([#75](https://github.com/customerio/customerio-node/pull/75))
+
 ## [3.0.1]
 
 - Fix an issue calculating the content length of multi-byte utf-8 string characters ([#69](https://github.com/customerio/customerio-node/pull/69))
