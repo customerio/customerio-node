@@ -65,7 +65,13 @@ export class SendEmailRequest {
 
     if ('from' in opts) {
       this.message.from = opts.from;
+    }
+
+    if ('subject' in opts) {
       this.message.subject = opts.subject;
+    }
+
+    if ('body' in opts) {
       this.message.body = opts.body;
     }
   }
