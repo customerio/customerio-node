@@ -62,6 +62,10 @@ test('#sendEmail: with template: success', (t) => {
   let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
   t.context.client.sendEmail(req);
   t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/email`, req.message));
+  t.falsy(req.message.from);
+  t.falsy(req.message.subject);
+  t.falsy(req.message.body);
+  t.is(req.message.transactional_message_id, 1);
 });
 
 test('#sendEmail: without template: success', (t) => {
@@ -75,6 +79,10 @@ test('#sendEmail: without template: success', (t) => {
   });
   t.context.client.sendEmail(req);
   t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/email`, req.message));
+  t.is(req.message.from, 'admin@example.com');
+  t.is(req.message.subject, 'This is a test');
+  t.is(req.message.body, 'Hi there!');
+  t.falsy(req.message.transactional_message_id);
 });
 
 test('#sendEmail: override from: success', (t) => {
@@ -87,6 +95,10 @@ test('#sendEmail: override from: success', (t) => {
   });
   t.context.client.sendEmail(req);
   t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/email`, req.message));
+  t.is(req.message.from, 'admin@example.com');
+  t.falsy(req.message.subject);
+  t.falsy(req.message.body);
+  t.is(req.message.transactional_message_id, 1);
 });
 
 test('#sendEmail: override subject: success', (t) => {
@@ -99,6 +111,10 @@ test('#sendEmail: override subject: success', (t) => {
   });
   t.context.client.sendEmail(req);
   t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/email`, req.message));
+  t.falsy(req.message.from);
+  t.is(req.message.subject, 'This is a test');
+  t.falsy(req.message.body);
+  t.is(req.message.transactional_message_id, 1);
 });
 
 test('#sendEmail: override body: success', (t) => {
@@ -111,6 +127,10 @@ test('#sendEmail: override body: success', (t) => {
   });
   t.context.client.sendEmail(req);
   t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/email`, req.message));
+  t.falsy(req.message.from);
+  t.falsy(req.message.subject);
+  t.is(req.message.body, 'Hi there!');
+  t.is(req.message.transactional_message_id, 1);
 });
 
 test('#sendEmail: adding attachments with encoding (default)', (t) => {
