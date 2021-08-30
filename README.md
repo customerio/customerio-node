@@ -1,4 +1,4 @@
-# Customerio [![test](https://github.com/customerio/customerio-node/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/customerio-node/actions/workflows/main.yml)
+# Customer.io [![test](https://github.com/customerio/customerio-node/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/customerio-node/actions/workflows/main.yml)
 
 A node client for the Customer.io [REST API](https://learn.customer.io/api/).
 
@@ -54,6 +54,16 @@ cio.identify(1, {
 - **data**: Object (optional)
   - _email_ is a required key if you intend to send email messages
   - _created_at_ is a required key if you want to segment based on signed up/created date
+
+#### Updating identifiers
+
+If you want to update an identifier for an existing profile, you must reference them using their `cio_id` in the format `cio_<cio_id_value>`. Using anything else will result in an attribute update failure in Customer.io. You can read more about [updating customers](https://variety.com/2021/tv/news/cowboy-bebop-premiere-date-first-look-john-cho-1235046075/) on our API documentation.
+
+```
+cio.identify(`cio_${customer.cio_id}`, {
+  email: 'new_email@example.com'
+});
+```
 
 ---
 
