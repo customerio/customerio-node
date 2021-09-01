@@ -1,5 +1,6 @@
 import { request } from 'https';
 import type { RequestOptions } from 'https';
+import { URL } from 'url';
 import { CustomerIORequestError } from './utils';
 
 export type BasicAuth = {
@@ -51,7 +52,7 @@ export default class CIORequest {
     const headers = {
       Authorization: this.auth,
       'Content-Type': 'application/json',
-      'Content-Length': body ? Buffer.byteLength(body,'utf8') : 0,
+      'Content-Length': body ? Buffer.byteLength(body, 'utf8') : 0,
     };
 
     return { method, uri, headers, body };
@@ -59,8 +60,14 @@ export default class CIORequest {
 
   handler({ uri, body, method, headers }: RequestHandlerOptions): Promise<Record<string, any>> {
     return new Promise((resolve, reject) => {
-      let options = Object.assign({}, this.defaults, { method, headers });
-      let req = request(uri, options, (res) => {
+      let url = new URL(uri);
+      let options = Object.assign<{}, RequestOptions, RequestOptions>({}, this.defaults, {
+        method,
+        headers,
+        hostname: url.hostname,
+        path: url.pathname,
+      });
+      let req = request(options, (res) => {
         let chunks: Buffer[] = [];
 
         res.on('data', (data: Buffer) => {

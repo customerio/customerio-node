@@ -54,7 +54,7 @@ const createMockRequest = (
   });
 
   // Cast to any because PassThrough doesn't conform to ClientRequest
-  httpsReq.callsArgWith(2, response).returns(request as any);
+  httpsReq.callsArgWith(1, response).returns(request as any);
 
   return httpsReq;
 };
@@ -93,7 +93,7 @@ test('#options returns a correctly formatted object', (t) => {
 
 test('#options sets Content-Length using body length in bytes', (t) => {
   const body = { first_name: 'Wïly Wönka' };
-  const method = 'POST'
+  const method = 'POST';
   const expectedOptions = {
     ...baseOptions,
     method,
@@ -120,6 +120,42 @@ test('#handler makes a request and resolves a promise on success', async (t) => 
 
   try {
     const res = await t.context.req.handler(putOptions);
+    t.deepEqual(res, body);
+  } catch {
+    t.fail();
+  }
+});
+
+test('#handler makes a request and parses the uri correctly', async (t) => {
+  const customOptions = {
+    ...baseOptions,
+    headers: {
+      ...baseOptions.headers,
+      // Add identifier so that this specific call to the sinon stub can be
+      // traced. The stub is shared across all tests and tests run async, so
+      // order is not guaranteed.
+      'X-Test-Identifier': 'uri test',
+    },
+    uri: 'https://track.customer.io/api/v1/customers/1/events',
+    body: JSON.stringify({ title: 'The Batman' }),
+    method: 'POST',
+  };
+
+  const body = {};
+  createMockRequest(t.context.httpsReq, 200, body);
+
+  try {
+    t.context.httpsReq.resetHistory();
+    const res = await t.context.req.handler(customOptions);
+    t.truthy(
+      t.context.httpsReq.calledWith({
+        hostname: 'track.customer.io',
+        path: '/api/v1/customers/1/events',
+        method: 'POST',
+        headers: customOptions.headers,
+        timeout: 5000,
+      }),
+    );
     t.deepEqual(res, body);
   } catch {
     t.fail();
