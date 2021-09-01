@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [3.0.3]
 
 - Fix an issue with some instances of `HTTPS.request` in certain runtimes ([#83](https://github.com/customerio/customerio-node/pull/83))
 
