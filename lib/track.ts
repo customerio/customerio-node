@@ -12,6 +12,13 @@ class MissingParamError extends Error {
   }
 }
 
+class InvalidParamError extends Error {
+  constructor(param: string) {
+    super(param);
+    this.message = `invalid value for param ${param}`;
+  }
+}
+
 export class TrackClient {
   siteid: BasicAuth['siteid'];
   apikey: BasicAuth['apikey'];
@@ -128,4 +135,33 @@ export class TrackClient {
       `${this.trackRoot}/customers/${encodeURIComponent(customerId)}/devices/${encodeURIComponent(deviceToken)}`,
     );
   }
+
+  isValidIdType(input: string) {
+    return ["id", "email", "cio_id"].includes(input)
+  }
+
+  mergeCustomers(primaryIdType: string, primaryId: string | number, secondaryIdType: string, secondaryId: string | number) {
+    if (!this.isValidIdType(primaryIdType)) {
+      throw new InvalidParamError('primaryIdType')
+    }
+    if (isEmpty(primaryId)) {
+      throw new MissingParamError('primaryId');
+    }
+
+    if (!this.isValidIdType(secondaryIdType)) {
+      throw new InvalidParamError('secondaryIdType')
+    }
+    if (isEmpty(secondaryId)) {
+      throw new MissingParamError('secondaryId');
+    }
+
+    return this.request.post(`${this.apiRoot}/merge_customers`, {
+      primary: {
+        [primaryIdType]: primaryId
+      },
+      secondary: {
+        [secondaryIdType]: secondaryId
+      }
+    });
+    }
 }

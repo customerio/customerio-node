@@ -214,3 +214,29 @@ test('#deleteDevice works', (t) => {
     );
   });
 });
+
+test('#mergeCustomers works', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.mergeCustomers("", "id1", "id", "id2"), { message: 'invalid value for param primaryIdType' });
+  t.throws(() => t.context.client.mergeCustomers("id", "", "id", "id2"), { message: 'primaryId is required' });
+  t.throws(() => t.context.client.mergeCustomers("id", "id1", "", "id2"), { message: 'invalid value for param secondaryIdType' });
+  t.throws(() => t.context.client.mergeCustomers("id", "id1", "id", ""), { message: 'secondaryId is required' });
+
+  [
+    ["email", "cool.person@company.com", "email", "cperson@gmail.com"],
+    ["id", "cool.person@company.com", "cio_id", "person2"],
+    ["cio_id", "CIO123", "id", "person1"],
+  ].forEach(([pType, pId, sType, sId]) => {
+    t.context.client.mergeCustomers(pType, pId, sType, sId);
+    t.truthy(
+      (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/merge_customers`, {
+        primary: {
+          [pType]: pId
+        },
+        secondary: {
+          [sType]: sId
+        }
+      }),
+    );
+  });
+});

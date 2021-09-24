@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.0.4]
+
+- Adding support for MergeCustomers API
+
 ## [3.0.3]
 
 - Fix an issue with some instances of `HTTPS.request` in certain runtimes ([#83](https://github.com/customerio/customerio-node/pull/83))
