@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [3.0.4]
 
-- Adding support for MergeCustomers API
+- Adding support for [Merge Customers API](https://customer.io/docs/api/#operation/merge)
 
 ## [3.0.3]
 
