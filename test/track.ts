@@ -1,6 +1,6 @@
 import avaTest, { TestInterface } from 'ava';
 import sinon, { SinonStub } from 'sinon';
-import { TrackClient } from '../lib/track';
+import { TrackClient, Identifier } from '../lib/track';
 import { RegionUS, RegionEU } from '../lib/regions';
 
 type TestContext = { client: TrackClient };
@@ -215,26 +215,29 @@ test('#deleteDevice works', (t) => {
   });
 });
 
+test('#mergeCustomers validations work', (t) => {
+  t.throws(() => t.context.client.mergeCustomers(Identifier.ID, "", Identifier.ID, "id2"), { message: 'primaryId is required' });
+  t.throws(() => t.context.client.mergeCustomers(Identifier.EMAIL, "id1", Identifier.CIOID, ""), { message: 'secondaryId is required' });
+});
+
 test('#mergeCustomers works', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.mergeCustomers("", "id1", "id", "id2"), { message: 'invalid value for param primaryIdType' });
-  t.throws(() => t.context.client.mergeCustomers("id", "", "id", "id2"), { message: 'primaryId is required' });
-  t.throws(() => t.context.client.mergeCustomers("id", "id1", "", "id2"), { message: 'invalid value for param secondaryIdType' });
-  t.throws(() => t.context.client.mergeCustomers("id", "id1", "id", ""), { message: 'secondaryId is required' });
+  // t.throws(() => t.context.client.mergeCustomers(Identifier.Id, "", Identifier.Email, "id2"), { message: 'primaryId is required' });
+  // t.throws(() => t.context.client.mergeCustomers(Identifier.CioId, "id1", Identifier.Id, ""), { message: 'secondaryId is required' });
 
   [
     ["email", "cool.person@company.com", "email", "cperson@gmail.com"],
     ["id", "cool.person@company.com", "cio_id", "person2"],
     ["cio_id", "CIO123", "id", "person1"],
-  ].forEach(([pType, pId, sType, sId]) => {
-    t.context.client.mergeCustomers(pType, pId, sType, sId);
+  ].forEach(([pTypeString, pId, sTypeString, sId]) => {
+    t.context.client.mergeCustomers(pTypeString as Identifier, pId, sTypeString as Identifier, sId);
     t.truthy(
       (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/merge_customers`, {
         primary: {
-          [pType]: pId
+          [pTypeString]: pId
         },
         secondary: {
-          [sType]: sId
+          [sTypeString]: sId
         }
       }),
     );

@@ -12,11 +12,10 @@ class MissingParamError extends Error {
   }
 }
 
-class InvalidParamError extends Error {
-  constructor(param: string) {
-    super(param);
-    this.message = `invalid value for param ${param}`;
-  }
+export enum Identifier {
+  ID = 'id',
+  EMAIL = 'email',
+  CIOID = 'cio_id',
 }
 
 export class TrackClient {
@@ -136,32 +135,27 @@ export class TrackClient {
     );
   }
 
-  isValidIdType(input: string) {
-    return ["id", "email", "cio_id"].includes(input)
-  }
-
-  mergeCustomers(primaryIdType: string, primaryId: string | number, secondaryIdType: string, secondaryId: string | number) {
-    if (!this.isValidIdType(primaryIdType)) {
-      throw new InvalidParamError('primaryIdType')
-    }
+  mergeCustomers(
+    primaryIdType: Identifier,
+    primaryId: string | number,
+    secondaryIdType: Identifier,
+    secondaryId: string | number,
+  ) {
     if (isEmpty(primaryId)) {
       throw new MissingParamError('primaryId');
     }
 
-    if (!this.isValidIdType(secondaryIdType)) {
-      throw new InvalidParamError('secondaryIdType')
-    }
     if (isEmpty(secondaryId)) {
       throw new MissingParamError('secondaryId');
     }
 
     return this.request.post(`${this.apiRoot}/merge_customers`, {
       primary: {
-        [primaryIdType]: primaryId
+        [primaryIdType]: primaryId,
       },
       secondary: {
-        [secondaryIdType]: secondaryId
-      }
+        [secondaryIdType]: secondaryId,
+      },
     });
-    }
+  }
 }
