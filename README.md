@@ -99,6 +99,13 @@ The first and third parameters represent the identifier for the primary and seco
 // primaryIdentifier / secondaryIdentifier are the identifier value corresponding to the type.
 cio.mergeCustomers("email", "cool.person@company.com", "email", "cperson@gmail.com")
 ```
+#### Options
+
+- **primaryType**: One of the ID types - "id" / "email" / "cio_id" (required)
+- **primaryIdentifier**: Primary profile Identifier, String or number (required)
+- **secondaryType**: One of the ID types - "id" / "email" / "cio_id" (required)
+- **secondaryIdentifier**: Secondary profile Identifier, String or number (required)
+---
 
 ### cio.track(id, data)
 
