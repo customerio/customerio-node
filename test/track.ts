@@ -222,9 +222,6 @@ test('#mergeCustomers validations work', (t) => {
 
 test('#mergeCustomers works', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  // t.throws(() => t.context.client.mergeCustomers(Identifier.Id, "", Identifier.Email, "id2"), { message: 'primaryId is required' });
-  // t.throws(() => t.context.client.mergeCustomers(Identifier.CioId, "id1", Identifier.Id, ""), { message: 'secondaryId is required' });
-
   [
     ["email", "cool.person@company.com", "email", "cperson@gmail.com"],
     ["id", "cool.person@company.com", "cio_id", "person2"],
