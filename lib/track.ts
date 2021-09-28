@@ -2,6 +2,7 @@ import type { RequestOptions } from 'https';
 import Request, { BasicAuth, RequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty } from './utils';
+import { IdentifierType } from './types';
 
 type TrackDefaults = RequestOptions & { region: Region; url?: string; apiUrl?: string };
 
@@ -10,12 +11,6 @@ class MissingParamError extends Error {
     super(param);
     this.message = `${param} is required`;
   }
-}
-
-export enum Identifier {
-  ID = 'id',
-  EMAIL = 'email',
-  CIOID = 'cio_id',
 }
 
 export class TrackClient {
@@ -136,9 +131,9 @@ export class TrackClient {
   }
 
   mergeCustomers(
-    primaryIdType: Identifier,
+    primaryIdType: IdentifierType,
     primaryId: string | number,
-    secondaryIdType: Identifier,
+    secondaryIdType: IdentifierType,
     secondaryId: string | number,
   ) {
     if (isEmpty(primaryId)) {

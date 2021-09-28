@@ -1,7 +1,8 @@
 import avaTest, { TestInterface } from 'ava';
 import sinon, { SinonStub } from 'sinon';
-import { TrackClient, Identifier } from '../lib/track';
+import { TrackClient } from '../lib/track';
 import { RegionUS, RegionEU } from '../lib/regions';
+import { IdentifierType } from '../lib/types';
 
 type TestContext = { client: TrackClient };
 
@@ -216,8 +217,8 @@ test('#deleteDevice works', (t) => {
 });
 
 test('#mergeCustomers validations work', (t) => {
-  t.throws(() => t.context.client.mergeCustomers(Identifier.ID, "", Identifier.ID, "id2"), { message: 'primaryId is required' });
-  t.throws(() => t.context.client.mergeCustomers(Identifier.EMAIL, "id1", Identifier.CIOID, ""), { message: 'secondaryId is required' });
+  t.throws(() => t.context.client.mergeCustomers(IdentifierType.Id, "", IdentifierType.Id, "id2"), { message: 'primaryId is required' });
+  t.throws(() => t.context.client.mergeCustomers(IdentifierType.Email, "id1", IdentifierType.CioId, ""), { message: 'secondaryId is required' });
 });
 
 test('#mergeCustomers works', (t) => {
@@ -227,7 +228,7 @@ test('#mergeCustomers works', (t) => {
     ["id", "cool.person@company.com", "cio_id", "person2"],
     ["cio_id", "CIO123", "id", "person1"],
   ].forEach(([pTypeString, pId, sTypeString, sId]) => {
-    t.context.client.mergeCustomers(pTypeString as Identifier, pId, sTypeString as Identifier, sId);
+    t.context.client.mergeCustomers(pTypeString as IdentifierType, pId, sTypeString as IdentifierType, sId);
     t.truthy(
       (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/merge_customers`, {
         primary: {

@@ -97,7 +97,7 @@ The first and third parameters represent the identifier for the primary and seco
 // cio.mergeCustomers("primaryType", "primaryIdentifier", "secondaryType", "secondaryIdentifier")
 // primaryType / secondaryType are one of "id", "email", or "cio_id"
 // primaryIdentifier / secondaryIdentifier are the identifier value corresponding to the type.
-cio.mergeCustomers("email", "cool.person@company.com", "email", "cperson@gmail.com")
+cio.mergeCustomers(IdentifierType.Id, "cool.person@company.com", IdentifierType.Email, "cperson@gmail.com")
 ```
 #### Options
 
