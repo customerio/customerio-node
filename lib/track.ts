@@ -2,6 +2,7 @@ import type { RequestOptions } from 'https';
 import Request, { BasicAuth, RequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty } from './utils';
+import { IdentifierType } from './types';
 
 type TrackDefaults = RequestOptions & { region: Region; url?: string; apiUrl?: string };
 
@@ -127,5 +128,29 @@ export class TrackClient {
     return this.request.destroy(
       `${this.trackRoot}/customers/${encodeURIComponent(customerId)}/devices/${encodeURIComponent(deviceToken)}`,
     );
+  }
+
+  mergeCustomers(
+    primaryIdType: IdentifierType,
+    primaryId: string | number,
+    secondaryIdType: IdentifierType,
+    secondaryId: string | number,
+  ) {
+    if (isEmpty(primaryId)) {
+      throw new MissingParamError('primaryId');
+    }
+
+    if (isEmpty(secondaryId)) {
+      throw new MissingParamError('secondaryId');
+    }
+
+    return this.request.post(`${this.apiRoot}/merge_customers`, {
+      primary: {
+        [primaryIdType]: primaryId,
+      },
+      secondary: {
+        [secondaryIdType]: secondaryId,
+      },
+    });
   }
 }
