@@ -2,8 +2,9 @@ import type { RequestOptions } from 'https';
 import Request, { BearerAuth, RequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { SendEmailRequest } from './api/requests';
+import { cleanEmail } from './utils';
 
-type APIDefaults = RequestOptions & { region: Region; url?: string };
+type APIDefaults = RequestOptions & { region: Region; url?: string; betaUrl?: string };
 
 type Recipients = Record<string, unknown>;
 
@@ -30,6 +31,7 @@ export class APIClient {
   defaults: APIDefaults;
   request: Request;
   apiRoot: string;
+  apiBetaRoot: string;
 
   constructor(appKey: BearerAuth, defaults: Partial<APIDefaults> = {}) {
     if (defaults.region && !(defaults.region instanceof Region)) {
@@ -41,6 +43,7 @@ export class APIClient {
     this.request = new Request(this.appKey, this.defaults);
 
     this.apiRoot = this.defaults.url ? this.defaults.url : this.defaults.region.apiUrl;
+    this.apiBetaRoot = this.defaults.betaUrl ? this.defaults.betaUrl : this.defaults.region.apiBetaUrl;
   }
 
   sendEmail(req: SendEmailRequest) {
@@ -51,11 +54,19 @@ export class APIClient {
     return this.request.post(`${this.apiRoot}/send/email`, req.message);
   }
 
+  getCustomersByEmail(email: string) {
+    if (typeof email !== 'string' || !email) {
+      throw new Error('"email" must be a string');
+    }
+
+    return this.request.get(`${this.apiBetaRoot}/customers?email=${cleanEmail(email)}`);
+  }
+
   triggerBroadcast(id: string | number, data: RequestData, recipients: Recipients) {
     let payload = {};
-    let customRecipientField = (Object.keys(
-      BROADCASTS_ALLOWED_RECIPIENT_FIELDS,
-    ) as BroadcastsAllowedRecipientFieldsKeys[]).find((field) => recipients[field]);
+    let customRecipientField = (
+      Object.keys(BROADCASTS_ALLOWED_RECIPIENT_FIELDS) as BroadcastsAllowedRecipientFieldsKeys[]
+    ).find((field) => recipients[field]);
 
     if (customRecipientField) {
       payload = Object.assign({ data }, filterRecipientsDataForField(recipients, customRecipientField));

@@ -54,7 +54,6 @@ export default class CIORequest {
       'Content-Type': 'application/json',
       'Content-Length': body ? Buffer.byteLength(body, 'utf8') : 0,
     };
-
     return { method, uri, headers, body };
   }
 
@@ -65,7 +64,7 @@ export default class CIORequest {
         method,
         headers,
         hostname: url.hostname,
-        path: url.pathname,
+        path: url.pathname + url.search,
       });
       let req = request(options, (res) => {
         let chunks: Buffer[] = [];
@@ -110,6 +109,9 @@ export default class CIORequest {
 
   put(uri: string, data: RequestData = {}) {
     return this.handler(this.options(uri, 'PUT', data));
+  }
+  get(uri: string) {
+    return this.handler(this.options(uri, 'GET'));
   }
 
   destroy(uri: string) {
