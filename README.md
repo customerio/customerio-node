@@ -1,5 +1,13 @@
-# Customer.io [![test](https://github.com/customerio/customerio-node/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/customerio-node/actions/workflows/main.yml)
+<p align="center">
+  <a href="https://customer.io">
+    <img src="https://user-images.githubusercontent.com/6409227/144680509-907ee093-d7ad-4a9c-b0a5-f640eeb060cd.png" height="60">
+  </a>
+  <p align="center">Power automated communication that people like to receive.</p>
+</p>
 
+[![ci](https://github.com/customerio/customerio-node/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/customerio-node/actions/workflows/main.yml)
+
+# Customer.io Node
 A node client for the Customer.io [REST API](https://learn.customer.io/api/).
 
 ## React Native and alternative Node runtimes
