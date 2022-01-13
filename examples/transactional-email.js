@@ -36,7 +36,7 @@ let req = new SendEmailRequest({
   body: '',
   plaintext_body: '',
   amp_body: '',
-  fake_bcc: '',
+  fake_bcc: false,
 
   disable_message_retention: false,
   send_to_unsubscribed: false,

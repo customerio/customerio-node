@@ -13,7 +13,7 @@ type SendEmailRequestOptionalOptions = Partial<{
   bcc: string;
   plaintext_body: string;
   amp_body: string;
-  fake_bcc: string;
+  fake_bcc: boolean;
   disable_message_retention: boolean;
   send_to_unsubscribed: boolean;
   tracked: boolean;
