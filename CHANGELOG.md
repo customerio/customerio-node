@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.1.1]
+
+- Fixed types for the `fake_bcc` parameter for transactional emails ([#92](https://github.com/customerio/customerio-node/pull/92))
+
 ## [3.1.0]
 
 - Adding support for [Merge Customers API](https://customer.io/docs/api/#operation/merge)
