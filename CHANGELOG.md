@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.1.2]
+
+- Set `User-Agent` for property source attributes on activity logs ([#93](https://github.com/customerio/customerio-node/pull/93))
+
 ## [3.1.1]
 
 - Fixed types for the `fake_bcc` parameter for transactional emails ([#92](https://github.com/customerio/customerio-node/pull/92))
