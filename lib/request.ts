@@ -1,7 +1,8 @@
 import { request } from 'https';
 import type { RequestOptions } from 'https';
 import { URL } from 'url';
-import { CustomerIORequestError } from './utils';
+import { resolve } from 'path';
+import { CustomerIORequestError, findPackageJson } from './utils';
 
 export type BasicAuth = {
   apikey: string;
@@ -20,6 +21,7 @@ export type RequestHandlerOptions = {
 };
 
 const TIMEOUT = 10_000;
+const PACKAGE_JSON = findPackageJson(resolve(__dirname, '..'));
 
 export default class CIORequest {
   apikey?: BasicAuth['apikey'];

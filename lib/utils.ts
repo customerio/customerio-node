@@ -1,4 +1,6 @@
 import { IncomingMessage } from 'http';
+import { resolve } from 'path';
+import { statSync, readFileSync } from 'fs';
 
 export const isEmpty = (value: unknown) => {
   return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
@@ -35,3 +37,19 @@ ${json.meta.errors.map((error: string) => `  - ${error}`).join('\n')}`;
     this.body = body;
   }
 }
+
+export const findPackageJson = (dirName: string): string => {
+  const path = resolve(dirName, 'package.json');
+
+  if (statSync(path, { throwIfNoEntry: false }) == null) {
+    const parentPath = resolve(dirName, '..');
+
+    if (statSync(parentPath, { throwIfNoEntry: false }) != null) {
+      return findPackageJson(parentPath);
+    }
+
+    return '';
+  }
+
+  return readFileSync(path).toString();
+};
