@@ -1,9 +1,7 @@
 import avaTest, { TestInterface } from 'ava';
-import https from 'https';
+import https, { RequestOptions } from 'https';
 import sinon, { SinonStub } from 'sinon';
 import { PassThrough } from 'stream';
-import fs from 'fs';
-import { resolve } from 'path';
 import Request from '../lib/request';
 
 type TestContext = { req: Request; httpsReq: sinon.SinonStub };
@@ -16,14 +14,12 @@ const apikey = 'abc';
 const uri = 'https://track.customer.io/api/v1/customers/1';
 const data = { first_name: 'Bruce', last_name: 'Wayne' };
 const auth = `Basic ${Buffer.from(`${siteid}:${apikey}`).toString('base64')}`;
-const PACKAGE_VERSION = JSON.parse(fs.readFileSync(resolve(__dirname, '..', 'package.json')).toString()).version;
 const baseOptions = {
   uri,
   headers: {
     Authorization: auth,
     'Content-Type': 'application/json',
     'Content-Length': 0,
-    'User-Agent': `Customer.io Node Client/${PACKAGE_VERSION}`,
   },
 };
 const putOptions = Object.assign({}, baseOptions, {
@@ -110,26 +106,6 @@ test('#options sets Content-Length using body length in bytes', (t) => {
   const resultOptions = t.context.req.options(uri, method, body);
 
   t.deepEqual(resultOptions, expectedOptions);
-});
-
-test('#options sets User-Agent even if package.json cannot be read', (t) => {
-  const jsonParseStub = sinon.stub(JSON, 'parse').throws();
-  const body = { bad_agent: true };
-  const method = 'POST';
-  const expectedOptions = {
-    ...baseOptions,
-    method,
-    headers: {
-      ...baseOptions.headers,
-      'Content-Length': 18,
-      'User-Agent': 'Customer.io Node Client/Unknown',
-    },
-    body: JSON.stringify(body),
-  };
-  const resultOptions = t.context.req.options(uri, method, body);
-
-  t.deepEqual(resultOptions, expectedOptions);
-  jsonParseStub.restore();
 });
 
 test('#handler returns a promise', (t) => {

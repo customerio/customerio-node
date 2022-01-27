@@ -1,8 +1,6 @@
 import { request } from 'https';
 import type { RequestOptions } from 'https';
 import { URL } from 'url';
-import fs from 'fs';
-import { resolve } from 'path';
 import { CustomerIORequestError } from './utils';
 
 export type BasicAuth = {
@@ -22,7 +20,6 @@ export type RequestHandlerOptions = {
 };
 
 const TIMEOUT = 10_000;
-const PACKAGE_JSON = fs.readFileSync(resolve(__dirname, '..', 'package.json'));
 
 export default class CIORequest {
   apikey?: BasicAuth['apikey'];
@@ -52,23 +49,10 @@ export default class CIORequest {
 
   options(uri: string, method: RequestOptions['method'], data?: RequestData): RequestHandlerOptions {
     const body = data ? JSON.stringify(data) : null;
-    let libraryVersion = 'Unknown';
-
-    try {
-      let json = JSON.parse(PACKAGE_JSON.toString());
-
-      libraryVersion = json.version;
-    } catch {
-      console.warn(
-        'WARN: package.json contents could not be read. Activity source data in Customer.io will be incorrect.',
-      );
-    }
-
     const headers = {
       Authorization: this.auth,
       'Content-Type': 'application/json',
       'Content-Length': body ? Buffer.byteLength(body, 'utf8') : 0,
-      'User-Agent': `Customer.io Node Client/${libraryVersion}`,
     };
 
     return { method, uri, headers, body };
