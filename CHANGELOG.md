@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.1.3]
+
+- Revert [#93](https://github.com/customerio/customerio-node/pull/93) due to a crashing bug ([#95](https://github.com/customerio/customerio-node/pull/95))
+
 ## [3.1.2]
 
 - Set `User-Agent` for property source attributes on activity logs ([#93](https://github.com/customerio/customerio-node/pull/93))
