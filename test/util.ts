@@ -6,7 +6,7 @@ import { findPackageJson } from '../lib/utils';
 
 const PACKAGE_JSON = JSON.parse(fs.readFileSync(resolve(__dirname, '..', 'package.json')).toString());
 
-test('#findPackageJson walks the tree to find package.json', (t) => {
+test.serial('#findPackageJson walks the tree to find package.json', (t) => {
   const sandbox = sinon.createSandbox();
   const statSpy = sandbox.spy(fs, 'statSync');
   const readSpy = sandbox.spy(fs, 'readFileSync');
@@ -36,7 +36,7 @@ test('#findPackageJson walks the tree to find package.json', (t) => {
   readSpy.restore();
 });
 
-test('#findPackageJson returns a default if no package.json is found', (t) => {
+test.serial('#findPackageJson returns a default if no package.json is found', (t) => {
   const sandbox = sinon.createSandbox();
   const statStub = sandbox.stub(fs, 'statSync').returns(undefined);
   const readSpy = sandbox.spy(fs, 'readFileSync');
