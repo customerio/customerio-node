@@ -39,9 +39,10 @@ ${json.meta.errors.map((error: string) => `  - ${error}`).join('\n')}`;
 }
 
 // Node.js v12 doesn't support the `throwIfNoEntry`
+// Once we drop v12, let's remove this function and use `throwIfNoEntry`
 const checkIfPathExists = (path: string) => {
   try {
-    let stat = fs.statSync(path, { throwIfNoEntry: false });
+    let stat = fs.statSync(path);
 
     return stat;
   } catch {

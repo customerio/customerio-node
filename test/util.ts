@@ -18,17 +18,13 @@ test.serial('#findPackageJson walks the tree to find package.json', (t) => {
   t.is(statSpy.callCount, 3, 'statSync called three times');
   t.deepEqual(
     statSpy.getCall(0).args,
-    [resolve(__dirname, 'package.json'), { throwIfNoEntry: false }],
+    [resolve(__dirname, 'package.json')],
     'called with the correct arguments initially',
   );
-  t.deepEqual(
-    statSpy.getCall(1).args,
-    [resolve(__dirname, '..'), { throwIfNoEntry: false }],
-    'checks if parent directory exists',
-  );
+  t.deepEqual(statSpy.getCall(1).args, [resolve(__dirname, '..')], 'checks if parent directory exists');
   t.deepEqual(
     statSpy.getCall(2).args,
-    [resolve(__dirname, '..', 'package.json'), { throwIfNoEntry: false }],
+    [resolve(__dirname, '..', 'package.json')],
     'checks if package.json in parent directory exists',
   );
 
@@ -38,7 +34,7 @@ test.serial('#findPackageJson walks the tree to find package.json', (t) => {
 
 test.serial('#findPackageJson returns a default if no package.json is found', (t) => {
   const sandbox = sinon.createSandbox();
-  const statStub = sandbox.stub(fs, 'statSync').returns(undefined);
+  const statStub = sandbox.stub(fs, 'statSync').throws();
   const readSpy = sandbox.spy(fs, 'readFileSync');
 
   let json = findPackageJson(__dirname);
@@ -47,14 +43,10 @@ test.serial('#findPackageJson returns a default if no package.json is found', (t
   t.is(statStub.callCount, 2, 'statSync called two times');
   t.deepEqual(
     statStub.getCall(0).args,
-    [resolve(__dirname, 'package.json'), { throwIfNoEntry: false }],
+    [resolve(__dirname, 'package.json')],
     'called with the correct arguments initially',
   );
-  t.deepEqual(
-    statStub.getCall(1).args,
-    [resolve(__dirname, '..'), { throwIfNoEntry: false }],
-    'checks if parent directory exists',
-  );
+  t.deepEqual(statStub.getCall(1).args, [resolve(__dirname, '..')], 'checks if parent directory exists');
 
   statStub.restore();
   readSpy.restore();
