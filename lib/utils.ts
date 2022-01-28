@@ -1,6 +1,6 @@
 import { IncomingMessage } from 'http';
 import { resolve } from 'path';
-import fs, { statSync, readFileSync } from 'fs';
+import fs from 'fs';
 
 export const isEmpty = (value: unknown) => {
   return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
@@ -38,13 +38,24 @@ ${json.meta.errors.map((error: string) => `  - ${error}`).join('\n')}`;
   }
 }
 
+// Node.js v12 doesn't support the `throwIfNoEntry`
+const checkIfPathExists = (path: string) => {
+  try {
+    let stat = fs.statSync(path, { throwIfNoEntry: false });
+
+    return stat;
+  } catch {
+    return undefined;
+  }
+};
+
 export const findPackageJson = (dirName: string): string => {
   const path = resolve(dirName, 'package.json');
 
-  if (fs.statSync(path, { throwIfNoEntry: false }) == null) {
+  if (checkIfPathExists(path) == null) {
     const parentPath = resolve(dirName, '..');
 
-    if (fs.statSync(parentPath, { throwIfNoEntry: false }) != null) {
+    if (checkIfPathExists(parentPath) != null) {
       return findPackageJson(parentPath);
     }
 
