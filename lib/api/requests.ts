@@ -18,6 +18,7 @@ type SendEmailRequestOptionalOptions = Partial<{
   send_to_unsubscribed: boolean;
   tracked: boolean;
   queue_draft: boolean;
+  send_at: number;
 }>;
 
 type SendEmailRequestWithTemplate = SendEmailRequestRequiredOptions &
@@ -57,6 +58,7 @@ export class SendEmailRequest {
       send_to_unsubscribed: opts.send_to_unsubscribed,
       tracked: opts.tracked,
       queue_draft: opts.queue_draft,
+      send_at: opts.send_at,
     };
 
     if ('transactional_message_id' in opts) {
