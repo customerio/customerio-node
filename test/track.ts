@@ -24,6 +24,7 @@ test('constructor sets necessary variables', (t) => {
   t.is(t.context.client.apikey, 'abc');
   t.is(t.context.client.trackRoot, RegionUS.trackUrl);
   t.is(t.context.client.apiRoot, RegionUS.apiUrl);
+  t.is(t.context.client.trackPushRoot, RegionUS.trackPushUrl);
 
   t.truthy(t.context.client.request);
   t.is(t.context.client.request.siteid, '123');
@@ -38,6 +39,7 @@ test('constructor sets correct URL for different regions', (t) => {
     t.is(client.apikey, 'abc');
     t.is(client.trackRoot, region.trackUrl);
     t.is(client.apiRoot, region.apiUrl);
+    t.is(client.trackPushRoot, region.trackPushUrl);
 
     t.truthy(client.request);
     t.is(client.request.siteid, '123');
@@ -46,12 +48,13 @@ test('constructor sets correct URL for different regions', (t) => {
 });
 
 test('constructor sets correct URL for custom URLs', (t) => {
-  let client = new TrackClient('123', 'abc', { url: 'https://example.com/url', apiUrl: 'https://example.com/apiUrl' });
+  let client = new TrackClient('123', 'abc', { url: 'https://example.com/url', apiUrl: 'https://example.com/apiUrl', trackPushUrl: 'https://example.com/push' });
 
   t.is(client.siteid, '123');
   t.is(client.apikey, 'abc');
   t.is(client.trackRoot, 'https://example.com/url');
   t.is(client.apiRoot, 'https://example.com/apiUrl');
+  t.is(client.trackPushRoot, 'https://example.com/push');
 
   t.truthy(client.request);
   t.is(client.request.siteid, '123');
@@ -136,7 +139,7 @@ test('#trackPush works', (t) => {
   sinon.stub(t.context.client.request, 'post');
   t.context.client.trackPush();
   t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/push/events`, {}),
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackPushUrl}/events`, {}),
   );
 
   t.context.client.trackPush({
@@ -146,7 +149,7 @@ test('#trackPush works', (t) => {
     timestamp: 1613063089
   });
   t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/push/events`, {
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackPushUrl}/events`, {
       delivery_id: "RPILAgUBcRhIBqSfeiIwdIYJKxTY",
       event: "opened",
       device_id: "CIO-Delivery-Token from the notification",
