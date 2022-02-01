@@ -98,6 +98,10 @@ export class TrackClient {
     });
   }
 
+  trackPush(data: RequestData = {}) {
+    return this.request.post(`${this.trackRoot}/push/events`, data);
+  }
+
   addDevice(customerId: string | number, device_id: string, platform: string, data = {}) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
