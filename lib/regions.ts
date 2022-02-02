@@ -1,9 +1,9 @@
 export class Region {
   readonly trackUrl: string;
   readonly apiUrl: string;
-  readonly trackPushUrl: string;
+  readonly trackPushUrl?: string;
 
-  constructor(trackUrl: string, apiUrl: string, trackPushUrl: string) {
+  constructor(trackUrl: string, apiUrl: string, trackPushUrl?: string) {
     this.trackUrl = trackUrl;
     this.apiUrl = apiUrl;
     this.trackPushUrl = trackPushUrl;

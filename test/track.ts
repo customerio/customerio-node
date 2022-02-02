@@ -1,7 +1,7 @@
 import avaTest, { TestInterface } from 'ava';
 import sinon, { SinonStub } from 'sinon';
 import { TrackClient } from '../lib/track';
-import { RegionUS, RegionEU } from '../lib/regions';
+import { RegionUS, RegionEU, Region } from '../lib/regions';
 import { IdentifierType } from '../lib/types';
 
 type TestContext = { client: TrackClient };
@@ -156,6 +156,12 @@ test('#trackPush works', (t) => {
       timestamp: 1613063089
     }),
   );
+});
+
+test('#trackPush throws error if trackPushRoot is missing', (t) => {
+  t.context.client = new TrackClient('123', 'abc', { region: new Region('https://example.com/url', 'https://example.com/apiUrl')});
+  sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.trackPush(), { message: 'trackPushRoot is required' });
 });
 
 ID_INPUTS.forEach(([input, expected]) => {

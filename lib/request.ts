@@ -19,6 +19,12 @@ export type RequestHandlerOptions = {
   headers: RequestOptions['headers'];
   body?: string | null;
 };
+export interface PushRequestData {
+  delivery_id?: string;
+  device_id?: string;
+  event?: 'delivered' | 'opened' | 'converted';
+  timestamp?: number;
+};
 
 const TIMEOUT = 10_000;
 const PACKAGE_JSON = findPackageJson(resolve(__dirname, '..'));

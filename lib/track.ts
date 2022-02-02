@@ -1,10 +1,17 @@
 import type { RequestOptions } from 'https';
-import Request, { BasicAuth, RequestData } from './request';
+import Request, { BasicAuth, RequestData, PushRequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty } from './utils';
 import { IdentifierType } from './types';
 
 type TrackDefaults = RequestOptions & { region: Region; url?: string; apiUrl?: string; trackPushUrl?: string };
+
+class MissingConfigError extends Error {
+  constructor(param: string) {
+    super(param);
+    this.message = `${param} is required`;
+  }
+}
 
 class MissingParamError extends Error {
   constructor(param: string) {
@@ -20,7 +27,7 @@ export class TrackClient {
   request: Request;
   trackRoot: string;
   apiRoot: string;
-  trackPushRoot: string;
+  trackPushRoot?: string;
 
   constructor(siteid: BasicAuth['siteid'], apikey: BasicAuth['apikey'], defaults: Partial<TrackDefaults> = {}) {
     if (defaults.region && !(defaults.region instanceof Region)) {
@@ -100,7 +107,11 @@ export class TrackClient {
     });
   }
 
-  trackPush(data: RequestData = {}) {
+  trackPush(data: PushRequestData = {}) {
+    if (isEmpty(this.trackPushRoot)) {
+      throw new MissingConfigError('trackPushRoot');
+
+    }
     return this.request.post(`${this.trackPushRoot}/events`, data);
   }
 
