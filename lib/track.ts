@@ -4,14 +4,7 @@ import { Region, RegionUS } from './regions';
 import { isEmpty } from './utils';
 import { IdentifierType } from './types';
 
-type TrackDefaults = RequestOptions & { region: Region; url?: string; apiUrl?: string; trackPushUrl?: string };
-
-class MissingConfigError extends Error {
-  constructor(param: string) {
-    super(param);
-    this.message = `${param} is required`;
-  }
-}
+type TrackDefaults = RequestOptions & { region: Region; url?: string; apiUrl?: string; };
 
 class MissingParamError extends Error {
   constructor(param: string) {
@@ -27,7 +20,6 @@ export class TrackClient {
   request: Request;
   trackRoot: string;
   apiRoot: string;
-  trackPushRoot?: string;
 
   constructor(siteid: BasicAuth['siteid'], apikey: BasicAuth['apikey'], defaults: Partial<TrackDefaults> = {}) {
     if (defaults.region && !(defaults.region instanceof Region)) {
@@ -41,7 +33,6 @@ export class TrackClient {
 
     this.trackRoot = this.defaults.url ? this.defaults.url : this.defaults.region.trackUrl;
     this.apiRoot = this.defaults.apiUrl ? this.defaults.apiUrl : this.defaults.region.apiUrl;
-    this.trackPushRoot = this.defaults.trackPushUrl ? this.defaults.trackPushUrl : this.defaults.region.trackPushUrl;
   }
 
   identify(customerId: string | number, data: RequestData = {}) {
@@ -108,11 +99,7 @@ export class TrackClient {
   }
 
   trackPush(data: PushRequestData = {}) {
-    if (isEmpty(this.trackPushRoot)) {
-      throw new MissingConfigError('trackPushRoot');
-
-    }
-    return this.request.post(`${this.trackPushRoot}/events`, data);
+    return this.request.post(`${this.trackRoot}/push/events`, data);
   }
 
   addDevice(customerId: string | number, device_id: string, platform: string, data = {}) {
