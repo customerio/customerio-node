@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.2.0]
+
+- Add support for push metrics tracking endpoint ([#98](https://github.com/customerio/customerio-node/pull/98))
+
 ## [3.1.4]
 
 - Add `send_at` to transactional message attributes ([#97](https://github.com/customerio/customerio-node/pull/97))
