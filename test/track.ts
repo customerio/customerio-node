@@ -132,6 +132,29 @@ test('#trackAnonymous works', (t) => {
   );
 });
 
+test('#trackPush works', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.trackPush();
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/push/events`, {}),
+  );
+
+  t.context.client.trackPush({
+    delivery_id: "RPILAgUBcRhIBqSfeiIwdIYJKxTY",
+    event: "opened",
+    device_id: "CIO-Delivery-Token from the notification",
+    timestamp: 1613063089
+  });
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/push/events`, {
+      delivery_id: "RPILAgUBcRhIBqSfeiIwdIYJKxTY",
+      event: "opened",
+      device_id: "CIO-Delivery-Token from the notification",
+      timestamp: 1613063089
+    }),
+  );
+});
+
 ID_INPUTS.forEach(([input, expected]) => {
   test(`#trackPageView works for ${input}`, (t) => {
     sinon.stub(t.context.client.request, 'post');
