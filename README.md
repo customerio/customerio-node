@@ -9,7 +9,7 @@
 [![ci](https://github.com/customerio/customerio-node/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/customerio-node/actions/workflows/main.yml)
 
 # Customer.io Node
-A node client for the Customer.io [REST API](https://learn.customer.io/api/).
+A node client for the Customer.io [REST API](https://customer.io/docs/api/).
 
 ## React Native and alternative Node runtimes
 
@@ -327,7 +327,7 @@ api.triggerBroadcast(1, { name: "foo" }, { emails: ["example@emails.com"], email
 
 ## Further examples
 
-We've included functional examples in the [examples/ directory](https://github.com/customerio/customerio-node/tree/master/examples) of the repo to further assist in demonstrating how to use this library to integrate with Customer.io
+We've included functional examples in the [examples/ directory](https://github.com/customerio/customerio-node/tree/main/examples) of the repo to further assist in demonstrating how to use this library to integrate with Customer.io
 
 ## Tests
 
