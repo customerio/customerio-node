@@ -1,0 +1,6 @@
+tasks:
+  - init: npm ci && npm run build
+
+vscode:
+  extensions:
+    - esbenp.prettier-vscode
