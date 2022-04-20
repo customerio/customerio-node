@@ -4,7 +4,7 @@ import { Region, RegionUS } from './regions';
 import { isEmpty } from './utils';
 import { IdentifierType } from './types';
 
-type TrackDefaults = RequestOptions & { region: Region; url?: string; apiUrl?: string; };
+type TrackDefaults = RequestOptions & { region: Region; url?: string; apiUrl?: string };
 
 class MissingParamError extends Error {
   constructor(param: string) {

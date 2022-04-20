@@ -53,9 +53,9 @@ export class APIClient {
 
   triggerBroadcast(id: string | number, data: RequestData, recipients: Recipients) {
     let payload = {};
-    let customRecipientField = (Object.keys(
-      BROADCASTS_ALLOWED_RECIPIENT_FIELDS,
-    ) as BroadcastsAllowedRecipientFieldsKeys[]).find((field) => recipients[field]);
+    let customRecipientField = (
+      Object.keys(BROADCASTS_ALLOWED_RECIPIENT_FIELDS) as BroadcastsAllowedRecipientFieldsKeys[]
+    ).find((field) => recipients[field]);
 
     if (customRecipientField) {
       payload = Object.assign({ data }, filterRecipientsDataForField(recipients, customRecipientField));
