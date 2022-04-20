@@ -66,6 +66,7 @@
     "test": "nyc ava",
     "build": "tsc -p tsconfig.json",
     "prepublish": "npm run build",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "version": "node update-version.js"
   }
 }
