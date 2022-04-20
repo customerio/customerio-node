@@ -1,11 +1,11 @@
-type Identifiers = { id: string | number } | { email: string };
+export type Identifiers = { id: string | number } | { email: string };
 
-type SendEmailRequestRequiredOptions = {
+export type SendEmailRequestRequiredOptions = {
   to: string;
   identifiers: Identifiers;
 };
 
-type SendEmailRequestOptionalOptions = Partial<{
+export type SendEmailRequestOptionalOptions = Partial<{
   message_data: Record<string, any>;
   headers: Record<string, any>;
   preheader: string;
@@ -21,21 +21,21 @@ type SendEmailRequestOptionalOptions = Partial<{
   send_at: number;
 }>;
 
-type SendEmailRequestWithTemplate = SendEmailRequestRequiredOptions &
+export type SendEmailRequestWithTemplate = SendEmailRequestRequiredOptions &
   SendEmailRequestOptionalOptions & {
     transactional_message_id: string | number;
   };
 
-type SendEmailRequestWithoutTemplate = SendEmailRequestRequiredOptions &
+export type SendEmailRequestWithoutTemplate = SendEmailRequestRequiredOptions &
   SendEmailRequestOptionalOptions & {
     body: string;
     subject: string;
     from: string;
   };
 
-type SendEmailRequestOptions = SendEmailRequestWithTemplate | SendEmailRequestWithoutTemplate;
+export type SendEmailRequestOptions = SendEmailRequestWithTemplate | SendEmailRequestWithoutTemplate;
 
-type Message = Partial<SendEmailRequestWithTemplate & SendEmailRequestWithoutTemplate> & {
+export type Message = Partial<SendEmailRequestWithTemplate & SendEmailRequestWithoutTemplate> & {
   attachments: Record<string, string>;
 };
 export class SendEmailRequest {
