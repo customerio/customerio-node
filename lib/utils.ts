@@ -37,31 +37,3 @@ ${json.meta.errors.map((error: string) => `  - ${error}`).join('\n')}`;
     this.body = body;
   }
 }
-
-// Node.js v12 doesn't support the `throwIfNoEntry`
-// Once we drop v12, let's remove this function and use `throwIfNoEntry`
-const checkIfPathExists = (path: string) => {
-  try {
-    let stat = fs.statSync(path);
-
-    return stat;
-  } catch {
-    return undefined;
-  }
-};
-
-export const findPackageJson = (dirName: string): string => {
-  const path = resolve(dirName, 'package.json');
-
-  if (checkIfPathExists(path) == null) {
-    const parentPath = resolve(dirName, '..');
-
-    if (checkIfPathExists(parentPath) != null) {
-      return findPackageJson(parentPath);
-    }
-
-    return '';
-  }
-
-  return fs.readFileSync(path).toString();
-};
