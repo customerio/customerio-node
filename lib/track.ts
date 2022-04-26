@@ -82,8 +82,6 @@ export class TrackClient {
       payload["anonymous_id"] = anonymousId;
     }
 
-    console.log(payload);
-
     return this.request.post(`${this.trackRoot}/events`, payload);
   }
 

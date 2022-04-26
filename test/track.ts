@@ -135,7 +135,6 @@ test('#trackAnonymous works', (t) => {
 test('#trackAnonymous ignores blank anonymousId', (t) => {
   sinon.stub(t.context.client.request, 'post');
   t.context.client.trackAnonymous('', { name: 'purchase', data: 'yep' })
-  t.context.client.trackAnonymous('123', { name: 'purchase', data: 'yep' });
   t.truthy(
     (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/events`, {
       name: 'purchase',
