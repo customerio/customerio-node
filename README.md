@@ -166,6 +166,20 @@ cio.trackAnonymous(anonymous_id, {
 });
 ```
 
+#### Anonymous invite events
+
+If you previously sent [invite events](https://customer.io/docs/anonymous-invite-emails/), you can achieve the same functionality by sending an anonymous event with an empty string for the anonymous identifier. To send anonymous invites, your event *must* include a `recipient` attribute. 
+
+```javascript
+cio.trackAnonymous("", {
+  name: "invite",
+  data: {
+    name: "Alex",
+    recipient: "alex.person@example.com",
+  },
+});
+```
+
 #### Options
 
 - **anonymous_id**: String or number (required)
