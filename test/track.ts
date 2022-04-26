@@ -135,22 +135,20 @@ test('#trackAnonymous works', (t) => {
 test('#trackPush works', (t) => {
   sinon.stub(t.context.client.request, 'post');
   t.context.client.trackPush();
-  t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/push/events`, {}),
-  );
+  t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/push/events`, {}));
 
   t.context.client.trackPush({
-    delivery_id: "RPILAgUBcRhIBqSfeiIwdIYJKxTY",
-    event: "opened",
-    device_id: "CIO-Delivery-Token from the notification",
-    timestamp: 1613063089
+    delivery_id: 'RPILAgUBcRhIBqSfeiIwdIYJKxTY',
+    event: 'opened',
+    device_id: 'CIO-Delivery-Token from the notification',
+    timestamp: 1613063089,
   });
   t.truthy(
     (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/push/events`, {
-      delivery_id: "RPILAgUBcRhIBqSfeiIwdIYJKxTY",
-      event: "opened",
-      device_id: "CIO-Delivery-Token from the notification",
-      timestamp: 1613063089
+      delivery_id: 'RPILAgUBcRhIBqSfeiIwdIYJKxTY',
+      event: 'opened',
+      device_id: 'CIO-Delivery-Token from the notification',
+      timestamp: 1613063089,
     }),
   );
 });
@@ -240,26 +238,30 @@ test('#deleteDevice works', (t) => {
 });
 
 test('#mergeCustomers validations work', (t) => {
-  t.throws(() => t.context.client.mergeCustomers(IdentifierType.Id, "", IdentifierType.Id, "id2"), { message: 'primaryId is required' });
-  t.throws(() => t.context.client.mergeCustomers(IdentifierType.Email, "id1", IdentifierType.CioId, ""), { message: 'secondaryId is required' });
+  t.throws(() => t.context.client.mergeCustomers(IdentifierType.Id, '', IdentifierType.Id, 'id2'), {
+    message: 'primaryId is required',
+  });
+  t.throws(() => t.context.client.mergeCustomers(IdentifierType.Email, 'id1', IdentifierType.CioId, ''), {
+    message: 'secondaryId is required',
+  });
 });
 
 test('#mergeCustomers works', (t) => {
   sinon.stub(t.context.client.request, 'post');
   [
-    ["email", "cool.person@company.com", "email", "cperson@gmail.com"],
-    ["id", "cool.person@company.com", "cio_id", "person2"],
-    ["cio_id", "CIO123", "id", "person1"],
+    ['email', 'cool.person@company.com', 'email', 'cperson@gmail.com'],
+    ['id', 'cool.person@company.com', 'cio_id', 'person2'],
+    ['cio_id', 'CIO123', 'id', 'person1'],
   ].forEach(([pTypeString, pId, sTypeString, sId]) => {
     t.context.client.mergeCustomers(pTypeString as IdentifierType, pId, sTypeString as IdentifierType, sId);
     t.truthy(
       (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/merge_customers`, {
         primary: {
-          [pTypeString]: pId
+          [pTypeString]: pId,
         },
         secondary: {
-          [sTypeString]: sId
-        }
+          [sTypeString]: sId,
+        },
       }),
     );
   });

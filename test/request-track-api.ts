@@ -112,26 +112,6 @@ test('#options sets Content-Length using body length in bytes', (t) => {
   t.deepEqual(resultOptions, expectedOptions);
 });
 
-test('#options sets User-Agent even if package.json cannot be read', (t) => {
-  const jsonParseStub = sinon.stub(JSON, 'parse').throws();
-  const body = { bad_agent: true };
-  const method = 'POST';
-  const expectedOptions = {
-    ...baseOptions,
-    method,
-    headers: {
-      ...baseOptions.headers,
-      'Content-Length': 18,
-      'User-Agent': 'Customer.io Node Client/Unknown',
-    },
-    body: JSON.stringify(body),
-  };
-  const resultOptions = t.context.req.options(uri, method, body);
-
-  t.deepEqual(resultOptions, expectedOptions);
-  jsonParseStub.restore();
-});
-
 test('#handler returns a promise', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.handler(putOptions);

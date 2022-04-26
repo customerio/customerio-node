@@ -20,6 +20,7 @@
     "noUnusedParameters": true,
     "outDir": "dist",
     "paths": {},
+    "resolveJsonModule": true,
     "sourceMap": false,
     "strict": true,
     "strictNullChecks": true,

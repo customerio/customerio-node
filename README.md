@@ -9,6 +9,7 @@
 [![ci](https://github.com/customerio/customerio-node/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/customerio-node/actions/workflows/main.yml)
 
 # Customer.io Node
+
 A node client for the Customer.io [REST API](https://customer.io/docs/api/).
 
 ## React Native and alternative Node runtimes
@@ -106,14 +107,16 @@ The first and third parameters represent the identifier for the primary and seco
 // cio.mergeCustomers("primaryType", "primaryIdentifier", "secondaryType", "secondaryIdentifier")
 // primaryType / secondaryType are one of "id", "email", or "cio_id"
 // primaryIdentifier / secondaryIdentifier are the identifier value corresponding to the type.
-cio.mergeCustomers(IdentifierType.Id, "cool.person@company.com", IdentifierType.Email, "cperson@gmail.com")
+cio.mergeCustomers(IdentifierType.Id, "cool.person@company.com", IdentifierType.Email, "cperson@gmail.com");
 ```
+
 #### Options
 
 - **primaryType**: One of the ID types - "id" / "email" / "cio_id" (required)
 - **primaryIdentifier**: Primary profile Identifier, String or number (required)
 - **secondaryType**: One of the ID types - "id" / "email" / "cio_id" (required)
 - **secondaryIdentifier**: Secondary profile Identifier, String or number (required)
+
 ---
 
 ### cio.track(id, data)
