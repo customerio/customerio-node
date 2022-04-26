@@ -1,10 +1,10 @@
 import type { RequestOptions } from 'https';
-import Request, { BasicAuth, RequestData } from './request';
+import Request, { BasicAuth, RequestData, PushRequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty } from './utils';
 import { IdentifierType } from './types';
 
-type TrackDefaults = RequestOptions & { region: Region; url?: string; apiUrl?: string };
+type TrackDefaults = RequestOptions & { region: Region; url?: string; apiUrl?: string; };
 
 class MissingParamError extends Error {
   constructor(param: string) {
@@ -100,6 +100,10 @@ export class TrackClient {
       type: 'page',
       name: path,
     });
+  }
+
+  trackPush(data: PushRequestData = {}) {
+    return this.request.post(`${this.trackRoot}/push/events`, data);
   }
 
   addDevice(customerId: string | number, device_id: string, platform: string, data = {}) {

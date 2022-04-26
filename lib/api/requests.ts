@@ -1,11 +1,11 @@
-type Identifiers = { id: string | number } | { email: string };
+export type Identifiers = { id: string | number } | { email: string };
 
-type SendEmailRequestRequiredOptions = {
+export type SendEmailRequestRequiredOptions = {
   to: string;
   identifiers: Identifiers;
 };
 
-type SendEmailRequestOptionalOptions = Partial<{
+export type SendEmailRequestOptionalOptions = Partial<{
   message_data: Record<string, any>;
   headers: Record<string, any>;
   preheader: string;
@@ -18,23 +18,24 @@ type SendEmailRequestOptionalOptions = Partial<{
   send_to_unsubscribed: boolean;
   tracked: boolean;
   queue_draft: boolean;
+  send_at: number;
 }>;
 
-type SendEmailRequestWithTemplate = SendEmailRequestRequiredOptions &
+export type SendEmailRequestWithTemplate = SendEmailRequestRequiredOptions &
   SendEmailRequestOptionalOptions & {
     transactional_message_id: string | number;
   };
 
-type SendEmailRequestWithoutTemplate = SendEmailRequestRequiredOptions &
+export type SendEmailRequestWithoutTemplate = SendEmailRequestRequiredOptions &
   SendEmailRequestOptionalOptions & {
     body: string;
     subject: string;
     from: string;
   };
 
-type SendEmailRequestOptions = SendEmailRequestWithTemplate | SendEmailRequestWithoutTemplate;
+export type SendEmailRequestOptions = SendEmailRequestWithTemplate | SendEmailRequestWithoutTemplate;
 
-type Message = Partial<SendEmailRequestWithTemplate & SendEmailRequestWithoutTemplate> & {
+export type Message = Partial<SendEmailRequestWithTemplate & SendEmailRequestWithoutTemplate> & {
   attachments: Record<string, string>;
 };
 export class SendEmailRequest {
@@ -57,6 +58,7 @@ export class SendEmailRequest {
       send_to_unsubscribed: opts.send_to_unsubscribed,
       tracked: opts.tracked,
       queue_draft: opts.queue_draft,
+      send_at: opts.send_at,
     };
 
     if ('transactional_message_id' in opts) {

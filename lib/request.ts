@@ -1,7 +1,8 @@
 import { request } from 'https';
 import type { RequestOptions } from 'https';
 import { URL } from 'url';
-import { CustomerIORequestError } from './utils';
+import { resolve } from 'path';
+import { CustomerIORequestError, findPackageJson } from './utils';
 
 export type BasicAuth = {
   apikey: string;
@@ -18,8 +19,15 @@ export type RequestHandlerOptions = {
   headers: RequestOptions['headers'];
   body?: string | null;
 };
+export interface PushRequestData {
+  delivery_id?: string;
+  device_id?: string;
+  event?: 'delivered' | 'opened' | 'converted';
+  timestamp?: number;
+};
 
 const TIMEOUT = 10_000;
+const PACKAGE_JSON = findPackageJson(resolve(__dirname, '..'));
 
 export default class CIORequest {
   apikey?: BasicAuth['apikey'];
@@ -49,10 +57,23 @@ export default class CIORequest {
 
   options(uri: string, method: RequestOptions['method'], data?: RequestData): RequestHandlerOptions {
     const body = data ? JSON.stringify(data) : null;
+    let libraryVersion = 'Unknown';
+
+    try {
+      let json = JSON.parse(PACKAGE_JSON.toString());
+
+      libraryVersion = json.version;
+    } catch {
+      console.warn(
+        'WARN: package.json contents could not be read. Activity source data in Customer.io will be incorrect.',
+      );
+    }
+
     const headers = {
       Authorization: this.auth,
       'Content-Type': 'application/json',
       'Content-Length': body ? Buffer.byteLength(body, 'utf8') : 0,
+      'User-Agent': `Customer.io Node Client/${libraryVersion}`,
     };
 
     return { method, uri, headers, body };
