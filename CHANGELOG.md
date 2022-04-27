@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.0]
+
+### Added
+
+- Added support for use with gitpod ([#101](https://github.com/customerio/customerio-node/pull/101))
+- Added support for invite-type anonymous event tracking ([#106](https://github.com/customerio/customerio-node/pull/106), [#107](https://github.com/customerio/customerio-node/pull/107))
+
+### Updated
+
+- Export more types from `request.ts` ([#102](https://github.com/customerio/customerio-node/pull/102))
+
+### Fixed
+
+- Fix instances of `customerio-node` running without a `package.json` alongside the code ([#105](https://github.com/customerio/customerio-node/pull/105))
+
 ## [3.2.0]
 
 - Add support for push metrics tracking endpoint ([#98](https://github.com/customerio/customerio-node/pull/98))
