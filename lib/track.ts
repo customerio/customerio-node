@@ -72,15 +72,17 @@ export class TrackClient {
   }
 
   trackAnonymous(anonymousId: string | number, data: RequestData = {}) {
-    if (isEmpty(anonymousId)) {
-      throw new MissingParamError('anonymousId');
-    }
-
     if (isEmpty(data.name)) {
       throw new MissingParamError('data.name');
     }
 
-    return this.request.post(`${this.trackRoot}/events`, { ...data, anonymous_id: anonymousId });
+    let payload = { ...data};
+
+    if (!isEmpty(anonymousId)) {
+      payload["anonymous_id"] = anonymousId;
+    }
+
+    return this.request.post(`${this.trackRoot}/events`, payload);
   }
 
   trackPageView(customerId: string | number, path: string) {
