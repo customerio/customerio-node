@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.1]
+
+### Changed
+
+- Export `CustomerIORequestError` in Typescript types ([#108](https://github.com/customerio/customerio-node/pull/108))
+
 ## [3.3.0]
 
 ### Added
