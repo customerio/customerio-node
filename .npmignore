@@ -5,3 +5,9 @@ yarn.lock
 .nyc_output
 .github
 .prettierrc.js
+.prettierignore
+.gitpod.yml
+.husky
+tsconfig.json
+update-version.js
+check-version.js
