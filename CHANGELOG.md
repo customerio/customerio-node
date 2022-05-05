@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Add more files to the npm ignore file
+- Add more files to the npm ignore file ([#109](https://github.com/customerio/customerio-node/pull/109))
 - Attempt to re-publish to get a proper build before publishing
 
 ## [3.3.1]
