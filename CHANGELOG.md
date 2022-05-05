@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.2]
+
+### Changed
+
+- Add more files to the npm ignore file
+- Attempt to re-publish to get a proper build before publishing
+
 ## [3.3.1]
 
 ### Changed
