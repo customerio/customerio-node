@@ -95,6 +95,11 @@ cio.destroy(1);
 
 - **id**: String or number (required)
 
+#### Attention! 
+
+This method will only delete a person and not suppress them. This means they can be readded. 
+If you need to suppress a person, please use [`cio.suppress`](https://github.com/customerio/customerio-node#ciosuppressid).
+
 ---
 
 ### Merge Customers
