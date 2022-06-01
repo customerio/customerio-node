@@ -184,7 +184,7 @@ test('#handler makes a request and rejects with an error on failure', async (t) 
     await t.context.req.handler(customOptions);
 
     t.fail();
-  } catch (err) {
+  } catch (err: any) {
     t.is(err.message, message);
   }
 });
@@ -208,7 +208,7 @@ test('#handler makes a request and rejects with an error on failure that has an 
     await t.context.req.handler(customOptions);
 
     t.fail();
-  } catch (err) {
+  } catch (err: any) {
     t.is(
       err.message,
       `2 errors:
@@ -236,7 +236,7 @@ test('#handler makes a request and rejects with an error on failure that has an 
     await t.context.req.handler(customOptions);
 
     t.fail();
-  } catch (err) {
+  } catch (err: any) {
     t.is(
       err.message,
       `1 error:
@@ -263,7 +263,7 @@ test('#handler makes a request and rejects with an error on failure that has an 
     await t.context.req.handler(customOptions);
 
     t.fail();
-  } catch (err) {
+  } catch (err: any) {
     t.is(err.message, 'Unknown error');
   }
 });
@@ -286,7 +286,7 @@ test('#handler makes a request and rejects with an error on failure and has no s
     await t.context.req.handler(customOptions);
 
     t.fail();
-  } catch (err) {
+  } catch (err: any) {
     t.is(err.statusCode, 0);
   }
 });
@@ -304,7 +304,7 @@ test('#handler makes a request and rejects with `null` as body', async (t) => {
     await t.context.req.handler(customOptions);
 
     t.fail();
-  } catch (err) {
+  } catch (err: any) {
     t.is(err.message, 'Unknown error');
   }
 });
@@ -322,7 +322,7 @@ test('#handler makes a request and rejects with a bad JSON response', async (t) 
     await t.context.req.handler(customOptions);
 
     t.fail();
-  } catch (err) {
+  } catch (err: any) {
     t.is(
       err.message,
       'Unable to parse JSON. Error: SyntaxError: Unexpected token < in JSON at position 0 \nBody:\n <html></html>',
@@ -342,7 +342,7 @@ test('#handler makes a request and rejects with timeout error', async (t) => {
     await t.context.req.handler(customOptions);
 
     t.fail();
-  } catch (err) {
+  } catch (err: any) {
     t.is(err.message, 'ETIMEDOUT');
   }
 });
