@@ -150,7 +150,7 @@ export class TrackClient {
       throw new MissingParamError('secondaryId');
     }
 
-    return this.request.post(`${this.apiRoot}/merge_customers`, {
+    return this.request.post(`${this.trackRoot}/merge_customers`, {
       primary: {
         [primaryIdType]: primaryId,
       },
