@@ -23,7 +23,6 @@ test('constructor sets necessary variables', (t) => {
   t.is(t.context.client.siteid, '123');
   t.is(t.context.client.apikey, 'abc');
   t.is(t.context.client.trackRoot, RegionUS.trackUrl);
-  t.is(t.context.client.apiRoot, RegionUS.apiUrl);
 
   t.truthy(t.context.client.request);
   t.is(t.context.client.request.siteid, '123');
@@ -37,7 +36,6 @@ test('constructor sets correct URL for different regions', (t) => {
     t.is(client.siteid, '123');
     t.is(client.apikey, 'abc');
     t.is(client.trackRoot, region.trackUrl);
-    t.is(client.apiRoot, region.apiUrl);
 
     t.truthy(client.request);
     t.is(client.request.siteid, '123');
@@ -46,12 +44,11 @@ test('constructor sets correct URL for different regions', (t) => {
 });
 
 test('constructor sets correct URL for custom URLs', (t) => {
-  let client = new TrackClient('123', 'abc', { url: 'https://example.com/url', apiUrl: 'https://example.com/apiUrl' });
+  let client = new TrackClient('123', 'abc', { url: 'https://example.com/url' });
 
   t.is(client.siteid, '123');
   t.is(client.apikey, 'abc');
   t.is(client.trackRoot, 'https://example.com/url');
-  t.is(client.apiRoot, 'https://example.com/apiUrl');
 
   t.truthy(client.request);
   t.is(client.request.siteid, '123');
@@ -266,7 +263,7 @@ test('#mergeCustomers works', (t) => {
   ].forEach(([pTypeString, pId, sTypeString, sId]) => {
     t.context.client.mergeCustomers(pTypeString as IdentifierType, pId, sTypeString as IdentifierType, sId);
     t.truthy(
-      (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/merge_customers`, {
+      (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/merge_customers`, {
         primary: {
           [pTypeString]: pId,
         },
