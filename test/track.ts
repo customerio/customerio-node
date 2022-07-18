@@ -43,7 +43,7 @@ test('constructor sets correct URL for different regions', (t) => {
   });
 });
 
-test('constructor sets correct URL for custom URLs', (t) => {
+test('constructor sets correct URL for custom URL', (t) => {
   let client = new TrackClient('123', 'abc', { url: 'https://example.com/url' });
 
   t.is(client.siteid, '123');
