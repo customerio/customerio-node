@@ -4,7 +4,7 @@ import { Region, RegionUS } from './regions';
 import { isEmpty } from './utils';
 import { IdentifierType } from './types';
 
-type TrackDefaults = RequestOptions & { region: Region; url?: string; apiUrl?: string };
+type TrackDefaults = RequestOptions & { region: Region; url?: string };
 
 class MissingParamError extends Error {
   constructor(param: string) {
@@ -19,7 +19,6 @@ export class TrackClient {
   defaults: TrackDefaults;
   request: Request;
   trackRoot: string;
-  apiRoot: string;
 
   constructor(siteid: BasicAuth['siteid'], apikey: BasicAuth['apikey'], defaults: Partial<TrackDefaults> = {}) {
     if (defaults.region && !(defaults.region instanceof Region)) {
@@ -32,7 +31,6 @@ export class TrackClient {
     this.request = new Request({ siteid: this.siteid, apikey: this.apikey }, this.defaults);
 
     this.trackRoot = this.defaults.url ? this.defaults.url : this.defaults.region.trackUrl;
-    this.apiRoot = this.defaults.apiUrl ? this.defaults.apiUrl : this.defaults.region.apiUrl;
   }
 
   identify(customerId: string | number, data: RequestData = {}) {
@@ -150,7 +148,7 @@ export class TrackClient {
       throw new MissingParamError('secondaryId');
     }
 
-    return this.request.post(`${this.apiRoot}/merge_customers`, {
+    return this.request.post(`${this.trackRoot}/merge_customers`, {
       primary: {
         [primaryIdType]: primaryId,
       },
