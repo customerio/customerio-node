@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.3]
+
+### Fixed
+
+- Use the track api url instead of the app api url for `mergeCustomers` ([#114](https://github.com/customerio/customerio-node/pull/114))
+
 ## [3.3.2]
 
 ### Changed
