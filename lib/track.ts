@@ -116,7 +116,7 @@ export class TrackClient {
     }
 
     return this.request.put(`${this.trackRoot}/customers/${encodeURIComponent(customerId)}/devices`, {
-      device: { id: device_id, platform, ...data },
+      device: { id: device_id, platform, attributes: { ...data } },
     });
   }
 
