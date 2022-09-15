@@ -191,12 +191,13 @@ ID_INPUTS.forEach(([input, expected]) => {
       message: 'platform is required',
     });
 
-    t.context.client.addDevice(input, '123', 'ios', { primary: true });
+    t.context.client.addDevice(input, '123', 'ios', { primary: true, last_used: 1613063089 });
     t.truthy(
       (t.context.client.request.put as SinonStub).calledWith(`${RegionUS.trackUrl}/customers/${expected}/devices`, {
         device: {
           id: '123',
           platform: 'ios',
+          last_used: 1613063089,
           attributes: {
             primary: true,
           },

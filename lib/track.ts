@@ -102,7 +102,7 @@ export class TrackClient {
     return this.request.post(`${this.trackRoot}/push/events`, data);
   }
 
-  addDevice(customerId: string | number, device_id: string, platform: string, data = {}) {
+  addDevice(customerId: string | number, device_id: string, platform: string, data: Record<string, any> = {}) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
     }
@@ -115,8 +115,10 @@ export class TrackClient {
       throw new MissingParamError('platform');
     }
 
+    let { last_used, ...attributes } = data;
+
     return this.request.put(`${this.trackRoot}/customers/${encodeURIComponent(customerId)}/devices`, {
-      device: { id: device_id, platform, attributes: { ...data } },
+      device: { id: device_id, platform, last_used, attributes },
     });
   }
 
