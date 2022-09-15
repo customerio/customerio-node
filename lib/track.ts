@@ -118,7 +118,12 @@ export class TrackClient {
     let { last_used, ...attributes } = data;
 
     return this.request.put(`${this.trackRoot}/customers/${encodeURIComponent(customerId)}/devices`, {
-      device: { id: device_id, platform, last_used, attributes },
+      device: {
+        id: device_id,
+        platform,
+        ...(last_used && { last_used }),
+        ...(Object.keys(attributes).length && { attributes }),
+      },
     });
   }
 
