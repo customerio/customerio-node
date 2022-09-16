@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.5]
+
+#### Fixed
+
+- Add extra device attributes to attributes object in `addDevice` ([#115](https://github.com/customerio/customerio-node/pull/115))
+
 ## [3.3.4]
 
 ### Fixed
