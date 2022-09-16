@@ -131,15 +131,15 @@ test('#trackAnonymous works', (t) => {
 
 test('#trackAnonymous ignores blank anonymousId', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.context.client.trackAnonymous('', { name: 'purchase', data: 'yep' })
+  t.context.client.trackAnonymous('', { name: 'purchase', data: 'yep' });
   t.truthy(
     (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/events`, {
       name: 'purchase',
       data: 'yep',
     }),
-    );
-  });
-  
+  );
+});
+
 test('#trackPush works', (t) => {
   sinon.stub(t.context.client.request, 'post');
   t.context.client.trackPush();
@@ -191,13 +191,16 @@ ID_INPUTS.forEach(([input, expected]) => {
       message: 'platform is required',
     });
 
-    t.context.client.addDevice(input, '123', 'ios', { primary: true });
+    t.context.client.addDevice(input, '123', 'ios', { primary: true, last_used: 1613063089 });
     t.truthy(
       (t.context.client.request.put as SinonStub).calledWith(`${RegionUS.trackUrl}/customers/${expected}/devices`, {
         device: {
           id: '123',
           platform: 'ios',
-          primary: true,
+          last_used: 1613063089,
+          attributes: {
+            primary: true,
+          },
         },
       }),
     );
