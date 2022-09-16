@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.6]
+
+#### Fixed
+
+- Republish to npm since `3.3.5` didn't include the correct changes ([Context](https://github.com/customerio/customerio-node/pull/115#issuecomment-1249269246))
+
 ## [3.3.5]
 
 #### Fixed
