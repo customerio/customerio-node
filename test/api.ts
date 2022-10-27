@@ -1,7 +1,8 @@
 import avaTest, { TestInterface } from 'ava';
 import sinon, { SinonStub } from 'sinon';
-import { APIClient, SendEmailRequest } from '../lib/api';
+import { APIClient, DeliveryExportMetric, DeliveryExportRequestOptions, SendEmailRequest } from '../lib/api';
 import { RegionUS, RegionEU } from '../lib/regions';
+import { Filter } from '../lib/types';
 
 type TestContext = { client: APIClient };
 
@@ -288,4 +289,101 @@ test('#triggerBroadcast discards extraneous fields', (t) => {
       id_ignore_missing: true,
     }),
   );
+});
+
+test('#listExports: success', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.context.client.listExports();
+  t.truthy((t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/exports`));
+});
+
+test('#getExport: success', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.context.client.getExport(1);
+  t.truthy((t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/1`));
+});
+
+test('#getExport: fails without id', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getExport(''), {
+    message: 'id is required',
+  });
+  t.falsy((t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/1`));
+});
+
+test('#downloadExport: success', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.context.client.downloadExport(1);
+  t.truthy((t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/1/download`));
+});
+
+test('#downloadExport: fails without id', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.downloadExport(''), {
+    message: 'id is required',
+  });
+  t.falsy((t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/1/download`));
+});
+
+test('#createCustomersExport: success', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  const filters: Filter = {
+    and: [
+      {
+        segment: {
+          id: 1,
+        },
+      },
+    ],
+  };
+  t.context.client.createCustomersExport(filters);
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/customers`, {
+      filters,
+    }),
+  );
+});
+
+test('#createCustomersExport: fails without filters', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createCustomersExport as any)(), {
+    message: 'filters is required',
+  });
+  t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/customers`));
+});
+
+test('#createDeliveriesExport: success with options', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  const options: DeliveryExportRequestOptions = {
+    metric: DeliveryExportMetric.Attempted,
+    start: new Date().getTime(),
+    end: new Date().getTime(),
+    attributes: ['attr1'],
+    drafts: false,
+  };
+  t.context.client.createDeliveriesExport(1, options);
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/deliveries`, {
+      newsletter_id: 1,
+      ...options,
+    }),
+  );
+});
+
+test('#createDeliveriesExport: success without options', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.createDeliveriesExport(1);
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/deliveries`, {
+      newsletter_id: 1,
+    }),
+  );
+});
+
+test('#createDeliveriesExport: fails without id', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createDeliveriesExport as any)(), {
+    message: 'newsletterId is required',
+  });
+  t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/deliveries`));
 });

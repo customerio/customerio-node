@@ -116,6 +116,10 @@ export default class CIORequest {
     });
   }
 
+  get(uri: string) {
+    return this.handler(this.options(uri, 'GET'));
+  }
+
   put(uri: string, data: RequestData = {}) {
     return this.handler(this.options(uri, 'PUT', data));
   }
