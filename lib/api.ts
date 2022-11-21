@@ -2,6 +2,7 @@ import type { RequestOptions } from 'https';
 import Request, { BearerAuth, RequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { SendEmailRequest } from './api/requests';
+import { cleanEmail } from './utils';
 
 type APIDefaults = RequestOptions & { region: Region; url?: string };
 
@@ -49,6 +50,14 @@ export class APIClient {
     }
 
     return this.request.post(`${this.apiRoot}/send/email`, req.message);
+  }
+
+  getCustomersByEmail(email: string) {
+    if (typeof email !== 'string' || !email) {
+      throw new Error('"email" must be a string');
+    }
+
+    return this.request.get(`${this.apiRoot}/customers?email=${cleanEmail(email)}`);
   }
 
   triggerBroadcast(id: string | number, data: RequestData, recipients: Recipients) {

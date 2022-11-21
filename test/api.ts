@@ -133,6 +133,19 @@ test('#sendEmail: override body: success', (t) => {
   t.is(req.message.transactional_message_id, 1);
 });
 
+test('#getCustomersByEmail: searching for a customer email (default)', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+
+  const email = 'hello@world.com';
+  t.context.client.getCustomersByEmail(email);
+  t.truthy((t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/customers?email=${email}`));
+})
+
+test('#getCustomersByEmail: should throw error when email is empty', (t) => {
+  const email = '';
+  t.throws(() => t.context.client.getCustomersByEmail(email));
+})
+
 test('#sendEmail: adding attachments with encoding (default)', (t) => {
   sinon.stub(t.context.client.request, 'post');
   let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
