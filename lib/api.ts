@@ -2,7 +2,7 @@ import type { RequestOptions } from 'https';
 import Request, { BearerAuth, RequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { SendEmailRequest } from './api/requests';
-import { cleanEmail } from './utils';
+import { cleanEmail, isEmpty } from './utils';
 
 type APIDefaults = RequestOptions & { region: Region; url?: string };
 
@@ -53,7 +53,7 @@ export class APIClient {
   }
 
   getCustomersByEmail(email: string) {
-    if (typeof email !== 'string' || !email) {
+    if (typeof email !== 'string' || isEmpty(email)) {
       throw new Error('"email" must be a string');
     }
 
