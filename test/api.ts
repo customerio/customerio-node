@@ -146,6 +146,22 @@ test('#getCustomersByEmail: should throw error when email is empty', (t) => {
   t.throws(() => t.context.client.getCustomersByEmail(email));
 })
 
+
+test('#getCustomersByEmail: should throw error when email is null', (t) => {
+  const email: unknown = null;
+  t.throws(() => t.context.client.getCustomersByEmail(email as string));
+})
+
+test('#getCustomersByEmail: should throw error when email is undefined', (t) => {
+  const email: unknown = undefined;
+  t.throws(() => t.context.client.getCustomersByEmail(email as string));
+})
+
+test('#getCustomersByEmail: should throw error when email is not a string object', (t) => {
+  const email: unknown = { "object": "test" };
+  t.throws(() => t.context.client.getCustomersByEmail(email as string));
+})
+
 test('#sendEmail: adding attachments with encoding (default)', (t) => {
   sinon.stub(t.context.client.request, 'post');
   let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
