@@ -95,9 +95,9 @@ cio.destroy(1);
 
 - **id**: String or number (required)
 
-#### Attention! 
+#### Attention!
 
-This method will only delete a person and not suppress them. This means they can be readded. 
+This method will only delete a person and not suppress them. This means they can be readded.
 If you need to suppress a person, please use [`cio.suppress`](https://github.com/customerio/customerio-node#ciosuppressid).
 
 ---
@@ -173,7 +173,7 @@ cio.trackAnonymous(anonymous_id, {
 
 #### Anonymous invite events
 
-If you previously sent [invite events](https://customer.io/docs/anonymous-invite-emails/), you can achieve the same functionality by sending an anonymous event with an empty string for the anonymous identifier. To send anonymous invites, your event *must* include a `recipient` attribute. 
+If you previously sent [invite events](https://customer.io/docs/anonymous-invite-emails/), you can achieve the same functionality by sending an anonymous event with an empty string for the anonymous identifier. To send anonymous invites, your event *must* include a `recipient` attribute.
 
 ```javascript
 cio.trackAnonymous("", {
@@ -346,6 +346,20 @@ api.triggerBroadcast(1, { name: "foo" }, { emails: ["example@emails.com"], email
 - **id**: String or number (required)
 - **data**: Object (optional)
 - **recipients**: Object (optional)
+
+### api.getCustomersByEmail(email)
+
+Returns customer object with given email.
+
+```javascript
+api.getCustomersByEmail("test@test.com")
+```
+
+[You can learn more about the available recipient fields here](https://customer.io/docs/api/#operation/getPeopleEmail).
+
+#### Options
+
+- **email**: String (required)
 
 ## Further examples
 
