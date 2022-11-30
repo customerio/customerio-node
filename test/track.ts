@@ -99,6 +99,18 @@ ID_INPUTS.forEach(([input, expected]) => {
 });
 
 ID_INPUTS.forEach(([input, expected]) => {
+  test(`#unsuppress works for ${input}`, (t) => {
+    sinon.stub(t.context.client.request, 'post');
+    t.throws(() => t.context.client.unsuppress(''), { message: 'customerId is required' });
+
+    t.context.client.unsuppress(input);
+    t.truthy(
+      (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/customers/${expected}/unsuppress`),
+    );
+  });
+});
+
+ID_INPUTS.forEach(([input, expected]) => {
   test(`#track with customer id works for ${input}`, (t) => {
     sinon.stub(t.context.client.request, 'post');
     t.throws(() => t.context.client.track(''), { message: 'customerId is required' });

@@ -57,6 +57,14 @@ export class TrackClient {
     return this.request.post(`${this.trackRoot}/customers/${encodeURIComponent(customerId)}/suppress`);
   }
 
+  unsuppress(customerId: string | number) {
+    if (isEmpty(customerId)) {
+      throw new MissingParamError('customerId');
+    }
+
+    return this.request.post(`${this.trackRoot}/customers/${encodeURIComponent(customerId)}/unsuppress`);
+  }
+
   track(customerId: string | number, data: RequestData = {}) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
@@ -74,10 +82,10 @@ export class TrackClient {
       throw new MissingParamError('data.name');
     }
 
-    let payload = { ...data};
+    let payload = { ...data };
 
     if (!isEmpty(anonymousId)) {
-      payload["anonymous_id"] = anonymousId;
+      payload['anonymous_id'] = anonymousId;
     }
 
     return this.request.post(`${this.trackRoot}/events`, payload);

@@ -247,6 +247,18 @@ cio.suppress(1);
 
 - **customer_id**: String or number (required)
 
+### cio.unsuppress(id)
+
+Unsuppress a customer.
+
+```javascript
+cio.unsuppress(1);
+```
+
+#### Options
+
+- **customer_id**: String or number (required)
+
 ### Using Promises
 
 All calls to the library will return a native promise, allowing you to chain calls as such:
