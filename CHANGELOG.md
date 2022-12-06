@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Add export methods to the api class
+
 ## [3.3.6]
 
 #### Fixed
