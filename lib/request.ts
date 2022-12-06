@@ -124,10 +124,6 @@ export default class CIORequest {
     return this.handler(this.options(uri, 'PUT', data));
   }
 
-  get(uri: string) {
-    return this.handler(this.options(uri, 'GET'));
-  }
-
   destroy(uri: string) {
     return this.handler(this.options(uri, 'DELETE'));
   }
