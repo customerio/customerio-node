@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 
 #### Added
 
+- Added `disable_css_preprocessing` and `language` optional fields ([#127](https://github.com/cusotmerio/customerio-node/pull/127))
+
+## [3.4.0]
+
+#### Added
+
 - Add export methods to the api class ([#120](https://github.com/cusotmerio/customerio-node/pull/120))
 - Add customer lookup by email method to the api class ([#124](https://github.com/customerio/customerio-node/pull/124))
 - Add unsuppress method to the track class ([#123](https://github.com/customerio/customerio-node/pull/123))
