@@ -12,11 +12,11 @@
 
 A node client for the Customer.io [REST API](https://customer.io/docs/api/).
 
-## React Native and alternative Node runtimes
+## Alternative Node runtimes
 
-This project is developed for and tested against the latest and LTS versions of Node.js. Many runtimes, such as React Native, often have subtle differences to the APIs and standard library offered by Node.js. These differences can cause issues when using this library with those runtimes.
+This project is developed for and tested against the latest and LTS versions of Node.js. Many runtimes often have subtle differences to the APIs and standard library offered by Node.js. These differences can cause issues when using this library with those runtimes.
 
-If you would like to use Customer.io with React Native or an alternate runtime, we recommend using our [Track](https://customer.io/docs/api/#tag/trackOverview) and [App](https://customer.io/docs/api/#tag/appOverview) APIs directly using the built-in HTTP client available in your runtime.
+If you would like to use Customer.io with an alternate runtime, we recommend using our [Track](https://customer.io/docs/api/#tag/trackOverview) and [App](https://customer.io/docs/api/#tag/appOverview) APIs directly using the built-in HTTP client available in your runtime.
 
 ## Installation
 
