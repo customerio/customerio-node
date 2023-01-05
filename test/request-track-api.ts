@@ -1,4 +1,4 @@
-import avaTest, { TestInterface } from 'ava';
+import avaTest, { TestFn } from 'ava';
 import https from 'https';
 import sinon, { SinonStub } from 'sinon';
 import { PassThrough } from 'stream';
@@ -8,7 +8,7 @@ import Request from '../lib/request';
 
 type TestContext = { req: Request; httpsReq: sinon.SinonStub };
 
-const test = avaTest as TestInterface<TestContext>;
+const test = avaTest as TestFn<TestContext>;
 
 // setup & fixture data
 const siteid = '123';

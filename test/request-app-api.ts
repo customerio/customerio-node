@@ -1,9 +1,9 @@
-import avaTest, { TestInterface } from 'ava';
+import avaTest, { TestFn } from 'ava';
 import Request from '../lib/request';
 
 type TestContext = { req: Request };
 
-const test = avaTest as TestInterface<TestContext>;
+const test = avaTest as TestFn<TestContext>;
 
 // setup & fixture data
 const appKey = 'abc';
