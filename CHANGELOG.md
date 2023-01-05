@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.4.1]
+
+#### Added
+
+- Added `disable_css_preprocessing` and `language` optional fields ([#127](https://github.com/cusotmerio/customerio-node/pull/127))
+
 ## [3.4.0]
 
 #### Added

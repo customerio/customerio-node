@@ -19,6 +19,8 @@ export type SendEmailRequestOptionalOptions = Partial<{
   tracked: boolean;
   queue_draft: boolean;
   send_at: number;
+  disable_css_preprocessing: boolean;
+  language: string;
 }>;
 
 export type SendEmailRequestWithTemplate = SendEmailRequestRequiredOptions &
@@ -59,6 +61,8 @@ export class SendEmailRequest {
       tracked: opts.tracked,
       queue_draft: opts.queue_draft,
       send_at: opts.send_at,
+      disable_css_preprocessing: opts.disable_css_preprocessing,
+      language: opts.language,
     };
 
     if ('transactional_message_id' in opts) {
