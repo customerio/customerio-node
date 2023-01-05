@@ -1,4 +1,4 @@
-import avaTest, { TestInterface } from 'ava';
+import avaTest, { TestFn } from 'ava';
 import sinon, { SinonStub } from 'sinon';
 import { APIClient, DeliveryExportMetric, DeliveryExportRequestOptions, SendEmailRequest } from '../lib/api';
 import { RegionUS, RegionEU } from '../lib/regions';
@@ -6,7 +6,7 @@ import { Filter } from '../lib/types';
 
 type TestContext = { client: APIClient };
 
-const test = avaTest as TestInterface<TestContext>;
+const test = avaTest as TestFn<TestContext>;
 
 test.beforeEach((t) => {
   t.context.client = new APIClient('appKey');

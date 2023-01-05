@@ -1,4 +1,4 @@
-import avaTest, { TestInterface } from 'ava';
+import avaTest, { TestFn } from 'ava';
 import sinon, { SinonStub } from 'sinon';
 import { TrackClient } from '../lib/track';
 import { RegionUS, RegionEU } from '../lib/regions';
@@ -6,7 +6,7 @@ import { IdentifierType } from '../lib/types';
 
 type TestContext = { client: TrackClient };
 
-const test = avaTest as TestInterface<TestContext>;
+const test = avaTest as TestFn<TestContext>;
 
 test.beforeEach((t) => {
   t.context.client = new TrackClient('123', 'abc');
