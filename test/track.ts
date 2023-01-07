@@ -289,3 +289,13 @@ test('#mergeCustomers works', (t) => {
     );
   });
 });
+
+test('#mergeCustomers: fails if id_type is not id, cio_id nor email', (t) => {
+  t.throws(() => (t.context.client.mergeCustomers as any)(undefined, 'id1', IdentifierType.Id, 'id2'), {
+    message: 'primaryIdType and secondaryIdType must be one of "id", "cio_id", or "email"',
+  });
+
+  t.throws(() => (t.context.client.mergeCustomers as any)(IdentifierType.Id, 'id1', undefined, 'id2'), {
+    message: 'primaryIdType and secondaryIdType must be one of "id", "cio_id", or "email"',
+  });
+});

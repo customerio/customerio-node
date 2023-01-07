@@ -2,8 +2,8 @@ import type { RequestOptions } from 'https';
 import Request, { BearerAuth, RequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { SendEmailRequest } from './api/requests';
-import { cleanEmail, isEmpty, MissingParamError } from './utils';
-import { Filter } from './types';
+import { cleanEmail, isEmpty, isIdentifierType, MissingParamError } from './utils';
+import { Filter, IdentifierType } from './types';
 
 type APIDefaults = RequestOptions & { region: Region; url?: string };
 
@@ -137,6 +137,18 @@ export class APIClient {
     }
 
     return this.request.post(`${this.apiRoot}/exports/deliveries`, { newsletter_id: newsletterId, ...options });
+  }
+
+  getAttributes(id: string | number, idType: IdentifierType = IdentifierType.Id) {
+    if (isEmpty(id)) {
+      throw new MissingParamError('customerId');
+    }
+
+    if (!isIdentifierType(idType)) {
+      throw new Error('idType must be one of "id", "cio_id", or "email"');
+    }
+
+    return this.request.get(`${this.apiRoot}/customers/${id}/attributes?id_type=${idType}`);
   }
 }
 
