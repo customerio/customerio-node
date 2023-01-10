@@ -394,7 +394,7 @@ api.searchForCustomers(
 );
 ```
 
-[You can learn more about the available recipient fields here](https://customer.io/docs/api/#operation/getPersonAttributes).
+[You can learn more about the available recipient fields here](https://customer.io/docs/api/#operation/getPeopleFilter).
 
 #### Options
 
