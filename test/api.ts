@@ -2,7 +2,7 @@ import avaTest, { TestFn } from 'ava';
 import sinon, { SinonStub } from 'sinon';
 import { APIClient, DeliveryExportMetric, DeliveryExportRequestOptions, SendEmailRequest } from '../lib/api';
 import { RegionUS, RegionEU } from '../lib/regions';
-import { Filter } from '../lib/types';
+import { Filter, FilterOperator } from '../lib/types';
 
 type TestContext = { client: APIClient };
 
@@ -140,28 +140,27 @@ test('#getCustomersByEmail: searching for a customer email (default)', (t) => {
   const email = 'hello@world.com';
   t.context.client.getCustomersByEmail(email);
   t.truthy((t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/customers?email=${email}`));
-})
+});
 
 test('#getCustomersByEmail: should throw error when email is empty', (t) => {
   const email = '';
   t.throws(() => t.context.client.getCustomersByEmail(email));
-})
-
+});
 
 test('#getCustomersByEmail: should throw error when email is null', (t) => {
   const email: unknown = null;
   t.throws(() => t.context.client.getCustomersByEmail(email as string));
-})
+});
 
 test('#getCustomersByEmail: should throw error when email is undefined', (t) => {
   const email: unknown = undefined;
   t.throws(() => t.context.client.getCustomersByEmail(email as string));
-})
+});
 
 test('#getCustomersByEmail: should throw error when email is not a string object', (t) => {
-  const email: unknown = { "object": "test" };
+  const email: unknown = { object: 'test' };
   t.throws(() => t.context.client.getCustomersByEmail(email as string));
-})
+});
 
 test('#sendEmail: adding attachments with encoding (default)', (t) => {
   sinon.stub(t.context.client.request, 'post');
@@ -386,4 +385,120 @@ test('#createDeliveriesExport: fails without id', (t) => {
     message: 'newsletterId is required',
   });
   t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/deliveries`));
+});
+
+test('#searchForCustomers: fails', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.searchForCustomers as any)(), {
+    message: 'filter is required',
+  });
+  t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/search`));
+});
+
+test('#searchForCustomers: success with simple filter', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.searchForCustomers({
+    and: [
+      {
+        segment: { id: 4 },
+        attribute: { field: 'unsubscribed', operator: FilterOperator.Eq, value: true },
+      },
+    ],
+  });
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/search?start=&limit=100`),
+  );
+});
+
+test('#searchForCustomers: success with complex filter', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+
+  // From https://www.customer.io/docs/api/#operation/getPeopleFilter sample in NodeJS
+  t.context.client.searchForCustomers({
+    and: [
+      {
+        and: [
+          {
+            segment: { id: 4 },
+            attribute: { field: 'unsubscribed', operator: FilterOperator.Eq, value: true },
+          },
+        ],
+        or: [
+          {
+            segment: { id: 4 },
+            attribute: { field: 'unsubscribed', operator: FilterOperator.Eq, value: true },
+          },
+        ],
+        not: {
+          and: [
+            {
+              segment: { id: 4 },
+              attribute: { field: 'unsubscribed', operator: FilterOperator.Eq, value: true },
+            },
+          ],
+          or: [
+            {
+              segment: { id: 4 },
+              attribute: { field: 'unsubscribed', operator: FilterOperator.Eq, value: true },
+            },
+          ],
+          segment: { id: 4 },
+          attribute: { field: 'unsubscribed', operator: FilterOperator.Eq, value: true },
+        },
+        segment: { id: 4 },
+        attribute: { field: 'unsubscribed', operator: FilterOperator.Eq, value: true },
+      },
+    ],
+  });
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/search?start=&limit=100`),
+  );
+});
+
+test('#searchForCustomers: success with simple filter and query parameters', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.searchForCustomers(
+    {
+      and: [
+        {
+          segment: { id: 4 },
+          attribute: { field: 'unsubscribed', operator: FilterOperator.Eq, value: true },
+        },
+      ],
+    },
+    {
+      limit: 30,
+      start: 'MDox',
+    },
+  );
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/search?start=MDox&limit=30`),
+  );
+});
+
+test('#searchForCustomers: wrong limit query parameter', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.throws(
+    () =>
+      t.context.client.searchForCustomers(
+        {
+          and: [
+            {
+              segment: { id: 4 },
+              attribute: { field: 'unsubscribed', operator: FilterOperator.Eq, value: true },
+            },
+          ],
+        },
+        {
+          limit: 'qwerty',
+          start: 'MDox',
+        } as any,
+      ),
+    {
+      message: 'limit is in the wrong format, expected number above 0',
+    },
+  );
+  t.falsy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/search?start=MDox&limit=30`),
+  );
 });

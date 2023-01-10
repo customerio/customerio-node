@@ -2,7 +2,7 @@ import type { RequestOptions } from 'https';
 import Request, { BearerAuth, RequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { SendEmailRequest } from './api/requests';
-import { cleanEmail, isEmpty, MissingParamError } from './utils';
+import { cleanEmail, isEmpty, MissingParamError, WrongFormatError } from './utils';
 import { Filter } from './types';
 
 type APIDefaults = RequestOptions & { region: Region; url?: string };
@@ -137,6 +137,23 @@ export class APIClient {
     }
 
     return this.request.post(`${this.apiRoot}/exports/deliveries`, { newsletter_id: newsletterId, ...options });
+  }
+
+  searchForCustomers(filter: Filter, options: { start?: string; limit?: number } = {}) {
+    if (isEmpty(filter)) {
+      throw new MissingParamError('filter');
+    }
+
+    if (options.limit && (!Number.isFinite(options.limit) || options.limit < 1)) {
+      throw new WrongFormatError('limit', 'number above 0');
+    }
+
+    const parameters = new URLSearchParams({
+      start: options.start || '',
+      limit: options.limit?.toString() || '100',
+    });
+
+    return this.request.post(`${this.apiRoot}/customers/search?${parameters}`, { filter });
   }
 }
 

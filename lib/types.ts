@@ -16,22 +16,24 @@ export type SegmentFilter = {
 export type AttributeFilter = {
   field: string;
   operator: FilterOperator;
-  value?: string;
+  value?: string | number | boolean;
 };
 
-export type NotFilter = {
+export type NotSegment = {
   segment?: SegmentFilter;
   attribute?: AttributeFilter;
 };
 
-export type FilterObject = SegmentFilter | AttributeFilter | NotFilter;
+export type FilterObject = SegmentFilter | AttributeFilter | NotSegment | AndFilter | OrFilter;
+
+export type FilterObjectOrRecord = FilterObject | Record<'not', FilterObject>;
 
 export type AndFilter = {
-  and: FilterObject[];
+  and: FilterObjectOrRecord[];
 };
 
 export type OrFilter = {
-  or: FilterObject[];
+  or: FilterObjectOrRecord[];
 };
 
 export type Filter = AndFilter | OrFilter;

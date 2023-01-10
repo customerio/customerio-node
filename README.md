@@ -373,6 +373,38 @@ api.getCustomersByEmail("test@test.com");
 
 - **email**: String (required)
 
+### api.searchForCustomers(filter, queery)
+
+Returns a list of identifiers, ids and the next page token.
+
+```javascript
+api.searchForCustomers(
+  {
+    and: [
+      {
+        segment: { id: 4 },
+        attribute: { field: "unsubscribed", operator: FilterOperator.Eq, value: true },
+      },
+    ],
+  },
+  {
+    limit: 30,
+    start: "MDox",
+  },
+);
+```
+
+[You can learn more about the available recipient fields here](https://customer.io/docs/api/#operation/getPersonAttributes).
+
+#### Options
+
+- **filters**: Object (required)
+- **query_parameters**: Object
+  - _start_: the token for the page of results you want to return.
+  - _limit_: the maximum number of results you want to retrieve per page.
+
+You can read more about the filter object syntax on the [export customer data](https://customer.io/docs/api/#operation/getPeopleFilter) docs.
+
 ### api.listExports()
 
 Return a list of your exports. Exports are point-in-time people or campaign metrics.
