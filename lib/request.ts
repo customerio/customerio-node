@@ -73,7 +73,7 @@ export default class CIORequest {
         method,
         headers,
         hostname: url.hostname,
-        path: url.pathname+`${url.search ? url.search : ""}`,
+        path: `${url.pathname}${url.search}`,
       });
       let req = request(options, (res) => {
         let chunks: Buffer[] = [];
