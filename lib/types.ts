@@ -16,7 +16,7 @@ export type SegmentFilter = {
 export type AttributeFilter = {
   field: string;
   operator: FilterOperator;
-  value?: string;
+  value?: string | number | boolean;
 };
 
 export type NotFilter = {
@@ -24,14 +24,18 @@ export type NotFilter = {
   attribute?: AttributeFilter;
 };
 
-export type FilterObject = SegmentFilter | AttributeFilter | NotFilter;
+export type FilterObject = SegmentFilter | AttributeFilter;
+
+export type NotFilterObject = {
+  not: Filter;
+};
 
 export type AndFilter = {
-  and: FilterObject[];
+  and: Filter[];
 };
 
 export type OrFilter = {
-  or: FilterObject[];
+  or: Filter[];
 };
 
-export type Filter = AndFilter | OrFilter;
+export type Filter = AndFilter | OrFilter | NotFilter | NotFilterObject | FilterObject;

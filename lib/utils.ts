@@ -46,3 +46,10 @@ export class MissingParamError extends Error {
     this.message = `${param} is required`;
   }
 }
+
+export class WrongFormatError extends Error {
+  constructor(param: string, expected: string) {
+    super(param);
+    this.message = `${param} is in the wrong format, expected ${expected}`;
+  }
+}
