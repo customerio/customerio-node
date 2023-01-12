@@ -19,21 +19,23 @@ export type AttributeFilter = {
   value?: string | number | boolean;
 };
 
-export type NotSegment = {
+export type NotFilter = {
   segment?: SegmentFilter;
   attribute?: AttributeFilter;
 };
 
-export type FilterObject = SegmentFilter | AttributeFilter | NotSegment | AndFilter | OrFilter;
+export type FilterObject = SegmentFilter | AttributeFilter;
 
-export type FilterObjectOrRecord = FilterObject | Record<'not', FilterObject>;
+export type NotFilterObject = {
+  not: Filter;
+};
 
 export type AndFilter = {
-  and: FilterObjectOrRecord[];
+  and: Filter[];
 };
 
 export type OrFilter = {
-  or: FilterObjectOrRecord[];
+  or: Filter[];
 };
 
-export type Filter = AndFilter | OrFilter;
+export type Filter = AndFilter | OrFilter | NotFilter | NotFilterObject | FilterObject;
