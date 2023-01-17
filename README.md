@@ -373,6 +373,29 @@ api.getCustomersByEmail("test@test.com");
 
 - **email**: String (required)
 
+### api.getAttributes(id, id_type)
+
+Returns a list of attributes for a customer profile.
+
+```javascript
+api.getAttributes("1", "id");
+```
+
+OR
+
+```javascript
+const { IdentifierType } = require("customerio-node");
+
+api.getAttributes("1", IdentifierType.ID);
+```
+
+[You can learn more about the available recipient fields here](https://customer.io/docs/api/#operation/getPersonAttributes).
+
+#### Options
+
+- **id**: Customer identifier, String or number (required)
+- **id_type**: One of the ID types - "id" / "email" / "cio_id" (default is "id")
+
 ### api.listExports()
 
 Return a list of your exports. Exports are point-in-time people or campaign metrics.

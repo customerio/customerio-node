@@ -1,4 +1,5 @@
 import { IncomingMessage } from 'http';
+import { IdentifierType } from '../lib/types';
 
 export const isEmpty = (value: unknown) => {
   return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
@@ -6,6 +7,10 @@ export const isEmpty = (value: unknown) => {
 
 export const cleanEmail = (email: string) => {
   return email.split('@').map(encodeURIComponent).join('@');
+};
+
+export const isIdentifierType = (value: unknown) => {
+  return Object.values(IdentifierType).includes(value as IdentifierType);
 };
 
 export class CustomerIORequestError extends Error {

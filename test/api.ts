@@ -2,7 +2,7 @@ import avaTest, { TestFn } from 'ava';
 import sinon, { SinonStub } from 'sinon';
 import { APIClient, DeliveryExportMetric, DeliveryExportRequestOptions, SendEmailRequest } from '../lib/api';
 import { RegionUS, RegionEU } from '../lib/regions';
-import { Filter } from '../lib/types';
+import { Filter, IdentifierType } from '../lib/types';
 
 type TestContext = { client: APIClient };
 
@@ -140,28 +140,27 @@ test('#getCustomersByEmail: searching for a customer email (default)', (t) => {
   const email = 'hello@world.com';
   t.context.client.getCustomersByEmail(email);
   t.truthy((t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/customers?email=${email}`));
-})
+});
 
 test('#getCustomersByEmail: should throw error when email is empty', (t) => {
   const email = '';
   t.throws(() => t.context.client.getCustomersByEmail(email));
-})
-
+});
 
 test('#getCustomersByEmail: should throw error when email is null', (t) => {
   const email: unknown = null;
   t.throws(() => t.context.client.getCustomersByEmail(email as string));
-})
+});
 
 test('#getCustomersByEmail: should throw error when email is undefined', (t) => {
   const email: unknown = undefined;
   t.throws(() => t.context.client.getCustomersByEmail(email as string));
-})
+});
 
 test('#getCustomersByEmail: should throw error when email is not a string object', (t) => {
-  const email: unknown = { "object": "test" };
+  const email: unknown = { object: 'test' };
   t.throws(() => t.context.client.getCustomersByEmail(email as string));
-})
+});
 
 test('#sendEmail: adding attachments with encoding (default)', (t) => {
   sinon.stub(t.context.client.request, 'post');
@@ -386,4 +385,68 @@ test('#createDeliveriesExport: fails without id', (t) => {
     message: 'newsletterId is required',
   });
   t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/deliveries`));
+});
+
+test('#getAttributes: fails without customerId', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.throws(() => (t.context.client.getAttributes as any)(), {
+    message: 'customerId is required',
+  });
+  t.falsy(
+    (t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/1/attributes?id_type=id`),
+  );
+});
+
+test('#getAttributes: fails if id_type is not id, cio_id nor email', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.throws(() => (t.context.client.getAttributes as any)(1, 'first_name'), {
+    message: 'idType must be one of "id", "cio_id", or "email"',
+  });
+  t.falsy(
+    (t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/1/attributes?id_type=id`),
+  );
+});
+
+test('#getAttributes: fails if id_type is null', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.throws(() => (t.context.client.getAttributes as any)(1, null), {
+    message: 'idType must be one of "id", "cio_id", or "email"',
+  });
+  t.falsy(
+    (t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/1/attributes?id_type=id`),
+  );
+});
+
+test('#getAttributes: success with default type id', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.context.client.getAttributes('1');
+  t.truthy(
+    (t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/1/attributes?id_type=id`),
+  );
+});
+
+test('#getAttributes: success with type id', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.context.client.getAttributes('1', IdentifierType.Id);
+  t.truthy(
+    (t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/1/attributes?id_type=id`),
+  );
+});
+
+test('#getAttributes: success with type cio id', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.context.client.getAttributes('1', IdentifierType.CioId);
+  t.truthy(
+    (t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/1/attributes?id_type=cio_id`),
+  );
+});
+
+test('#getAttributes: success with type email', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+  t.context.client.getAttributes('test@email.com', IdentifierType.Email);
+  t.truthy(
+    (t.context.client.request.get as SinonStub).calledWith(
+      `${RegionUS.apiUrl}/customers/test@email.com/attributes?id_type=email`,
+    ),
+  );
 });

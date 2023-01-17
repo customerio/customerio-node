@@ -1,7 +1,7 @@
 import type { RequestOptions } from 'https';
 import Request, { BasicAuth, RequestData, PushRequestData } from './request';
 import { Region, RegionUS } from './regions';
-import { isEmpty, MissingParamError } from './utils';
+import { isEmpty, isIdentifierType, MissingParamError } from './utils';
 import { IdentifierType } from './types';
 
 type TrackDefaults = RequestOptions & { region: Region; url?: string };
@@ -154,6 +154,10 @@ export class TrackClient {
 
     if (isEmpty(secondaryId)) {
       throw new MissingParamError('secondaryId');
+    }
+
+    if (!isIdentifierType(primaryIdType) || !isIdentifierType(secondaryIdType)) {
+      throw new Error('primaryIdType and secondaryIdType must be one of "id", "cio_id", or "email"');
     }
 
     return this.request.post(`${this.trackRoot}/merge_customers`, {
