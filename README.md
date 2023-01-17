@@ -378,7 +378,15 @@ api.getCustomersByEmail("test@test.com");
 Returns a list of attributes for a customer profile.
 
 ```javascript
-api.getAttributes("1", IdentifierType.Id);
+api.getAttributes("1", "id");
+```
+
+OR
+
+```javascript
+const { IdentifierType } = require("customerio-node");
+
+api.getAttributes("1", IdentifierType.ID);
 ```
 
 [You can learn more about the available recipient fields here](https://customer.io/docs/api/#operation/getPersonAttributes).
