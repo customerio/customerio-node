@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.5.0]
+
+#### Added
+
+- Added `getAttributes` method ([#129](https://github.com/customerio/customerio-node/pull/129))
+
+#### Fixed
+
+- Pass query parameters for `getCustomersByEmail` to prevent `400` responses from Customer.io ([#132](https://github.com/customerio/customerio-node/pull/132))
+
 ## [3.4.1]
 
 #### Added
