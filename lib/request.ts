@@ -86,6 +86,16 @@ export default class CIORequest {
           let body = Buffer.concat(chunks).toString('utf-8');
           let json = null;
 
+          if ([301, 302, 307, 308].includes(res.statusCode ?? 0)) {
+            let newURI = res.headers.location;
+
+            if (newURI == null) {
+              return reject(new Error(`Received a ${res.statusCode} status, but no Location header was present`));
+            }
+
+            return this.handler({ uri: newURI, body, method, headers }).then(resolve).catch(reject);
+          }
+
           try {
             if (body && body.length) {
               json = JSON.parse(body);
