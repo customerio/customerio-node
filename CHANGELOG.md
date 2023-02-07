@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.5.1]
+
+#### Fixed
+
+- Handle redirect responses from the track and app apis ([#135](https://github.com/customerio/customerio-node/pull/135))
+
 ## [3.5.0]
 
 #### Added
