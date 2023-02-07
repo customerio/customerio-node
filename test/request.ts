@@ -13,14 +13,16 @@ const test = avaTest as TestFn<TestContext>;
 // setup & fixture data
 const siteid = '123';
 const apikey = 'abc';
+const appKey = 'abc';
 const uri = 'https://track.customer.io/api/v1/customers/1';
 const data = { first_name: 'Bruce', last_name: 'Wayne' };
-const auth = `Basic ${Buffer.from(`${siteid}:${apikey}`).toString('base64')}`;
+const trackAuth = `Basic ${Buffer.from(`${siteid}:${apikey}`).toString('base64')}`;
+const appAuth = `Bearer ${appKey}`;
 const PACKAGE_VERSION = JSON.parse(fs.readFileSync(resolve(__dirname, '..', 'package.json')).toString()).version;
 const baseOptions = {
   uri,
   headers: {
-    Authorization: auth,
+    Authorization: trackAuth,
     'Content-Type': 'application/json',
     'Content-Length': 0,
     'User-Agent': `Customer.io Node Client/${PACKAGE_VERSION}`,
@@ -39,6 +41,7 @@ const createMockRequest = (
   statusCode: number | null,
   body: Record<string, any> | string | null = '',
   error?: Error,
+  headers: Record<string, string> = {},
 ): SinonStub => {
   const response = new PassThrough();
   const request = new PassThrough();
@@ -49,6 +52,7 @@ const createMockRequest = (
   request.on('finish', () => {
     // Cast to any because PassThrough doesn't have ClientResponse properties types
     (response as any).statusCode = statusCode;
+    (response as any).headers = headers;
     if (error) {
       request.destroy(error);
     } else {
@@ -63,39 +67,48 @@ const createMockRequest = (
   return httpsReq;
 };
 
-test.before((t) => {
-  t.context.httpsReq = sinon.stub(https, 'request');
-});
-
 test.beforeEach((t) => {
+  t.context.httpsReq = sinon.stub(https, 'request');
   t.context.req = new Request({ siteid: '123', apikey: 'abc' }, { timeout: 5000 });
 });
 
-test.after((t) => {
+test.afterEach((t) => {
   t.context.httpsReq.restore();
 });
 
 // tests begin here
-test('constructor sets all properties correctly', (t) => {
+test.serial('constructor sets all properties correctly for track api', (t) => {
   t.is(t.context.req.siteid, '123');
   t.is(t.context.req.apikey, 'abc');
   t.deepEqual(t.context.req.defaults, { timeout: 5000 });
-  t.is(t.context.req.auth, auth);
+  t.is(t.context.req.auth, trackAuth);
 });
 
-test('constructor sets default timeout correctly', (t) => {
+test.serial('constructor sets default timeout correctly for track api', (t) => {
   const req = new Request({ siteid, apikey });
   t.deepEqual(req.defaults, { timeout: 10000 });
 });
 
-test('#options returns a correctly formatted object', (t) => {
+test.serial('constructor sets all properties correctly for app api', (t) => {
+  const req = new Request(appKey, { timeout: 5000 });
+  t.is(req.appKey, appKey);
+  t.deepEqual(req.defaults, { timeout: 5000 });
+  t.is(req.auth, appAuth);
+});
+
+test.serial('constructor sets default timeout correctly for app api', (t) => {
+  const req = new Request(appKey);
+  t.deepEqual(req.defaults, { timeout: 10000 });
+});
+
+test.serial('#options returns a correctly formatted object', (t) => {
   const expectedOptions = Object.assign({}, baseOptions, { method: 'POST', body: null });
   const resultOptions = t.context.req.options(uri, 'POST');
 
   t.deepEqual(resultOptions, expectedOptions);
 });
 
-test('#options sets Content-Length using body length in bytes', (t) => {
+test.serial('#options sets Content-Length using body length in bytes', (t) => {
   const body = { first_name: 'Wïly Wönka' };
   const method = 'POST';
   const expectedOptions = {
@@ -112,13 +125,13 @@ test('#options sets Content-Length using body length in bytes', (t) => {
   t.deepEqual(resultOptions, expectedOptions);
 });
 
-test('#handler returns a promise', (t) => {
+test.serial('#handler returns a promise', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.handler(putOptions);
   t.is(promise.constructor.name, 'Promise');
 });
 
-test('#handler makes a request and resolves a promise on success', async (t) => {
+test.serial('#handler makes a request and resolves a promise on success', async (t) => {
   const body = {};
   createMockRequest(t.context.httpsReq, 200, body);
 
@@ -130,7 +143,7 @@ test('#handler makes a request and resolves a promise on success', async (t) => 
   }
 });
 
-test('#handler makes a request and parses the uri correctly', async (t) => {
+test.serial('#handler makes a request and parses the uri correctly', async (t) => {
   const customOptions = {
     ...baseOptions,
     headers: {
@@ -166,7 +179,7 @@ test('#handler makes a request and parses the uri correctly', async (t) => {
   }
 });
 
-test('#handler makes a request and rejects with an error on failure', async (t) => {
+test.serial('#handler makes a request and rejects with an error on failure', async (t) => {
   const customOptions = {
     ...baseOptions,
     ...{
@@ -189,86 +202,95 @@ test('#handler makes a request and rejects with an error on failure', async (t) 
   }
 });
 
-test('#handler makes a request and rejects with an error on failure that has an error array with multiple errors', async (t) => {
-  const customOptions = {
-    ...baseOptions,
-    ...{
-      uri: 'https://track.customer.io/api/v1/customers/1/events',
-      body: JSON.stringify({ title: 'The Batman' }),
-      method: 'POST',
-    },
-  };
+test.serial(
+  '#handler makes a request and rejects with an error on failure that has an error array with multiple errors',
+  async (t) => {
+    const customOptions = {
+      ...baseOptions,
+      ...{
+        uri: 'https://track.customer.io/api/v1/customers/1/events',
+        body: JSON.stringify({ title: 'The Batman' }),
+        method: 'POST',
+      },
+    };
 
-  const messageOne = 'test error message one';
-  const messageTwo = 'test error message two';
-  const body = { meta: { errors: [messageOne, messageTwo] } };
-  createMockRequest(t.context.httpsReq, 400, body);
+    const messageOne = 'test error message one';
+    const messageTwo = 'test error message two';
+    const body = { meta: { errors: [messageOne, messageTwo] } };
+    createMockRequest(t.context.httpsReq, 400, body);
 
-  try {
-    await t.context.req.handler(customOptions);
+    try {
+      await t.context.req.handler(customOptions);
 
-    t.fail();
-  } catch (err: any) {
-    t.is(
-      err.message,
-      `2 errors:
+      t.fail();
+    } catch (err: any) {
+      t.is(
+        err.message,
+        `2 errors:
   - ${messageOne}
   - ${messageTwo}`,
-    );
-  }
-});
+      );
+    }
+  },
+);
 
-test('#handler makes a request and rejects with an error on failure that has an error array with one error', async (t) => {
-  const customOptions = {
-    ...baseOptions,
-    ...{
-      uri: 'https://track.customer.io/api/v1/customers/1/events',
-      body: JSON.stringify({ title: 'The Batman' }),
-      method: 'POST',
-    },
-  };
+test.serial(
+  '#handler makes a request and rejects with an error on failure that has an error array with one error',
+  async (t) => {
+    const customOptions = {
+      ...baseOptions,
+      ...{
+        uri: 'https://track.customer.io/api/v1/customers/1/events',
+        body: JSON.stringify({ title: 'The Batman' }),
+        method: 'POST',
+      },
+    };
 
-  const message = 'test error message';
-  const body = { meta: { errors: [message] } };
-  createMockRequest(t.context.httpsReq, 400, body);
+    const message = 'test error message';
+    const body = { meta: { errors: [message] } };
+    createMockRequest(t.context.httpsReq, 400, body);
 
-  try {
-    await t.context.req.handler(customOptions);
+    try {
+      await t.context.req.handler(customOptions);
 
-    t.fail();
-  } catch (err: any) {
-    t.is(
-      err.message,
-      `1 error:
+      t.fail();
+    } catch (err: any) {
+      t.is(
+        err.message,
+        `1 error:
   - ${message}`,
-    );
-  }
-});
+      );
+    }
+  },
+);
 
-test('#handler makes a request and rejects with an error on failure that has an unexpected structure', async (t) => {
-  const customOptions = {
-    ...baseOptions,
-    ...{
-      uri: 'https://track.customer.io/api/v1/customers/1/events',
-      body: JSON.stringify({ title: 'The Batman' }),
-      method: 'POST',
-    },
-  };
+test.serial(
+  '#handler makes a request and rejects with an error on failure that has an unexpected structure',
+  async (t) => {
+    const customOptions = {
+      ...baseOptions,
+      ...{
+        uri: 'https://track.customer.io/api/v1/customers/1/events',
+        body: JSON.stringify({ title: 'The Batman' }),
+        method: 'POST',
+      },
+    };
 
-  const message = 'test error message';
-  const body = { error: message };
-  createMockRequest(t.context.httpsReq, 400, body);
+    const message = 'test error message';
+    const body = { error: message };
+    createMockRequest(t.context.httpsReq, 400, body);
 
-  try {
-    await t.context.req.handler(customOptions);
+    try {
+      await t.context.req.handler(customOptions);
 
-    t.fail();
-  } catch (err: any) {
-    t.is(err.message, 'Unknown error');
-  }
-});
+      t.fail();
+    } catch (err: any) {
+      t.is(err.message, 'Unknown error');
+    }
+  },
+);
 
-test('#handler makes a request and rejects with an error on failure and has no status code', async (t) => {
+test.serial('#handler makes a request and rejects with an error on failure and has no status code', async (t) => {
   const customOptions = {
     ...baseOptions,
     ...{
@@ -291,7 +313,7 @@ test('#handler makes a request and rejects with an error on failure and has no s
   }
 });
 
-test('#handler makes a request and rejects with `null` as body', async (t) => {
+test.serial('#handler makes a request and rejects with `null` as body', async (t) => {
   const customOptions = Object.assign({}, baseOptions, {
     uri: 'https://track.customer.io/api/v1/customers/1/events',
     body: JSON.stringify({ title: 'The Batman' }),
@@ -309,7 +331,7 @@ test('#handler makes a request and rejects with `null` as body', async (t) => {
   }
 });
 
-test('#handler makes a request and rejects with a bad JSON response', async (t) => {
+test.serial('#handler makes a request and rejects with a bad JSON response', async (t) => {
   const customOptions = Object.assign({}, baseOptions, {
     uri: 'https://track.customer.io/api/v1/customers/1/events',
     body: JSON.stringify({ title: 'The Batman' }),
@@ -330,7 +352,7 @@ test('#handler makes a request and rejects with a bad JSON response', async (t) 
   }
 });
 
-test('#handler makes a request and rejects with timeout error', async (t) => {
+test.serial('#handler makes a request and rejects with timeout error', async (t) => {
   const customOptions = Object.assign({}, baseOptions, {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -347,27 +369,120 @@ test('#handler makes a request and rejects with timeout error', async (t) => {
   }
 });
 
-test('#get calls the handler, makes GET request with the correct args', (t) => {
+test.serial('#handler makes a request and follows redirects', async (t) => {
+  const usResponse = new PassThrough();
+  const usRequest = new PassThrough();
+  const euResponse = new PassThrough();
+  const euRequest = new PassThrough();
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    timeout: 1,
+  });
+  const body = { redirected: true };
+
+  // Don't start writing response until request has ended
+  // Use `finish` here, because calling `.end()` on a `PassThrough` doesn't emit the `end` event
+  // https://stackoverflow.com/questions/41155877/node-js-passthrough-stream-not-closing-properly
+  usRequest.on('finish', () => {
+    // Cast to any because PassThrough doesn't have ClientResponse properties types
+    (usResponse as any).statusCode = 301;
+    (usResponse as any).headers = { location: 'https://track-eu.customer.io/api/v1/customers/1' };
+    usResponse.end();
+  });
+  euRequest.on('finish', () => {
+    // Cast to any because PassThrough doesn't have ClientResponse properties types
+    (euResponse as any).statusCode = 200;
+    (euResponse as any).headers = {};
+    euResponse.write(JSON.stringify(body));
+    euResponse.end();
+  });
+
+  // Cast to any because PassThrough doesn't conform to ClientRequest
+  t.context.httpsReq
+    .withArgs(sinon.match.any)
+    .callsArgWith(1, usResponse)
+    .returns(usRequest as any)
+    .withArgs(sinon.match.has('hostname', 'track-eu.customer.io'))
+    .callsArgWith(1, euResponse)
+    .returns(euRequest as any);
+
+  try {
+    const res = await t.context.req.handler(customOptions);
+    t.deepEqual(res, body);
+    t.is(t.context.httpsReq.callCount, 2);
+  } catch {
+    t.fail();
+  }
+});
+
+test.serial('#handler makes a request and errors when redirecting without a location header', async (t) => {
+  const usResponse = new PassThrough();
+  const usRequest = new PassThrough();
+  const euResponse = new PassThrough();
+  const euRequest = new PassThrough();
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    timeout: 1,
+  });
+  const body = { redirected: true };
+
+  // Don't start writing response until request has ended
+  // Use `finish` here, because calling `.end()` on a `PassThrough` doesn't emit the `end` event
+  // https://stackoverflow.com/questions/41155877/node-js-passthrough-stream-not-closing-properly
+  usRequest.on('finish', () => {
+    // Cast to any because PassThrough doesn't have ClientResponse properties types
+    (usResponse as any).statusCode = 301;
+    (usResponse as any).headers = {};
+    usResponse.end();
+  });
+  euRequest.on('finish', () => {
+    // Cast to any because PassThrough doesn't have ClientResponse properties types
+    (euResponse as any).statusCode = 200;
+    (euResponse as any).headers = {};
+    euResponse.write(JSON.stringify(body));
+    euResponse.end();
+  });
+
+  // Cast to any because PassThrough doesn't conform to ClientRequest
+  t.context.httpsReq
+    .withArgs(sinon.match.any)
+    .callsArgWith(1, usResponse)
+    .returns(usRequest as any)
+    .withArgs(sinon.match.has('hostname', 'track-eu.customer.io'))
+    .callsArgWith(1, euResponse)
+    .returns(euRequest as any);
+
+  try {
+    await t.context.req.handler(customOptions);
+    t.fail();
+  } catch (err: any) {
+    t.is(err.message, 'Received a 301 status, but no Location header was present');
+  }
+});
+
+test.serial('#get calls the handler, makes GET request with the correct args', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.get(uri);
   t.truthy((t.context.req.handler as SinonStub).calledWith({ ...baseOptions, method: 'GET', body: null }));
 });
 
-test('#get returns the promise generated by the handler', (t) => {
+test.serial('#get returns the promise generated by the handler', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.get(uri);
   t.is(promise.constructor.name, 'Promise');
 });
 
-test('#put calls the handler, makes PUT request with the correct args', (t) => {
+test.serial('#put calls the handler, makes PUT request with the correct args', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.put(uri, data);
   t.truthy((t.context.req.handler as SinonStub).calledWith(putOptions));
 });
 
-test('#put calls the handler, makes PUT request with default data', (t) => {
+test.serial('#put calls the handler, makes PUT request with default data', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.put(uri);
@@ -382,7 +497,7 @@ test('#put calls the handler, makes PUT request with default data', (t) => {
   );
 });
 
-test('#put returns the promise generated by the handler', (t) => {
+test.serial('#put returns the promise generated by the handler', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.put(uri, data);
   t.is(promise.constructor.name, 'Promise');
@@ -390,14 +505,14 @@ test('#put returns the promise generated by the handler', (t) => {
 
 const deleteOptions = Object.assign({}, baseOptions, { method: 'DELETE', body: null });
 
-test('#destroy calls the handler, makes a DELETE request with the correct args', (t) => {
+test.serial('#destroy calls the handler, makes a DELETE request with the correct args', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.destroy(uri);
   t.truthy((t.context.req.handler as SinonStub).calledWith(deleteOptions));
 });
 
-test('#destroy returns the promise generated by the handler', (t) => {
+test.serial('#destroy returns the promise generated by the handler', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.destroy(uri);
   t.is(promise.constructor.name, 'Promise');
@@ -411,14 +526,14 @@ const postOptions = Object.assign({}, baseOptions, {
   }),
 });
 
-test('#post calls the handler, makes a POST request with the correct args', (t) => {
+test.serial('#post calls the handler, makes a POST request with the correct args', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.post(uri, data);
   t.truthy((t.context.req.handler as SinonStub).calledWith(postOptions));
 });
 
-test('#post returns the promise generated by the handler', (t) => {
+test.serial('#post returns the promise generated by the handler', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.post(uri);
   t.is(promise.constructor.name, 'Promise');
