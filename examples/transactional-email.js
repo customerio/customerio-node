@@ -34,7 +34,7 @@ let req = new SendEmailRequest({
   bcc: '',
   subject: '',
   body: '',
-  body_plaintext: '',
+  body_plain: '',
   body_amp: '',
   fake_bcc: false,
 

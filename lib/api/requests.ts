@@ -11,7 +11,7 @@ export type SendEmailRequestOptionalOptions = Partial<{
   preheader: string;
   reply_to: string;
   bcc: string;
-  body_plaintext: string;
+  body_plain: string;
   body_amp: string;
   fake_bcc: boolean;
   disable_message_retention: boolean;
@@ -53,7 +53,7 @@ export class SendEmailRequest {
       preheader: opts.preheader,
       reply_to: opts.reply_to,
       bcc: opts.bcc,
-      body_plaintext: opts.body_plaintext,
+      body_plain: opts.body_plain,
       body_amp: opts.body_amp,
       fake_bcc: opts.fake_bcc,
       disable_message_retention: opts.disable_message_retention,
