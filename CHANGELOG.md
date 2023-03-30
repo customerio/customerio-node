@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.0]
+
+#### Changed
+
+- Updated transactional email request parameter `amp_body` to `body_amp` for consistency across APIs ([#137](https://github.com/customerio/customerio-node/pull/137/files))
+
 ## [3.5.1]
 
 #### Fixed
