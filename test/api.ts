@@ -1,6 +1,12 @@
 import avaTest, { TestFn } from 'ava';
 import sinon, { SinonStub } from 'sinon';
-import { APIClient, DeliveryExportMetric, DeliveryExportRequestOptions, SendEmailRequest } from '../lib/api';
+import {
+  APIClient,
+  DeliveryExportMetric,
+  DeliveryExportRequestOptions,
+  SendEmailRequest,
+  SendPushRequest,
+} from '../lib/api';
 import { RegionUS, RegionEU } from '../lib/regions';
 import { Filter, IdentifierType } from '../lib/types';
 
@@ -132,6 +138,49 @@ test('#sendEmail: override body: success', (t) => {
   t.falsy(req.message.subject);
   t.is(req.message.body, 'Hi there!');
   t.is(req.message.transactional_message_id, 1);
+});
+
+test('sendPush: passing in a plain object throws an error', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+
+  let req = { identifiers: { id: '2' }, transactional_message_id: 1 };
+
+  t.throws(() => t.context.client.sendPush(req as any), {
+    message: /"request" must be an instance of SendPushRequest/,
+  });
+  t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/push`));
+});
+
+test('#sendPush: with custom payload: success', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  let req = new SendPushRequest({
+    identifiers: { id: '2' },
+    transactional_message_id: 1,
+    custom_payload: { ios: { foo: 'bar' }, android: { foo: 'bar' } },
+  });
+  t.context.client.sendPush(req);
+  t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/push`, req.message));
+  t.is(req.message.transactional_message_id, 1);
+  t.deepEqual(req.message.custom_payload, { ios: { foo: 'bar' }, android: { foo: 'bar' } });
+});
+
+test('#sendPush: without custom payload: success', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  let req = new SendPushRequest({
+    identifiers: { id: '2' },
+    transactional_message_id: 1,
+    title: 'This is a test',
+    message: 'Hi there!',
+    message_data: { foo: 'bar' },
+  });
+
+  t.context.client.sendPush(req);
+  t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/push`, req.message));
+  t.is(req.message.transactional_message_id, 1);
+  t.is(req.message.title, 'This is a test');
+  t.is(req.message.message, 'Hi there!');
+  t.deepEqual(req.message.message_data, { foo: 'bar' });
+  t.falsy(req.message.custom_payload);
 });
 
 test('#getCustomersByEmail: searching for a customer email (default)', (t) => {
