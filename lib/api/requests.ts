@@ -121,7 +121,7 @@ export type SendPushRequestOptionalOptions = Partial<{
   image_url: string;
   link: string;
   sound: string;
-  custom_data: Record<string, any>;
+  custom_data: Record<string, string>;
   device: Record<string, any>;
   custom_device: Record<string, any>;
 }>;
