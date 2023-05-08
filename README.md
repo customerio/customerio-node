@@ -295,7 +295,9 @@ return cio.track(customerId, {
 
 ### Transactional API
 
-To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), import our API client and initialize it with an [app key](https://customer.io/docs/managing-credentials#app-api-keys).
+To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), import our API client and initialize it with an [app key](https://customer.io/docs/managing-credentials#app-api-keys) and create a request object of your message type.
+
+#### Email
 
 Create a new `SendEmailRequest` object containing:
 
@@ -333,6 +335,40 @@ request.attach("receipt.pdf", fs.readFileSync("receipt.pdf"));
 
 api
   .sendEmail(request)
+  .then((res) => console.log(res))
+  .catch((err) => console.log(err.statusCode, err.message));
+```
+
+#### Push
+
+Create a new `SendPushRequest` object containing:
+
+- `transactional_message_id`: the ID or trigger name of the transactional message you want to send.
+- an `identifiers` object containing the `id` or `email` of your recipient. If the profile does not exist, Customer.io will create it.
+
+Use `sendPush` referencing your request to send a transactional message. [Learn more about transactional messages and `sendPushRequest` properties](https://customer.io/docs/transactional-api).
+
+```javascript
+const { APIClient, SendPushRequest, RegionUS, RegionEU } = require("customerio-node");
+const api = new APIClient("app-key", { region: RegionUS });
+
+const request = new SendPushRequest({
+  transactional_message_id: "3",
+  message_data: {
+    name: "Person",
+    items: {
+      name: "shoes",
+      price: "59.99",
+    },
+    products: [],
+  },
+  identifiers: {
+    id: "2",
+  },
+});
+
+api
+  .sendPush(request)
   .then((res) => console.log(res))
   .catch((err) => console.log(err.statusCode, err.message));
 ```

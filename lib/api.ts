@@ -1,7 +1,7 @@
 import type { RequestOptions } from 'https';
 import Request, { BearerAuth, RequestData } from './request';
 import { Region, RegionUS } from './regions';
-import { SendEmailRequest } from './api/requests';
+import { SendEmailRequest, SendPushRequest } from './api/requests';
 import { cleanEmail, isEmpty, isIdentifierType, MissingParamError } from './utils';
 import { Filter, IdentifierType } from './types';
 
@@ -75,6 +75,14 @@ export class APIClient {
     }
 
     return this.request.post(`${this.apiRoot}/send/email`, req.message);
+  }
+
+  sendPush(req: SendPushRequest) {
+    if (!(req instanceof SendPushRequest)) {
+      throw new Error('"request" must be an instance of SendPushRequest');
+    }
+
+    return this.request.post(`${this.apiRoot}/send/push`, req.message);
   }
 
   getCustomersByEmail(email: string) {
@@ -152,4 +160,4 @@ export class APIClient {
   }
 }
 
-export { SendEmailRequest } from './api/requests';
+export { SendEmailRequest, SendPushRequest } from './api/requests';

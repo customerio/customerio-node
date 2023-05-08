@@ -37,11 +37,12 @@ export type SendEmailRequestWithoutTemplate = SendEmailRequestRequiredOptions &
 
 export type SendEmailRequestOptions = SendEmailRequestWithTemplate | SendEmailRequestWithoutTemplate;
 
-export type Message = Partial<SendEmailRequestWithTemplate & SendEmailRequestWithoutTemplate> & {
+export type EmailMessage = Partial<SendEmailRequestWithTemplate & SendEmailRequestWithoutTemplate> & {
   attachments: Record<string, string>;
 };
+
 export class SendEmailRequest {
-  message: Message;
+  message: EmailMessage;
 
   constructor(opts: SendEmailRequestOptions) {
     this.message = {
@@ -93,6 +94,76 @@ export class SendEmailRequest {
       this.message.attachments[name] = Buffer.from(data).toString('base64');
     } else {
       this.message.attachments[name] = data;
+    }
+  }
+}
+
+export type SendPushCustomPayload = {
+  ios: Record<string, any>;
+  android: Record<string, any>;
+};
+
+export type SendPushRequestRequiredOptions = {
+  identifiers: Identifiers;
+  transactional_message_id: string | number;
+};
+
+export type SendPushRequestOptionalOptions = Partial<{
+  to: string;
+  title: string;
+  message: string;
+  disable_message_retention: boolean;
+  send_to_unsubscribed: boolean;
+  queue_draft: boolean;
+  message_data: Record<string, any>;
+  send_at: number;
+  language: string;
+  image_url: string;
+  link: string;
+  sound: string;
+  custom_data: Record<string, string>;
+  device: Record<string, any>;
+  custom_device: Record<string, any>;
+}>;
+
+export type SendPushRequestWithoutCustomPayload = SendPushRequestRequiredOptions & SendPushRequestOptionalOptions & {};
+
+export type SendPushRequestWithCustomPayload = SendPushRequestRequiredOptions &
+  SendPushRequestOptionalOptions & {
+    custom_payload: SendPushCustomPayload;
+  };
+
+export type SendPushRequestOptions = SendPushRequestWithoutCustomPayload | SendPushRequestWithCustomPayload;
+
+export type PushMessage = Partial<
+  Omit<SendPushRequestWithoutCustomPayload, 'device'> & Omit<SendPushRequestWithCustomPayload, 'device'>
+>;
+
+export class SendPushRequest {
+  message: PushMessage;
+
+  constructor(opts: SendPushRequestOptions) {
+    this.message = {
+      identifiers: opts.identifiers,
+      to: opts.to,
+      transactional_message_id: opts.transactional_message_id,
+      title: opts.title,
+      message: opts.message,
+      disable_message_retention: opts.disable_message_retention,
+      send_to_unsubscribed: opts.send_to_unsubscribed,
+      queue_draft: opts.queue_draft,
+      message_data: opts.message_data,
+      send_at: opts.send_at,
+      language: opts.language,
+      image_url: opts.image_url,
+      link: opts.link,
+      sound: opts.sound,
+      custom_data: opts.custom_data,
+      custom_device: opts.device,
+    };
+
+    if ('custom_payload' in opts) {
+      this.message.custom_payload = opts.custom_payload;
     }
   }
 }
