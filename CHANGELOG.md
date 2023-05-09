@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.0]
+
+#### Added
+
+- Add support for sending [transactional push messages](https://customer.io/docs/transactional-api/#transactional-push-notifications) ([#141](https://github.com/customerio/customerio-node/pull/141))
+
 ## [4.0.0]
 
 #### Changed
