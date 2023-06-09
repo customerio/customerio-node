@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.1]
+
+#### Fixed
+
+- Explicitly initialize a variable to avoid build errors ([#143](https://github.com/customerio/customerio-node/issues/143))
+
 ## [4.1.0]
 
 #### Added
