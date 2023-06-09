@@ -84,7 +84,7 @@ export default class CIORequest {
 
         res.on('end', () => {
           let body = Buffer.concat(chunks).toString('utf-8');
-          let json = null;
+          let json: Record<string, any> = {};
 
           if ([301, 302, 307, 308].includes(res.statusCode ?? 0)) {
             let newURI = res.headers.location;
