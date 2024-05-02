@@ -1,9 +1,9 @@
-<table align="center" border=0>
-<tr>
-<td><a href="https://customer.io"><img src="https://avatars.githubusercontent.com/u/1152079?s=200&v=4" height="60"></a></td>
-<td><h4>Say more, more powerfully</h4></td>
-</tr>
-</table>
+<p align=center>
+  <a href="https://customer.io">
+    <img src="https://avatars.githubusercontent.com/u/1152079?s=200&v=4" height="60">
+  </a>
+  <h4 align=center>Say more, more powerfully</h4>
+</p>
 
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blueviolet?logo=gitpod)](https://gitpod.io/#https://github.com/customerio/customerio-node/)
 [![ci](https://github.com/customerio/customerio-node/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/customerio-node/actions/workflows/main.yml)
