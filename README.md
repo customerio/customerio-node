@@ -305,7 +305,7 @@ Create a new `SendEmailRequest` object containing:
 - `to`: the email address of your recipients
 - an `identifiers` object containing the email and/or `id` of your recipient. If the person you reference by email or ID does not exist, Customer.io creates them.
 - a `message_data` object containing properties that you want reference in your message using Liquid.
-- You can also send attachments with your message. Use `attach` to encode attachments.
+- You can also send attachments with your message with `attach`, but you need to read the file to a buffer (with `fs.readFileSync`, for example); you cannot attach raw, base64-encoded data directly from a variable.
 
 Use `sendEmail` referencing your request to send a transactional message. [Learn more about transactional messages and `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
 
@@ -331,6 +331,8 @@ const request = new SendEmailRequest({
 });
 
 // (optional) attach a file to your message.
+// Note that you need to read the file to a buffer;
+// you can't simply attach raw, base64-encoded data.
 request.attach("receipt.pdf", fs.readFileSync("receipt.pdf"));
 
 api
