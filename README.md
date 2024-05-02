@@ -1,7 +1,7 @@
-<table align="center">
+<table align="center" border=0>
 <tr>
-<td style="borders:none;"><a href="https://customer.io"><img src="https://avatars.githubusercontent.com/u/1152079?s=200&v=4" height="60"></a></td>
-<td style="borders:none;"><a href="https://customer.io"><p style="font-size: 2rem;">Say more, more powerfully</p></a></td>
+<td><a href="https://customer.io"><img src="https://avatars.githubusercontent.com/u/1152079?s=200&v=4" height="60"></a></td>
+<td><h4>Say more, more powerfully</h4></td>
 </tr>
 </table>
 
