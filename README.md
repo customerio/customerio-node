@@ -1,16 +1,15 @@
-<p align="center">
+<p align=center>
   <a href="https://customer.io">
-    <img src="https://user-images.githubusercontent.com/6409227/144680509-907ee093-d7ad-4a9c-b0a5-f640eeb060cd.png" height="60">
+    <img src="https://avatars.githubusercontent.com/u/1152079?s=200&v=4" height="60">
   </a>
-  <p align="center">Power automated communication that people like to receive.</p>
 </p>
 
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blueviolet?logo=gitpod)](https://gitpod.io/#https://github.com/customerio/customerio-node/)
 [![ci](https://github.com/customerio/customerio-node/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/customerio-node/actions/workflows/main.yml)
 
-# Customer.io Node
+# Customer.io NodeJS
 
-A node client for the Customer.io [REST API](https://customer.io/docs/api/).
+A node client for the Customer.io Journeys [REST API](https://customer.io/docs/api/). If you're new to Customer.io, we recommend that you integrate with our [Data Pipelines JavaScript client](https://github.com/customerio/cdp-analytics-js) instead.
 
 ## Alternative Node runtimes
 
@@ -305,7 +304,7 @@ Create a new `SendEmailRequest` object containing:
 - `to`: the email address of your recipients
 - an `identifiers` object containing the email and/or `id` of your recipient. If the person you reference by email or ID does not exist, Customer.io creates them.
 - a `message_data` object containing properties that you want reference in your message using Liquid.
-- You can also send attachments with your message. Use `attach` to encode attachments.
+- You can also send attachments with your message with `attach`, but you need to read the file to a buffer (with `fs.readFileSync`, for example); you cannot attach raw, base64-encoded data directly from a variable.
 
 Use `sendEmail` referencing your request to send a transactional message. [Learn more about transactional messages and `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
 
@@ -331,6 +330,8 @@ const request = new SendEmailRequest({
 });
 
 // (optional) attach a file to your message.
+// Note that you need to read the file to a buffer;
+// you can't simply attach raw, base64-encoded data.
 request.attach("receipt.pdf", fs.readFileSync("receipt.pdf"));
 
 api
