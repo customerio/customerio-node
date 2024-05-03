@@ -9,7 +9,7 @@
 
 # Customer.io NodeJS
 
-A node client for the Customer.io Journeys [REST API](https://customer.io/docs/api/). If you're new to Customer.io, we recommend that you integrate with our [Data Pipelines JavaScript client](https://github.com/customerio/cdp-analytics-js) instead.
+A node client for the [Customer.io Journeys Track API](https://customer.io/docs/api/track). If you're new to Customer.io, we recommend that you integrate with our [Data Pipelines JavaScript client](https://github.com/customerio/cdp-analytics-js) instead.
 
 ## Alternative Node runtimes
 
