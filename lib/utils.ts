@@ -68,9 +68,5 @@ export const verifyWebhookSignature = (
   hmac.update(payload);
 
   const hash = hmac.digest();
-  if (!timingSafeEqual(hash, Buffer.from(signature, 'hex'))) {
-    return false;
-  }
-
-  return true;
+  return timingSafeEqual(hash, Buffer.from(signature, 'hex'));
 };
