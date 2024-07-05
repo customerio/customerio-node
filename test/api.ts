@@ -499,3 +499,33 @@ test('#getAttributes: success with type email', (t) => {
     ),
   );
 });
+
+test('#getAttributesBatch: fails without customerId', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.getAttributesBatch as any)(), {
+    message: 'ids is required',
+  });
+  t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/attributes`));
+});
+
+test('#getAttributesBatch: fails if ids is not array', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.getAttributesBatch as any)(1), {
+    message: 'ids must be an array',
+  });
+  t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/attributes`));
+});
+
+test('#getAttributesBatch: fails if length of ids is greater than 100', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.getAttributesBatch as any)(Array(101).fill(1)), {
+    message: 'Maximum of 100 customer IDs allowed',
+  });
+  t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/attributes`));
+});
+
+test('#getAttributesBatch: success with default type id', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.getAttributesBatch(['1']);
+  t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/attributes`));
+});
