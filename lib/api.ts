@@ -158,6 +158,22 @@ export class APIClient {
 
     return this.request.get(`${this.apiRoot}/customers/${id}/attributes?id_type=${idType}`);
   }
+
+  getAttributesBatch(ids: string[]) {
+    if (isEmpty(ids)) {
+      throw new MissingParamError('ids');
+    }
+
+    if (!Array.isArray(ids)) {
+      throw new Error('ids must be an array');
+    }
+
+    if (ids.length > 100) {
+      throw new Error('Maximum of 100 customer IDs allowed');
+    }
+
+    return this.request.post(`${this.apiRoot}/customers/attributes`, { ids });
+  }
 }
 
 export { SendEmailRequest, SendPushRequest } from './api/requests';

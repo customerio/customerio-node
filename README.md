@@ -433,6 +433,18 @@ api.getAttributes("1", IdentifierType.ID);
 - **id**: Customer identifier, String or number (required)
 - **id_type**: One of the ID types - "id" / "email" / "cio_id" (default is "id")
 
+### api.getAttributesBatch(ids)
+
+Returns a list of attributes and devices for up to 100 customer profiles.
+
+```javascript
+api.getAttributesBatch(["1", "2", "3"]);
+```
+
+#### Options
+
+- **ids**: Customer identifiers, array of String (required)
+
 ### api.listExports()
 
 Return a list of your exports. Exports are point-in-time people or campaign metrics.
