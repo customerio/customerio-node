@@ -173,6 +173,37 @@ test('#trackPush works', (t) => {
   );
 });
 
+test('#reportMetrics works', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.reportMetrics({
+    delivery_id: 'RPILAgUBcRhIBqSfeiIwdIYJKxTY',
+    metric: 'opened',
+  });
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/metrics`, {
+      delivery_id: 'RPILAgUBcRhIBqSfeiIwdIYJKxTY',
+      metric: 'opened',
+    }),
+  );
+
+  t.context.client.reportMetrics({
+    delivery_id: 'RPILAgUBcRhIBqSfeiIwdIYJKxTY',
+    metric: 'clicked',
+    timestamp: 1613063089,
+    recipient: 'cool.person@company.com',
+    href: 'https://example.com',
+  });
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/metrics`, {
+      delivery_id: 'RPILAgUBcRhIBqSfeiIwdIYJKxTY',
+      metric: 'clicked',
+      timestamp: 1613063089,
+      recipient: 'cool.person@company.com',
+      href: 'https://example.com',
+    }),
+  );
+});
+
 ID_INPUTS.forEach(([input, expected]) => {
   test(`#trackPageView works for ${input}`, (t) => {
     sinon.stub(t.context.client.request, 'post');
