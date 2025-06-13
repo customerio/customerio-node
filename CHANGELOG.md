@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.0]
+
+#### Added
+
+- Add support for sending transactional SMS messages ([#164](https://github.com/customerio/customerio-node/pull/164))
+
 ## [4.1.1]
 
 #### Fixed
