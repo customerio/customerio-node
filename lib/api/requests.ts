@@ -167,3 +167,40 @@ export class SendPushRequest {
     }
   }
 }
+
+export type SMSMessage = Partial<SendSMSRequestOptions>;
+
+export type SendSMSRequestRequiredOptions = {
+  identifiers: Identifiers;
+  transactional_message_id: string | number;
+};
+
+export type SendSMSRequestOptionalOptions = Partial<{
+  to: string;
+  disable_message_retention: boolean;
+  send_to_unsubscribed: boolean;
+  queue_draft: boolean;
+  message_data: Record<string, any>;
+  send_at: number;
+  language: string;
+}>;
+
+export type SendSMSRequestOptions = SendSMSRequestRequiredOptions & SendSMSRequestOptionalOptions & {};
+
+export class SendSMSRequest {
+  message: SMSMessage;
+
+  constructor(opts: SendSMSRequestOptions) {
+    this.message = {
+      identifiers: opts.identifiers,
+      to: opts.to,
+      transactional_message_id: opts.transactional_message_id,
+      disable_message_retention: opts.disable_message_retention,
+      send_to_unsubscribed: opts.send_to_unsubscribed,
+      queue_draft: opts.queue_draft,
+      message_data: opts.message_data,
+      send_at: opts.send_at,
+      language: opts.language,
+    };
+  }
+}
