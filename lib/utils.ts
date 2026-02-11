@@ -1,4 +1,5 @@
 import { IncomingMessage } from 'http';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { IdentifierType } from '../lib/types';
 
 export const isEmpty = (value: unknown) => {
@@ -51,3 +52,21 @@ export class MissingParamError extends Error {
     this.message = `${param} is required`;
   }
 }
+
+export const verifyWebhookSignature = (
+  webhookSigningSecret: string,
+  timestamp: string,
+  signature: string,
+  payload: Buffer,
+): boolean => {
+  if (isEmpty(webhookSigningSecret) || isEmpty(timestamp) || isEmpty(signature) || isEmpty(payload)) {
+    throw new MissingParamError('webhookSigningSecret, timestamp, signature, payload');
+  }
+
+  const hmac = createHmac('sha256', webhookSigningSecret);
+  hmac.update(`v0:${timestamp}:`);
+  hmac.update(payload);
+
+  const hash = hmac.digest();
+  return timingSafeEqual(hash, Buffer.from(signature, 'hex'));
+};
