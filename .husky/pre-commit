@@ -1,5 +1,5 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-ts-node ./check-version.ts
-pretty-quick --staged
+npx ts-node ./check-version.ts
+npx pretty-quick --staged
