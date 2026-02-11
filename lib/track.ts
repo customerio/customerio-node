@@ -1,5 +1,5 @@
 import type { RequestOptions } from 'https';
-import Request, { BasicAuth, RequestData, PushRequestData } from './request';
+import Request, { BasicAuth, RequestData, PushRequestData, ReportMetricsRequestData } from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty, isIdentifierType, MissingParamError } from './utils';
 import { IdentifierType } from './types';
@@ -99,6 +99,13 @@ export class TrackClient {
     });
   }
 
+  reportMetrics(data: ReportMetricsRequestData) {
+    return this.request.post(`${this.trackRoot}/metrics`, data);
+  }
+
+  /**
+   * @deprecated Use reportMetrics instead
+   */
   trackPush(data: PushRequestData = {}) {
     return this.request.post(`${this.trackRoot}/push/events`, data);
   }
