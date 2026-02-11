@@ -1,7 +1,7 @@
 import type { RequestOptions } from 'https';
 import Request, { BearerAuth, RequestData } from './request';
 import { Region, RegionUS } from './regions';
-import { SendEmailRequest, SendPushRequest, SendSMSRequest } from './api/requests';
+import { SendEmailRequest, SendPushRequest, SendSMSRequest, SendInboxMessageRequest } from './api/requests';
 import { cleanEmail, isEmpty, isIdentifierType, MissingParamError } from './utils';
 import { Filter, IdentifierType } from './types';
 
@@ -93,6 +93,14 @@ export class APIClient {
     return this.request.post(`${this.apiRoot}/send/sms`, req.message);
   }
 
+  sendInboxMessage(req: SendInboxMessageRequest) {
+    if (!(req instanceof SendInboxMessageRequest)) {
+      throw new Error('"request" must be an instance of SendInboxMessageRequest');
+    }
+
+    return this.request.post(`${this.apiRoot}/send/inbox_message`, req.message);
+  }
+
   getCustomersByEmail(email: string) {
     if (typeof email !== 'string' || isEmpty(email)) {
       throw new Error('"email" must be a string');
@@ -168,4 +176,4 @@ export class APIClient {
   }
 }
 
-export { SendEmailRequest, SendPushRequest, SendSMSRequest } from './api/requests';
+export { SendEmailRequest, SendPushRequest, SendSMSRequest, SendInboxMessageRequest } from './api/requests';

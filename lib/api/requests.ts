@@ -204,3 +204,37 @@ export class SendSMSRequest {
     };
   }
 }
+
+export type InboxMessage = Partial<SendInboxMessageRequestOptions>;
+
+export type SendInboxMessageRequestRequiredOptions = {
+  identifiers: Identifiers;
+  transactional_message_id: string | number;
+};
+
+export type SendInboxMessageRequestOptionalOptions = Partial<{
+  disable_message_retention: boolean;
+  queue_draft: boolean;
+  message_data: Record<string, any>;
+  send_at: number;
+  language: string;
+}>;
+
+export type SendInboxMessageRequestOptions = SendInboxMessageRequestRequiredOptions &
+  SendInboxMessageRequestOptionalOptions & {};
+
+export class SendInboxMessageRequest {
+  message: InboxMessage;
+
+  constructor(opts: SendInboxMessageRequestOptions) {
+    this.message = {
+      identifiers: opts.identifiers,
+      transactional_message_id: opts.transactional_message_id,
+      disable_message_retention: opts.disable_message_retention,
+      queue_draft: opts.queue_draft,
+      message_data: opts.message_data,
+      send_at: opts.send_at,
+      language: opts.language,
+    };
+  }
+}

@@ -7,6 +7,7 @@ import {
   SendEmailRequest,
   SendPushRequest,
   SendSMSRequest,
+  SendInboxMessageRequest,
 } from '../lib/api';
 import { RegionUS, RegionEU } from '../lib/regions';
 import { Filter, IdentifierType } from '../lib/types';
@@ -564,4 +565,84 @@ test('#sendSMS: error', async (t) => {
   });
 
   t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/sms`, req.message));
+});
+
+test('sendInboxMessage: passing in a plain object throws an error', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+
+  let req = { identifiers: { id: '2' }, transactional_message_id: 1 };
+
+  t.throws(() => t.context.client.sendInboxMessage(req as any), {
+    message: /"request" must be an instance of SendInboxMessageRequest/,
+  });
+  t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/inbox_message`));
+});
+
+test('#sendInboxMessage: with template: success', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  let req = new SendInboxMessageRequest({
+    identifiers: { id: '2' },
+    transactional_message_id: 1,
+  });
+  t.context.client.sendInboxMessage(req);
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/inbox_message`, req.message),
+  );
+  t.is(req.message.transactional_message_id, 1);
+  t.deepEqual(req.message.identifiers, { id: '2' });
+});
+
+test('#sendInboxMessage: with optional parameters: success', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  let req = new SendInboxMessageRequest({
+    identifiers: { id: '2' },
+    transactional_message_id: 1,
+    message_data: { key: 'value' },
+    disable_message_retention: true,
+    queue_draft: true,
+    send_at: 1234567890,
+    language: 'en',
+  });
+  t.context.client.sendInboxMessage(req);
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/inbox_message`, req.message),
+  );
+  t.is(req.message.transactional_message_id, 1);
+  t.deepEqual(req.message.identifiers, { id: '2' });
+  t.deepEqual(req.message.message_data, { key: 'value' });
+  t.true(req.message.disable_message_retention);
+  t.true(req.message.queue_draft);
+  t.is(req.message.send_at, 1234567890);
+  t.is(req.message.language, 'en');
+});
+
+test('#sendInboxMessage: with email identifier: success', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  let req = new SendInboxMessageRequest({
+    identifiers: { email: 'test@example.com' },
+    transactional_message_id: 1,
+  });
+  t.context.client.sendInboxMessage(req);
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/inbox_message`, req.message),
+  );
+  t.is(req.message.transactional_message_id, 1);
+  t.deepEqual(req.message.identifiers, { email: 'test@example.com' });
+});
+
+test('#sendInboxMessage: error', async (t) => {
+  sinon.stub(t.context.client.request, 'post').rejects({ message: 'sample error', statusCode: 400 });
+
+  let req = new SendInboxMessageRequest({
+    identifiers: { id: '2' },
+    transactional_message_id: 1,
+  });
+  t.context.client.sendInboxMessage(req).catch((err) => {
+    t.is(err.message, 'sample error');
+    t.is(err.statusCode, 400);
+  });
+
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/inbox_message`, req.message),
+  );
 });
