@@ -11,6 +11,7 @@ export type SendEmailRequestOptionalOptions = Partial<{
   preheader: string;
   reply_to: string;
   bcc: string;
+  body: string;
   body_plain: string;
   body_amp: string;
   fake_bcc: boolean;
