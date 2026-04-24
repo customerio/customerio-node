@@ -369,6 +369,38 @@ test.serial('#handler makes a request and rejects with timeout error', async (t)
   }
 });
 
+test.serial('#handler destroys the request and rejects when the socket times out', async (t) => {
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+  const request = new PassThrough() as PassThrough & {
+    destroy: (err?: Error) => void;
+  };
+
+  const originalDestroy = request.destroy.bind(request);
+  request.destroy = (err?: Error) => {
+    if (err) {
+      request.emit('error', err);
+    }
+    return originalDestroy(err);
+  };
+
+  t.context.httpsReq.returns(request as any);
+
+  const promise = t.context.req.handler(customOptions);
+
+  setImmediate(() => request.emit('timeout'));
+
+  try {
+    await promise;
+    t.fail('Expected handler to reject on timeout');
+  } catch (err: any) {
+    t.is(err.message, 'Request timed out after 5000ms');
+  }
+});
+
 test.serial('#handler makes a request and follows redirects', async (t) => {
   const usResponse = new PassThrough();
   const usRequest = new PassThrough();
