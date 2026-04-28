@@ -238,3 +238,36 @@ export class SendInboxMessageRequest {
     };
   }
 }
+
+export type InAppMessage = Partial<SendInAppRequestOptions>;
+
+export type SendInAppRequestRequiredOptions = {
+  identifiers: Identifiers;
+  transactional_message_id: string | number;
+};
+
+export type SendInAppRequestOptionalOptions = Partial<{
+  disable_message_retention: boolean;
+  queue_draft: boolean;
+  message_data: Record<string, any>;
+  send_at: number;
+  language: string;
+}>;
+
+export type SendInAppRequestOptions = SendInAppRequestRequiredOptions & SendInAppRequestOptionalOptions & {};
+
+export class SendInAppRequest {
+  message: InAppMessage;
+
+  constructor(opts: SendInAppRequestOptions) {
+    this.message = {
+      identifiers: opts.identifiers,
+      transactional_message_id: opts.transactional_message_id,
+      disable_message_retention: opts.disable_message_retention,
+      queue_draft: opts.queue_draft,
+      message_data: opts.message_data,
+      send_at: opts.send_at,
+      language: opts.language,
+    };
+  }
+}
