@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.0]
+
+#### Added
+
+- Add support for sending transactional in-app messages ([#174](https://github.com/customerio/customerio-node/pull/174))
+
 ## [4.3.0]
 
 #### Added
