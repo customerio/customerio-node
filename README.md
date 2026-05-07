@@ -376,7 +376,7 @@ api
 
 ### api.triggerBroadcast(campaign_id, data, recipients)
 
-Trigger an email broadcast using the email campaign's id. You can also optionally pass along custom data that will be merged with the liquid template, and additional conditions to filter recipients.
+Trigger an email broadcast using the broadcast ID. You can also optionally pass along custom data that will be merged with the liquid template, and additional conditions to filter recipients.
 
 ```javascript
 api.triggerBroadcast(1, { name: "foo" }, { segment: { id: 7 } });
