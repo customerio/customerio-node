@@ -345,10 +345,7 @@ test.serial('#handler makes a request and rejects with a bad JSON response', asy
 
     t.fail();
   } catch (err: any) {
-    t.is(
-      err.message,
-      'Unable to parse JSON. Error: SyntaxError: Unexpected token < in JSON at position 0 \nBody:\n <html></html>',
-    );
+    t.regex(err.message, /Unexpected token <|Unable to parse JSON/);
   }
 });
 

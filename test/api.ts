@@ -255,7 +255,7 @@ test('#triggerBroadcast works', (t) => {
   sinon.stub(t.context.client.request, 'post');
   t.context.client.triggerBroadcast(1, { type: 'data' }, { type: 'recipients' });
   t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/api/campaigns/1/triggers`, {
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
       data: { type: 'data' },
       recipients: { type: 'recipients' },
     }),
@@ -274,7 +274,7 @@ test('#triggerBroadcast works with emails', (t) => {
     },
   );
   t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/api/campaigns/1/triggers`, {
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
       data: { type: 'data' },
       emails: ['test@email.com'],
       email_ignore_missing: true,
@@ -287,7 +287,7 @@ test('#triggerBroadcast works with ids', (t) => {
   sinon.stub(t.context.client.request, 'post');
   t.context.client.triggerBroadcast(1, { type: 'data' }, { ids: [1], id_ignore_missing: true });
   t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/api/campaigns/1/triggers`, {
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
       data: { type: 'data' },
       ids: [1],
       id_ignore_missing: true,
@@ -300,7 +300,7 @@ test('#triggerBroadcast works with per_user_data', (t) => {
   const per_user_data = [{ id: 1, data: { very: 'important' } }];
   t.context.client.triggerBroadcast(1, { type: 'data' }, { per_user_data, id_ignore_missing: true });
   t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/api/campaigns/1/triggers`, {
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
       data: { type: 'data' },
       per_user_data,
       id_ignore_missing: true,
@@ -313,7 +313,7 @@ test('#triggerBroadcast works with data_file_url', (t) => {
   const data_file_url = 'https://my.s3.bucket.com';
   t.context.client.triggerBroadcast(1, { type: 'data' }, { data_file_url, id_ignore_missing: true });
   t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/api/campaigns/1/triggers`, {
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
       data: { type: 'data' },
       data_file_url,
       id_ignore_missing: true,
@@ -334,7 +334,7 @@ test('#triggerBroadcast discards extraneous fields', (t) => {
     },
   );
   t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/api/campaigns/1/triggers`, {
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
       data: { type: 'data' },
       ids: [1],
       id_ignore_missing: true,

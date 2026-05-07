@@ -123,7 +123,7 @@ export class APIClient {
     return this.request.get(`${this.apiRoot}/customers?email=${cleanEmail(email)}`);
   }
 
-  triggerBroadcast(id: string | number, data: RequestData, recipients: Recipients) {
+  triggerBroadcast(broadcastId: string | number, data: RequestData, recipients: Recipients) {
     let payload = {};
     let customRecipientField = (
       Object.keys(BROADCASTS_ALLOWED_RECIPIENT_FIELDS) as BroadcastsAllowedRecipientFieldsKeys[]
@@ -138,7 +138,7 @@ export class APIClient {
       };
     }
 
-    return this.request.post(`${this.apiRoot}/api/campaigns/${id}/triggers`, payload);
+    return this.request.post(`${this.apiRoot}/campaigns/${broadcastId}/triggers`, payload);
   }
 
   listExports() {
