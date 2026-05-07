@@ -118,6 +118,10 @@ export default class CIORequest {
         reject(error);
       });
 
+      req.on('timeout', () => {
+        req.destroy(new Error(`Request timed out after ${options.timeout}ms`));
+      });
+
       if (body) {
         req.write(body);
       }
