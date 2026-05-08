@@ -11,9 +11,15 @@
 
 A node client for the Customer.io Journeys [REST API](https://customer.io/docs/api/). If you're new to Customer.io, we recommend that you integrate with our [Data Pipelines JavaScript client](https://github.com/customerio/cdp-analytics-js) instead.
 
+## Supported Node.js versions
+
+This project is developed for and tested against the versions of Node.js that the Node.js project itself supports — the **Current** release plus the **Active LTS** and **Maintenance LTS** lines. See the [Node.js release schedule](https://nodejs.org/en/about/previous-releases) for details. When a Node.js version reaches end-of-life, support for it is dropped in the next release of this library, which may be a breaking change.
+
+The `engines` field in `package.json` reflects the current minimum supported version.
+
 ## Alternative Node runtimes
 
-This project is developed for and tested against the latest and LTS versions of Node.js. Many runtimes often have subtle differences to the APIs and standard library offered by Node.js. These differences can cause issues when using this library with those runtimes.
+Many runtimes often have subtle differences to the APIs and standard library offered by Node.js. These differences can cause issues when using this library with those runtimes.
 
 If you would like to use Customer.io with an alternate runtime, we recommend using either our [Track](https://customer.io/docs/api/#tag/trackOverview) and [App](https://customer.io/docs/api/#tag/appOverview) APIs directly using the built-in HTTP client available in your runtime, or our [React Native SDK](https://customer.io/docs/sdk/react-native/getting-started/) if applicable.
 

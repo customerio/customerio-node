@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+#### Changed
+
+- **BREAKING:** Drop support for Node.js versions that have reached end-of-life. Supported versions now follow the [Node.js release schedule](https://nodejs.org/en/about/previous-releases) — Current, Active LTS, and Maintenance LTS only (currently Node.js 22, 24, and 26). Added an `engines` field to `package.json`.
+
 ## [4.4.0]
 
 #### Added
