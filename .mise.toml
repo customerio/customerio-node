@@ -1,0 +1,7 @@
+[settings]
+# needed for installing tools using go directly (go forge) as that is an experimental feature at the moment
+experimental = true
+fetch_remote_versions_timeout = '120s'
+
+[tools]
+node = '22.22.0'
