@@ -6,6 +6,8 @@ const campaignId = require('./config').campaignId;
 const segmentId = require('./config').segmentId;
 const cio = new APIClient(appKey, { region: RegionUS });
 
-const email = "hello@world.com"
+const email = 'hello@world.com';
 
-cio.getCustomersByEmail(email);
+cio.getCustomersByEmail(email).then((result) => {
+  console.log(result);
+});
