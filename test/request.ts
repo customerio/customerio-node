@@ -101,6 +101,20 @@ test.serial('constructor sets default timeout correctly for app api', (t) => {
   t.deepEqual(req.defaults, { timeout: 10000 });
 });
 
+test.serial('constructor accepts an optional userAgentSuffix', (t) => {
+  const req = new Request(appKey, undefined, 'CioEmailSDK-Preview');
+  t.is(req.userAgentSuffix, 'CioEmailSDK-Preview');
+});
+
+test.serial('#options User-Agent includes userAgentSuffix when set', (t) => {
+  const req = new Request(appKey, undefined, 'CioEmailSDK-Preview');
+  const opts = req.options(uri, 'POST');
+  t.is(
+    (opts.headers as Record<string, string | number>)['User-Agent'],
+    `Customer.io Node Client/${PACKAGE_VERSION} CioEmailSDK-Preview`,
+  );
+});
+
 test.serial('#options returns a correctly formatted object', (t) => {
   const expectedOptions = Object.assign({}, baseOptions, { method: 'POST', body: null });
   const resultOptions = t.context.req.options(uri, 'POST');
