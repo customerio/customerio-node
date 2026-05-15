@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [4.5.0]
 
 #### Changed
 
-- **BREAKING:** Drop support for Node.js versions that have reached end-of-life. Supported versions now follow the [Node.js release schedule](https://nodejs.org/en/about/previous-releases) — Current, Active LTS, and Maintenance LTS only (currently Node.js 22, 24, and 26). Added an `engines` field to `package.json`.
+- **BREAKING:** Drop support for Node.js versions that have reached end-of-life. Supported versions now follow the [Node.js release schedule](https://nodejs.org/en/about/previous-releases) — Current, Active LTS, and Maintenance LTS only (currently Node.js 22, 24, and 26). Added an `engines` field to `package.json`. ([#180](https://github.com/customerio/customerio-node/pull/180))
+- **BREAKING:** Fix `triggerBroadcast` API path by removing erroneous `/api` prefix, and rename the `id` parameter to `broadcastId` for clarity ([#179](https://github.com/customerio/customerio-node/pull/179))
+- Bump third-party dependencies: `@types/node`, `@types/sinon`, `ava`, `js-yaml`, `lodash`, `minimatch`, `nyc`, `picomatch`, `pretty-quick`, `sinon` ([#167](https://github.com/customerio/customerio-node/pull/167), [#169](https://github.com/customerio/customerio-node/pull/169), [#177](https://github.com/customerio/customerio-node/pull/177), [#178](https://github.com/customerio/customerio-node/pull/178), [#181](https://github.com/customerio/customerio-node/pull/181))
+
+#### Added
+
+- Add `body` property to `SendEmailRequestWithTemplate` type definition ([#172](https://github.com/customerio/customerio-node/pull/172))
+
+#### Fixed
+
+- Add timeout handling for HTTP requests ([#173](https://github.com/customerio/customerio-node/pull/173))
 
 ## [4.4.0]
 
