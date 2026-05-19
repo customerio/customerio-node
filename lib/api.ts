@@ -1,5 +1,6 @@
 import type { RequestOptions } from 'https';
-import Request, { BearerAuth, RequestData } from './request';
+import type { BearerAuth, RequestData } from './request';
+import Request from './request';
 import { Region, RegionUS } from './regions';
 import {
   SendEmailRequest,
@@ -9,7 +10,8 @@ import {
   SendInAppRequest,
 } from './api/requests';
 import { cleanEmail, isEmpty, isIdentifierType, MissingParamError } from './utils';
-import { Filter, IdentifierType } from './types';
+import type { Filter } from './types';
+import { IdentifierType } from './types';
 
 type APIDefaults = RequestOptions & { region: Region; url?: string };
 
@@ -50,7 +52,7 @@ const BROADCASTS_ALLOWED_RECIPIENT_FIELDS = {
 
 const filterRecipientsDataForField = (recipients: Recipients, field: BroadcastsAllowedRecipientFieldsKeys) => {
   return BROADCASTS_ALLOWED_RECIPIENT_FIELDS[field].reduce<Record<string, unknown>>((obj, field) => {
-    if (!!recipients[field]) {
+    if (recipients[field]) {
       obj[field] = recipients[field];
     }
     return obj;
@@ -125,7 +127,7 @@ export class APIClient {
 
   triggerBroadcast(broadcastId: string | number, data: RequestData, recipients: Recipients) {
     let payload = {};
-    let customRecipientField = (
+    const customRecipientField = (
       Object.keys(BROADCASTS_ALLOWED_RECIPIENT_FIELDS) as BroadcastsAllowedRecipientFieldsKeys[]
     ).find((field) => recipients[field]);
 

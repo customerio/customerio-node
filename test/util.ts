@@ -1,4 +1,5 @@
-import avaTest, { TestFn } from 'ava';
+import type { TestFn } from 'ava';
+import avaTest from 'ava';
 import { cleanEmail } from '../lib/utils';
 
 type TestContext = {};

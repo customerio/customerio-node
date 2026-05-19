@@ -1,5 +1,7 @@
-import avaTest, { TestFn } from 'ava';
-import sinon, { SinonStub } from 'sinon';
+import type { TestFn } from 'ava';
+import avaTest from 'ava';
+import type { SinonStub } from 'sinon';
+import sinon from 'sinon';
 import { TrackClient } from '../lib/track';
 import { RegionUS, RegionEU } from '../lib/regions';
 import { IdentifierType } from '../lib/types';
@@ -31,7 +33,7 @@ test('constructor sets necessary variables', (t) => {
 
 test('constructor sets correct URL for different regions', (t) => {
   [RegionUS, RegionEU].forEach((region) => {
-    let client = new TrackClient('123', 'abc', { region });
+    const client = new TrackClient('123', 'abc', { region });
 
     t.is(client.siteid, '123');
     t.is(client.apikey, 'abc');
@@ -44,7 +46,7 @@ test('constructor sets correct URL for different regions', (t) => {
 });
 
 test('constructor sets correct URL for custom URL', (t) => {
-  let client = new TrackClient('123', 'abc', { url: 'https://example.com/url' });
+  const client = new TrackClient('123', 'abc', { url: 'https://example.com/url' });
 
   t.is(client.siteid, '123');
   t.is(client.apikey, 'abc');

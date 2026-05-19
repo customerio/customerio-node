@@ -68,26 +68,26 @@ export default class CIORequest {
 
   handler({ uri, body, method, headers }: RequestHandlerOptions): Promise<Record<string, any>> {
     return new Promise((resolve, reject) => {
-      let url = new URL(uri);
-      let options = Object.assign<{}, RequestOptions, RequestOptions>({}, this.defaults, {
+      const url = new URL(uri);
+      const options = Object.assign<{}, RequestOptions, RequestOptions>({}, this.defaults, {
         method,
         headers,
         hostname: url.hostname,
         path: `${url.pathname}${url.search}`,
       });
-      let req = request(options, (res) => {
-        let chunks: Buffer[] = [];
+      const req = request(options, (res) => {
+        const chunks: Buffer[] = [];
 
         res.on('data', (data: Buffer) => {
           chunks.push(data);
         });
 
         res.on('end', () => {
-          let responseBody = Buffer.concat(chunks).toString('utf-8');
+          const responseBody = Buffer.concat(chunks).toString('utf-8');
           let json: Record<string, any> = {};
 
           if ([301, 302, 307, 308].includes(res.statusCode ?? 0)) {
-            let newURI = res.headers.location;
+            const newURI = res.headers.location;
 
             if (newURI == null) {
               return reject(new Error(`Received a ${res.statusCode} status, but no Location header was present`));

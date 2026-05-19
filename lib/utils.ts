@@ -1,4 +1,4 @@
-import { IncomingMessage } from 'http';
+import type { IncomingMessage } from 'http';
 import { IdentifierType } from '../lib/types';
 
 export const isEmpty = (value: unknown) => {

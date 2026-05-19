@@ -1,8 +1,9 @@
 import type { RequestOptions } from 'https';
-import Request, { BasicAuth, RequestData, PushRequestData } from './request';
+import type { BasicAuth, RequestData, PushRequestData } from './request';
+import Request from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty, isIdentifierType, MissingParamError } from './utils';
-import { IdentifierType } from './types';
+import type { IdentifierType } from './types';
 
 type TrackDefaults = RequestOptions & { region: Region; url?: string };
 
@@ -75,7 +76,7 @@ export class TrackClient {
       throw new MissingParamError('data.name');
     }
 
-    let payload = { ...data };
+    const payload = { ...data };
 
     if (!isEmpty(anonymousId)) {
       payload['anonymous_id'] = anonymousId;
@@ -116,7 +117,7 @@ export class TrackClient {
       throw new MissingParamError('platform');
     }
 
-    let { last_used, ...attributes } = data;
+    const { last_used, ...attributes } = data;
 
     return this.request.put(`${this.trackRoot}/customers/${encodeURIComponent(customerId)}/devices`, {
       device: {

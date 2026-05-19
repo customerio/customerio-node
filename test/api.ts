@@ -1,9 +1,11 @@
-import avaTest, { TestFn } from 'ava';
-import sinon, { SinonStub } from 'sinon';
+import type { TestFn } from 'ava';
+import avaTest from 'ava';
+import type { SinonStub } from 'sinon';
+import sinon from 'sinon';
+import type { DeliveryExportRequestOptions } from '../lib/api';
 import {
   APIClient,
   DeliveryExportMetric,
-  DeliveryExportRequestOptions,
   SendEmailRequest,
   SendPushRequest,
   SendSMSRequest,
@@ -11,7 +13,8 @@ import {
   SendInAppRequest,
 } from '../lib/api';
 import { RegionUS, RegionEU } from '../lib/regions';
-import { Filter, IdentifierType } from '../lib/types';
+import type { Filter } from '../lib/types';
+import { IdentifierType } from '../lib/types';
 
 type TestContext = { client: APIClient };
 
@@ -29,7 +32,7 @@ test('constructor sets necessary variables', (t) => {
 
 test('constructor sets correct URL for different regions', (t) => {
   [RegionUS, RegionEU].forEach((region) => {
-    let client = new APIClient('appKey', { region });
+    const client = new APIClient('appKey', { region });
 
     t.is(client.appKey, 'appKey');
     t.truthy(client.request);
@@ -38,7 +41,7 @@ test('constructor sets correct URL for different regions', (t) => {
 });
 
 test('constructor sets correct URL for a custom URL', (t) => {
-  let client = new APIClient('appKey', { url: 'https://example.com' });
+  const client = new APIClient('appKey', { url: 'https://example.com' });
 
   t.is(client.appKey, 'appKey');
   t.truthy(client.request);
@@ -59,7 +62,7 @@ test('passing in an invalid region throws an error', (t) => {
 test('sendEmail: passing in a plain object throws an error', (t) => {
   sinon.stub(t.context.client.request, 'post');
 
-  let req = { identifiers: { id: '2' }, transactional_message_id: 1 };
+  const req = { identifiers: { id: '2' }, transactional_message_id: 1 };
 
   t.throws(() => t.context.client.sendEmail(req as any), {
     message: /"request" must be an instance of SendEmailRequest/,
@@ -69,7 +72,7 @@ test('sendEmail: passing in a plain object throws an error', (t) => {
 
 test('#sendEmail: with template: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
+  const req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
   t.context.client.sendEmail(req);
   t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/email`, req.message));
   t.falsy(req.message.from);
@@ -80,7 +83,7 @@ test('#sendEmail: with template: success', (t) => {
 
 test('#sendEmail: without template: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendEmailRequest({
+  const req = new SendEmailRequest({
     to: 'test@example.com',
     identifiers: { id: '2' },
     from: 'admin@example.com',
@@ -97,7 +100,7 @@ test('#sendEmail: without template: success', (t) => {
 
 test('#sendEmail: override from: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendEmailRequest({
+  const req = new SendEmailRequest({
     to: 'test@example.com',
     identifiers: { id: '2' },
     transactional_message_id: 1,
@@ -113,7 +116,7 @@ test('#sendEmail: override from: success', (t) => {
 
 test('#sendEmail: override subject: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendEmailRequest({
+  const req = new SendEmailRequest({
     to: 'test@example.com',
     identifiers: { id: '2' },
     transactional_message_id: 1,
@@ -129,7 +132,7 @@ test('#sendEmail: override subject: success', (t) => {
 
 test('#sendEmail: override body: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendEmailRequest({
+  const req = new SendEmailRequest({
     to: 'test@example.com',
     identifiers: { id: '2' },
     transactional_message_id: 1,
@@ -146,7 +149,7 @@ test('#sendEmail: override body: success', (t) => {
 test('sendPush: passing in a plain object throws an error', (t) => {
   sinon.stub(t.context.client.request, 'post');
 
-  let req = { identifiers: { id: '2' }, transactional_message_id: 1 };
+  const req = { identifiers: { id: '2' }, transactional_message_id: 1 };
 
   t.throws(() => t.context.client.sendPush(req as any), {
     message: /"request" must be an instance of SendPushRequest/,
@@ -156,7 +159,7 @@ test('sendPush: passing in a plain object throws an error', (t) => {
 
 test('#sendPush: with custom payload: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendPushRequest({
+  const req = new SendPushRequest({
     identifiers: { id: '2' },
     transactional_message_id: 1,
     custom_payload: { ios: { foo: 'bar' }, android: { foo: 'bar' } },
@@ -169,7 +172,7 @@ test('#sendPush: with custom payload: success', (t) => {
 
 test('#sendPush: without custom payload: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendPushRequest({
+  const req = new SendPushRequest({
     identifiers: { id: '2' },
     transactional_message_id: 1,
     title: 'This is a test',
@@ -216,7 +219,7 @@ test('#getCustomersByEmail: should throw error when email is not a string object
 
 test('#sendEmail: adding attachments with encoding (default)', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
+  const req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
 
   req.attach('test', 'hello world');
   t.is(req.message.attachments.test, Buffer.from('hello world').toString('base64'));
@@ -224,7 +227,7 @@ test('#sendEmail: adding attachments with encoding (default)', (t) => {
 
 test('#sendEmail: adding attachments without encoding', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
+  const req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
 
   req.attach('file', 'test content', { encode: false });
   t.truthy(req.message.attachments.file, 'test content');
@@ -232,7 +235,7 @@ test('#sendEmail: adding attachments without encoding', (t) => {
 
 test('#sendEmail: adding attachments twice throws an error', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
+  const req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
 
   req.attach('test', 'test content');
   t.throws(() => req.attach('test', 'test content 2'), { message: /attachment test already exists/ });
@@ -242,7 +245,7 @@ test('#sendEmail: adding attachments twice throws an error', (t) => {
 test('#sendEmail: error', async (t) => {
   sinon.stub(t.context.client.request, 'post').rejects({ message: 'sample error', statusCode: 400 });
 
-  let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
+  const req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
   t.context.client.sendEmail(req).catch((err) => {
     t.is(err.message, 'sample error');
     t.is(err.statusCode, 400);
@@ -506,7 +509,7 @@ test('#getAttributes: success with type email', (t) => {
 test('sendSMS: passing in a plain object throws an error', (t) => {
   sinon.stub(t.context.client.request, 'post');
 
-  let req = { identifiers: { id: '2' }, transactional_message_id: 1 };
+  const req = { identifiers: { id: '2' }, transactional_message_id: 1 };
 
   t.throws(() => t.context.client.sendSMS(req as any), {
     message: /"request" must be an instance of SendSMSRequest/,
@@ -516,7 +519,7 @@ test('sendSMS: passing in a plain object throws an error', (t) => {
 
 test('#sendSMS: with template: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendSMSRequest({
+  const req = new SendSMSRequest({
     to: '+1234567890',
     identifiers: { id: '2' },
     transactional_message_id: 1,
@@ -529,7 +532,7 @@ test('#sendSMS: with template: success', (t) => {
 
 test('#sendSMS: with optional parameters: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendSMSRequest({
+  const req = new SendSMSRequest({
     to: '+1234567890',
     identifiers: { id: '2' },
     transactional_message_id: 1,
@@ -555,7 +558,7 @@ test('#sendSMS: with optional parameters: success', (t) => {
 test('#sendSMS: error', async (t) => {
   sinon.stub(t.context.client.request, 'post').rejects({ message: 'sample error', statusCode: 400 });
 
-  let req = new SendSMSRequest({
+  const req = new SendSMSRequest({
     to: '+1234567890',
     identifiers: { id: '2' },
     transactional_message_id: 1,
@@ -571,7 +574,7 @@ test('#sendSMS: error', async (t) => {
 test('sendInboxMessage: passing in a plain object throws an error', (t) => {
   sinon.stub(t.context.client.request, 'post');
 
-  let req = { identifiers: { id: '2' }, transactional_message_id: 1 };
+  const req = { identifiers: { id: '2' }, transactional_message_id: 1 };
 
   t.throws(() => t.context.client.sendInboxMessage(req as any), {
     message: /"request" must be an instance of SendInboxMessageRequest/,
@@ -581,7 +584,7 @@ test('sendInboxMessage: passing in a plain object throws an error', (t) => {
 
 test('#sendInboxMessage: with template: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendInboxMessageRequest({
+  const req = new SendInboxMessageRequest({
     identifiers: { id: '2' },
     transactional_message_id: 1,
   });
@@ -595,7 +598,7 @@ test('#sendInboxMessage: with template: success', (t) => {
 
 test('#sendInboxMessage: with optional parameters: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendInboxMessageRequest({
+  const req = new SendInboxMessageRequest({
     identifiers: { id: '2' },
     transactional_message_id: 1,
     message_data: { key: 'value' },
@@ -619,7 +622,7 @@ test('#sendInboxMessage: with optional parameters: success', (t) => {
 
 test('#sendInboxMessage: with email identifier: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendInboxMessageRequest({
+  const req = new SendInboxMessageRequest({
     identifiers: { email: 'test@example.com' },
     transactional_message_id: 1,
   });
@@ -634,7 +637,7 @@ test('#sendInboxMessage: with email identifier: success', (t) => {
 test('#sendInboxMessage: error', async (t) => {
   sinon.stub(t.context.client.request, 'post').rejects({ message: 'sample error', statusCode: 400 });
 
-  let req = new SendInboxMessageRequest({
+  const req = new SendInboxMessageRequest({
     identifiers: { id: '2' },
     transactional_message_id: 1,
   });
@@ -651,7 +654,7 @@ test('#sendInboxMessage: error', async (t) => {
 test('sendInApp: passing in a plain object throws an error', (t) => {
   sinon.stub(t.context.client.request, 'post');
 
-  let req = { identifiers: { id: '2' }, transactional_message_id: 1 };
+  const req = { identifiers: { id: '2' }, transactional_message_id: 1 };
 
   t.throws(() => t.context.client.sendInApp(req as any), {
     message: /"request" must be an instance of SendInAppRequest/,
@@ -661,7 +664,7 @@ test('sendInApp: passing in a plain object throws an error', (t) => {
 
 test('#sendInApp: with template: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendInAppRequest({
+  const req = new SendInAppRequest({
     identifiers: { id: '2' },
     transactional_message_id: 1,
   });
@@ -673,7 +676,7 @@ test('#sendInApp: with template: success', (t) => {
 
 test('#sendInApp: with optional parameters: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendInAppRequest({
+  const req = new SendInAppRequest({
     identifiers: { id: '2' },
     transactional_message_id: 1,
     message_data: { key: 'value' },
@@ -695,7 +698,7 @@ test('#sendInApp: with optional parameters: success', (t) => {
 
 test('#sendInApp: with email identifier: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  let req = new SendInAppRequest({
+  const req = new SendInAppRequest({
     identifiers: { email: 'test@example.com' },
     transactional_message_id: 1,
   });
@@ -708,7 +711,7 @@ test('#sendInApp: with email identifier: success', (t) => {
 test('#sendInApp: error', async (t) => {
   sinon.stub(t.context.client.request, 'post').rejects({ message: 'sample error', statusCode: 400 });
 
-  let req = new SendInAppRequest({
+  const req = new SendInAppRequest({
     identifiers: { id: '2' },
     transactional_message_id: 1,
   });
