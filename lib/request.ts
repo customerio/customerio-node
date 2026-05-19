@@ -93,7 +93,23 @@ export default class CIORequest {
               return reject(new Error(`Received a ${res.statusCode} status, but no Location header was present`));
             }
 
-            return this.handler({ uri: newURI, body, method, headers }).then(resolve).catch(reject);
+            // Strip the Authorization header when the redirect target is not a
+            // customer.io host, so we don't leak credentials to a host the
+            // caller never intended to authenticate against. Cross-data-center
+            // redirects (e.g. US → EU) stay within `*.customer.io` and must
+            // continue to carry the Authorization header.
+            let redirectHeaders = headers;
+            try {
+              const newHostname = new URL(newURI).hostname;
+              if (!newHostname.endsWith('.customer.io') && headers && 'Authorization' in headers) {
+                const { Authorization: _stripped, ...rest } = headers as Record<string, unknown>;
+                redirectHeaders = rest as RequestOptions['headers'];
+              }
+            } catch (err) {
+              // No need to do anything if the URL is malformed or relative
+            }
+
+            return this.handler({ uri: newURI, body, method, headers: redirectHeaders }).then(resolve).catch(reject);
           }
 
           try {
