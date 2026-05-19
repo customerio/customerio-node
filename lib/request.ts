@@ -34,8 +34,9 @@ export default class CIORequest {
   appKey?: BearerAuth;
   auth: string;
   defaults: RequestOptions;
+  userAgentSuffix?: string;
 
-  constructor(auth: RequestAuth, defaults?: RequestOptions) {
+  constructor(auth: RequestAuth, defaults?: RequestOptions, userAgentSuffix?: string) {
     if (typeof auth === 'object') {
       this.apikey = auth.apikey;
       this.siteid = auth.siteid;
@@ -52,15 +53,20 @@ export default class CIORequest {
       },
       defaults,
     );
+
+    this.userAgentSuffix = userAgentSuffix;
   }
 
   options(uri: string, method: RequestOptions['method'], data?: RequestData): RequestHandlerOptions {
     const body = data ? JSON.stringify(data) : null;
+    const userAgent = this.userAgentSuffix
+      ? `Customer.io Node Client/${version} ${this.userAgentSuffix}`
+      : `Customer.io Node Client/${version}`;
     const headers = {
       Authorization: this.auth,
       'Content-Type': 'application/json',
       'Content-Length': body ? Buffer.byteLength(body, 'utf8') : 0,
-      'User-Agent': `Customer.io Node Client/${version}`,
+      'User-Agent': userAgent,
     };
 
     return { method, uri, headers, body };

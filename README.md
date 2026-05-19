@@ -529,3 +529,25 @@ npm install && npm test
 ## License
 
 Released under the MIT license. See file [LICENSE](LICENSE) for more details.
+
+## Sending email (preview)
+
+The `EmailClient` is a small surface for sending a single transactional email
+using a unified API key (prefix `sdk_live_`). It is currently in preview and
+is gated by the `sdk_email_send_preview` workspace flag — keys that have not
+been enrolled will receive a 403 response.
+
+```ts
+import { EmailClient } from "customerio-node";
+
+const cio = new EmailClient({ apiKey: process.env.CIO_API_KEY! });
+
+const { delivery_id } = await cio.send({
+  to: "user@example.com",
+  from: "verified@yourdomain.com",
+  subject: "Hello",
+  body: "<p>Hi there</p>",
+});
+```
+
+The existing `APIClient` and `TrackClient` surfaces are unchanged.
