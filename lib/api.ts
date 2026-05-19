@@ -138,7 +138,7 @@ export class APIClient {
       };
     }
 
-    return this.request.post(`${this.apiRoot}/campaigns/${broadcastId}/triggers`, payload);
+    return this.request.post(`${this.apiRoot}/campaigns/${encodeURIComponent(broadcastId)}/triggers`, payload);
   }
 
   listExports() {
@@ -150,7 +150,7 @@ export class APIClient {
       throw new MissingParamError('id');
     }
 
-    return this.request.get(`${this.apiRoot}/exports/${id}`);
+    return this.request.get(`${this.apiRoot}/exports/${encodeURIComponent(id)}`);
   }
 
   downloadExport(id: string | number) {
@@ -158,7 +158,7 @@ export class APIClient {
       throw new MissingParamError('id');
     }
 
-    return this.request.get(`${this.apiRoot}/exports/${id}/download`);
+    return this.request.get(`${this.apiRoot}/exports/${encodeURIComponent(id)}/download`);
   }
 
   createCustomersExport(filters: Filter) {
@@ -186,7 +186,7 @@ export class APIClient {
       throw new Error('idType must be one of "id", "cio_id", or "email"');
     }
 
-    return this.request.get(`${this.apiRoot}/customers/${id}/attributes?id_type=${idType}`);
+    return this.request.get(`${this.apiRoot}/customers/${encodeURIComponent(id)}/attributes?id_type=${idType}`);
   }
 }
 
