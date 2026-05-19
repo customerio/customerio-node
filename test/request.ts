@@ -490,6 +490,87 @@ test.serial('#handler forwards the original request body across redirects', asyn
   t.is(euRequestBody, originalBody);
 });
 
+test.serial('#handler strips the Authorization header on redirects to non-customer.io hosts', async (t) => {
+  const usResponse = new PassThrough();
+  const usRequest = new PassThrough();
+  const evilResponse = new PassThrough();
+  const evilRequest = new PassThrough();
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    timeout: 1,
+  });
+  const body = { redirected: true };
+
+  usRequest.on('finish', () => {
+    (usResponse as any).statusCode = 301;
+    (usResponse as any).headers = { location: 'https://evil.example.com/api/v1/customers/1' };
+    usResponse.end();
+  });
+  evilRequest.on('finish', () => {
+    (evilResponse as any).statusCode = 200;
+    (evilResponse as any).headers = {};
+    evilResponse.write(JSON.stringify(body));
+    evilResponse.end();
+  });
+
+  t.context.httpsReq
+    .withArgs(sinon.match.any)
+    .callsArgWith(1, usResponse)
+    .returns(usRequest as any)
+    .withArgs(sinon.match.has('hostname', 'evil.example.com'))
+    .callsArgWith(1, evilResponse)
+    .returns(evilRequest as any);
+
+  const res = await t.context.req.handler(customOptions);
+  t.deepEqual(res, body);
+  t.is(t.context.httpsReq.callCount, 2);
+
+  const secondCallArgs = t.context.httpsReq.getCall(1).args[0] as { headers: Record<string, string | undefined> };
+  t.false('Authorization' in secondCallArgs.headers);
+  t.is(secondCallArgs.headers.Authorization, undefined);
+});
+
+test.serial('#handler preserves the Authorization header on redirects within *.customer.io', async (t) => {
+  const usResponse = new PassThrough();
+  const usRequest = new PassThrough();
+  const euResponse = new PassThrough();
+  const euRequest = new PassThrough();
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    timeout: 1,
+  });
+  const body = { redirected: true };
+
+  usRequest.on('finish', () => {
+    (usResponse as any).statusCode = 301;
+    (usResponse as any).headers = { location: 'https://track-eu.customer.io/api/v1/customers/1' };
+    usResponse.end();
+  });
+  euRequest.on('finish', () => {
+    (euResponse as any).statusCode = 200;
+    (euResponse as any).headers = {};
+    euResponse.write(JSON.stringify(body));
+    euResponse.end();
+  });
+
+  t.context.httpsReq
+    .withArgs(sinon.match.any)
+    .callsArgWith(1, usResponse)
+    .returns(usRequest as any)
+    .withArgs(sinon.match.has('hostname', 'track-eu.customer.io'))
+    .callsArgWith(1, euResponse)
+    .returns(euRequest as any);
+
+  const res = await t.context.req.handler(customOptions);
+  t.deepEqual(res, body);
+  t.is(t.context.httpsReq.callCount, 2);
+
+  const secondCallArgs = t.context.httpsReq.getCall(1).args[0] as { headers: Record<string, string> };
+  t.is(secondCallArgs.headers.Authorization, trackAuth);
+});
+
 test.serial('#handler makes a request and errors when redirecting without a location header', async (t) => {
   const usResponse = new PassThrough();
   const usRequest = new PassThrough();
