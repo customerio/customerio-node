@@ -12,14 +12,14 @@ export type BasicAuth = {
 export type BearerAuth = string;
 
 export type RequestAuth = BasicAuth | BearerAuth;
-export type RequestData = Record<string, unknown> | undefined;
+export type RequestData = Record<string, any> | undefined;
 export type RequestHandlerOptions = {
   method: RequestOptions['method'];
   uri: string;
   headers: RequestOptions['headers'];
   body?: string | null;
 };
-export interface PushRequestData extends Record<string, unknown> {
+export interface PushRequestData {
   delivery_id?: string;
   device_id?: string;
   event?: 'delivered' | 'opened' | 'converted';
@@ -66,7 +66,7 @@ export default class CIORequest {
     return { method, uri, headers, body };
   }
 
-  handler({ uri, body, method, headers }: RequestHandlerOptions): Promise<Record<string, unknown>> {
+  handler({ uri, body, method, headers }: RequestHandlerOptions): Promise<Record<string, any>> {
     return new Promise((resolve, reject) => {
       let url = new URL(uri);
       let options = Object.assign<{}, RequestOptions, RequestOptions>({}, this.defaults, {
@@ -84,7 +84,7 @@ export default class CIORequest {
 
         res.on('end', () => {
           let responseBody = Buffer.concat(chunks).toString('utf-8');
-          let json: Record<string, unknown> = {};
+          let json: Record<string, any> = {};
 
           if ([301, 302, 307, 308].includes(res.statusCode ?? 0)) {
             let newURI = res.headers.location;

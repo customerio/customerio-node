@@ -104,7 +104,7 @@ export class TrackClient {
     return this.request.post(`${this.trackRoot}/push/events`, data);
   }
 
-  addDevice(customerId: string | number, device_id: string, platform: string, data: Record<string, unknown> = {}) {
+  addDevice(customerId: string | number, device_id: string, platform: string, data: Record<string, any> = {}) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
     }
