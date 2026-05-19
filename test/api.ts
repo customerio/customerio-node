@@ -498,7 +498,7 @@ test('#getAttributes: success with type email', (t) => {
   t.context.client.getAttributes('test@email.com', IdentifierType.Email);
   t.truthy(
     (t.context.client.request.get as SinonStub).calledWith(
-      `${RegionUS.apiUrl}/customers/test@email.com/attributes?id_type=email`,
+      `${RegionUS.apiUrl}/customers/${encodeURIComponent('test@email.com')}/attributes?id_type=email`,
     ),
   );
 });
@@ -718,4 +718,46 @@ test('#sendInApp: error', async (t) => {
   });
 
   t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/in_app`, req.message));
+});
+
+const ID_INPUTS: [string | number, string][] = [
+  [1, '1'],
+  ['2 ', encodeURIComponent('2 ')],
+  ['3/', encodeURIComponent('3/')],
+  ['%&*/test.#@!~', encodeURIComponent('%&*/test.#@!~')],
+];
+
+ID_INPUTS.forEach(([input, expected]) => {
+  test(`#triggerBroadcast: encodes broadcastId ${input}`, (t) => {
+    sinon.stub(t.context.client.request, 'post');
+    t.context.client.triggerBroadcast(input, { type: 'data' }, { type: 'recipients' });
+    t.truthy(
+      (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/${expected}/triggers`, {
+        data: { type: 'data' },
+        recipients: { type: 'recipients' },
+      }),
+    );
+  });
+
+  test(`#getExport: encodes id ${input}`, (t) => {
+    sinon.stub(t.context.client.request, 'get');
+    t.context.client.getExport(input);
+    t.truthy((t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/${expected}`));
+  });
+
+  test(`#downloadExport: encodes id ${input}`, (t) => {
+    sinon.stub(t.context.client.request, 'get');
+    t.context.client.downloadExport(input);
+    t.truthy((t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/${expected}/download`));
+  });
+
+  test(`#getAttributes: encodes id ${input}`, (t) => {
+    sinon.stub(t.context.client.request, 'get');
+    t.context.client.getAttributes(input as string);
+    t.truthy(
+      (t.context.client.request.get as SinonStub).calledWith(
+        `${RegionUS.apiUrl}/customers/${expected}/attributes?id_type=id`,
+      ),
+    );
+  });
 });
