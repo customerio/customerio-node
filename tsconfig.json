@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "inlineSourceMap": false,
     "inlineSources": false,
-    "lib": ["es2020", "es2020.promise"],
+    "lib": ["es2022"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noEmit": false,
@@ -25,7 +25,7 @@
     "strict": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    "target": "es2017"
+    "target": "es2022"
   },
   "include": ["index.ts", "lib/**/*"]
 }

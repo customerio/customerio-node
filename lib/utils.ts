@@ -1,4 +1,4 @@
-import { IncomingMessage } from 'http';
+import type { IncomingMessage } from 'http';
 import { IdentifierType } from '../lib/types';
 
 export const isEmpty = (value: unknown) => {
@@ -14,24 +14,26 @@ export class CustomerIORequestError extends Error {
   response: IncomingMessage;
   body: string;
 
-  static composeMessage(json: Record<string, any> | null): string {
+  static composeMessage(json: Record<string, unknown> | null): string {
     if (!json) {
       return 'Unknown error';
     }
 
-    if (json.meta && json.meta.error) {
-      return json.meta.error;
-    } else if (json.meta && json.meta.errors) {
-      const count = json.meta.errors.length;
+    const meta = json.meta as { error?: string; errors?: string[] } | undefined;
+
+    if (meta?.error) {
+      return meta.error;
+    } else if (meta?.errors) {
+      const count = meta.errors.length;
 
       return `${count} ${count === 1 ? 'error' : 'errors'}:
-${json.meta.errors.map((error: string) => `  - ${error}`).join('\n')}`;
+${meta.errors.map((error: string) => `  - ${error}`).join('\n')}`;
     }
 
     return 'Unknown error';
   }
 
-  constructor(json: Record<string, any> | null, statusCode: number, response: IncomingMessage, body: string) {
+  constructor(json: Record<string, unknown> | null, statusCode: number, response: IncomingMessage, body: string) {
     super(CustomerIORequestError.composeMessage(json));
 
     this.name = 'CustomerIORequestError';

@@ -6,8 +6,8 @@ export type SendEmailRequestRequiredOptions = {
 };
 
 export type SendEmailRequestOptionalOptions = Partial<{
-  message_data: Record<string, any>;
-  headers: Record<string, any>;
+  message_data: Record<string, unknown>;
+  headers: Record<string, unknown>;
   preheader: string;
   reply_to: string;
   bcc: string;
@@ -84,9 +84,8 @@ export class SendEmailRequest {
     }
   }
 
-  // Use `any` for data here, because union types and overloads in Typescript
-  // don't work well together for `Buffer.from`.
-  attach(name: string, data: any, { encode = true } = {}) {
+  // Use string or Buffer data so attachments can be encoded without weakening type safety.
+  attach(name: string, data: string | Buffer, { encode = true } = {}) {
     if (this.message.attachments[name]) {
       throw new Error(`attachment ${name} already exists`);
     }
@@ -94,14 +93,14 @@ export class SendEmailRequest {
     if (encode) {
       this.message.attachments[name] = Buffer.from(data).toString('base64');
     } else {
-      this.message.attachments[name] = data;
+      this.message.attachments[name] = data.toString();
     }
   }
 }
 
 export type SendPushCustomPayload = {
-  ios: Record<string, any>;
-  android: Record<string, any>;
+  ios: Record<string, unknown>;
+  android: Record<string, unknown>;
 };
 
 export type SendPushRequestRequiredOptions = {
@@ -116,15 +115,15 @@ export type SendPushRequestOptionalOptions = Partial<{
   disable_message_retention: boolean;
   send_to_unsubscribed: boolean;
   queue_draft: boolean;
-  message_data: Record<string, any>;
+  message_data: Record<string, unknown>;
   send_at: number;
   language: string;
   image_url: string;
   link: string;
   sound: string;
   custom_data: Record<string, string>;
-  device: Record<string, any>;
-  custom_device: Record<string, any>;
+  device: Record<string, unknown>;
+  custom_device: Record<string, unknown>;
 }>;
 
 export type SendPushRequestWithoutCustomPayload = SendPushRequestRequiredOptions & SendPushRequestOptionalOptions & {};
@@ -181,7 +180,7 @@ export type SendSMSRequestOptionalOptions = Partial<{
   disable_message_retention: boolean;
   send_to_unsubscribed: boolean;
   queue_draft: boolean;
-  message_data: Record<string, any>;
+  message_data: Record<string, unknown>;
   send_at: number;
   language: string;
 }>;
@@ -216,7 +215,7 @@ export type SendInboxMessageRequestRequiredOptions = {
 export type SendInboxMessageRequestOptionalOptions = Partial<{
   disable_message_retention: boolean;
   queue_draft: boolean;
-  message_data: Record<string, any>;
+  message_data: Record<string, unknown>;
   send_at: number;
   language: string;
 }>;
@@ -250,7 +249,7 @@ export type SendInAppRequestRequiredOptions = {
 export type SendInAppRequestOptionalOptions = Partial<{
   disable_message_retention: boolean;
   queue_draft: boolean;
-  message_data: Record<string, any>;
+  message_data: Record<string, unknown>;
   send_at: number;
   language: string;
 }>;

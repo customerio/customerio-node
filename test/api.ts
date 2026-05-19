@@ -1,9 +1,11 @@
-import avaTest, { TestFn } from 'ava';
-import sinon, { SinonStub } from 'sinon';
+import type { TestFn } from 'ava';
+import avaTest from 'ava';
+import type { SinonStub } from 'sinon';
+import sinon from 'sinon';
+import type { DeliveryExportRequestOptions } from '../lib/api';
 import {
   APIClient,
   DeliveryExportMetric,
-  DeliveryExportRequestOptions,
   SendEmailRequest,
   SendPushRequest,
   SendSMSRequest,
@@ -11,7 +13,8 @@ import {
   SendInAppRequest,
 } from '../lib/api';
 import { RegionUS, RegionEU } from '../lib/regions';
-import { Filter, IdentifierType } from '../lib/types';
+import type { Filter } from '../lib/types';
+import { IdentifierType } from '../lib/types';
 
 type TestContext = { client: APIClient };
 

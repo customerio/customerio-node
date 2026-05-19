@@ -1,6 +1,8 @@
-import avaTest, { TestFn } from 'ava';
+import type { TestFn } from 'ava';
+import avaTest from 'ava';
 import https from 'https';
-import sinon, { SinonStub } from 'sinon';
+import type { SinonStub } from 'sinon';
+import sinon from 'sinon';
 import { PassThrough } from 'stream';
 import { resolve } from 'path';
 import fs from 'fs';

@@ -1,8 +1,9 @@
 import type { RequestOptions } from 'https';
-import Request, { BasicAuth, RequestData, PushRequestData } from './request';
+import type { BasicAuth, RequestData, PushRequestData } from './request';
+import Request from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty, isIdentifierType, MissingParamError } from './utils';
-import { IdentifierType } from './types';
+import type { IdentifierType } from './types';
 
 type TrackDefaults = RequestOptions & { region: Region; url?: string };
 
@@ -103,7 +104,7 @@ export class TrackClient {
     return this.request.post(`${this.trackRoot}/push/events`, data);
   }
 
-  addDevice(customerId: string | number, device_id: string, platform: string, data: Record<string, any> = {}) {
+  addDevice(customerId: string | number, device_id: string, platform: string, data: Record<string, unknown> = {}) {
     if (isEmpty(customerId)) {
       throw new MissingParamError('customerId');
     }
@@ -122,7 +123,7 @@ export class TrackClient {
       device: {
         id: device_id,
         platform,
-        ...(last_used && { last_used }),
+        ...(last_used ? { last_used } : {}),
         ...(Object.keys(attributes).length && { attributes }),
       },
     });
