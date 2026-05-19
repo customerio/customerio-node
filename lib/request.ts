@@ -83,7 +83,7 @@ export default class CIORequest {
         });
 
         res.on('end', () => {
-          let body = Buffer.concat(chunks).toString('utf-8');
+          let responseBody = Buffer.concat(chunks).toString('utf-8');
           let json: Record<string, any> = {};
 
           if ([301, 302, 307, 308].includes(res.statusCode ?? 0)) {
@@ -97,11 +97,11 @@ export default class CIORequest {
           }
 
           try {
-            if (body && body.length) {
-              json = JSON.parse(body);
+            if (responseBody && responseBody.length) {
+              json = JSON.parse(responseBody);
             }
           } catch (error) {
-            const message = `Unable to parse JSON. Error: ${error} \nBody:\n ${body}`;
+            const message = `Unable to parse JSON. Error: ${error} \nBody:\n ${responseBody}`;
 
             return reject(new Error(message));
           }
@@ -109,7 +109,7 @@ export default class CIORequest {
           if (res.statusCode == 200 || res.statusCode == 201) {
             resolve(json);
           } else {
-            reject(new CustomerIORequestError(json, res.statusCode || 0, res, body));
+            reject(new CustomerIORequestError(json, res.statusCode || 0, res, responseBody));
           }
         });
       });

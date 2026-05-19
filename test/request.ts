@@ -445,6 +445,51 @@ test.serial('#handler makes a request and follows redirects', async (t) => {
   }
 });
 
+test.serial('#handler forwards the original request body across redirects', async (t) => {
+  const usResponse = new PassThrough();
+  const usRequest = new PassThrough();
+  const euResponse = new PassThrough();
+  const euRequest = new PassThrough();
+  const originalBody = JSON.stringify(data);
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: originalBody,
+  });
+
+  // Capture what gets written to the second (redirected) request
+  let euRequestBody = '';
+  euRequest.on('data', (chunk: Buffer) => {
+    euRequestBody += chunk.toString('utf-8');
+  });
+
+  usRequest.on('finish', () => {
+    (usResponse as any).statusCode = 301;
+    (usResponse as any).headers = { location: 'https://track-eu.customer.io/api/v1/customers/1' };
+    // Write a non-empty response body to make sure we don't accidentally
+    // forward *this* as the next request body.
+    usResponse.write('redirect-response-body-not-a-payload');
+    usResponse.end();
+  });
+  euRequest.on('finish', () => {
+    (euResponse as any).statusCode = 200;
+    (euResponse as any).headers = {};
+    euResponse.write(JSON.stringify({ ok: true }));
+    euResponse.end();
+  });
+
+  t.context.httpsReq
+    .withArgs(sinon.match.any)
+    .callsArgWith(1, usResponse)
+    .returns(usRequest as any)
+    .withArgs(sinon.match.has('hostname', 'track-eu.customer.io'))
+    .callsArgWith(1, euResponse)
+    .returns(euRequest as any);
+
+  await t.context.req.handler(customOptions);
+
+  t.is(euRequestBody, originalBody);
+});
+
 test.serial('#handler makes a request and errors when redirecting without a location header', async (t) => {
   const usResponse = new PassThrough();
   const usRequest = new PassThrough();
