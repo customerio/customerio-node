@@ -11,9 +11,9 @@
   ],
   "ava": {
     "verbose": true,
-    "extensions": [
-      "ts"
-    ],
+    "extensions": {
+      "ts": "commonjs"
+    },
     "require": [
       "ts-node/register"
     ]
@@ -84,6 +84,8 @@
     "test": "nyc ava",
     "build": "tsc -p tsconfig.json",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
     "prepublishOnly": "npm run build",
     "prepare": "husky",
     "version": "node update-version.js"
