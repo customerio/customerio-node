@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.5.1]
+
+#### Fixed
+
+- Fix redirect handler shadowing request body with response body ([#185](https://github.com/customerio/customerio-node/pull/185))
+- Strip Authorization header on non-customer.io redirects ([#186](https://github.com/customerio/customerio-node/pull/186))
+- URL-encode path parameters in APIClient  ([#187](https://github.com/customerio/customerio-node/pull/187))
+
 ## [4.5.0]
 
 #### Changed
