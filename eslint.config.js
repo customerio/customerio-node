@@ -3,6 +3,7 @@ const tsPlugin = require('@typescript-eslint/eslint-plugin');
 
 const typeAwareRules = {
   '@typescript-eslint/consistent-type-imports': 'error',
+  '@typescript-eslint/no-explicit-any': 'error',
   '@typescript-eslint/no-floating-promises': 'error',
 };
 
