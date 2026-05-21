@@ -122,7 +122,7 @@ export default class CIORequest {
             return reject(new Error(message));
           }
 
-          if (res.statusCode == 200 || res.statusCode == 201) {
+          if (res.statusCode !== undefined && res.statusCode >= 200 && res.statusCode < 300) {
             resolve(json);
           } else {
             reject(new CustomerIORequestError(json, res.statusCode || 0, res, responseBody));
