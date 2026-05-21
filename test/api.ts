@@ -191,7 +191,35 @@ test('#getCustomersByEmail: searching for a customer email (default)', (t) => {
 
   const email = 'hello@world.com';
   t.context.client.getCustomersByEmail(email);
-  t.truthy((t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/customers?email=${email}`));
+  t.truthy(
+    (t.context.client.request.get as SinonStub).calledWith(
+      `${RegionUS.apiUrl}/customers?email=${encodeURIComponent(email)}`,
+    ),
+  );
+});
+
+test('#getCustomersByEmail: encodes reserved characters in email', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+
+  const email = 'user+tag&filter=1@example.com';
+  t.context.client.getCustomersByEmail(email);
+  t.truthy(
+    (t.context.client.request.get as SinonStub).calledWith(
+      `${RegionUS.apiUrl}/customers?email=${encodeURIComponent(email)}`,
+    ),
+  );
+});
+
+test('#getCustomersByEmail: encodes hash and question mark in email', (t) => {
+  sinon.stub(t.context.client.request, 'get');
+
+  const email = 'user#name?q=1@example.com';
+  t.context.client.getCustomersByEmail(email);
+  t.truthy(
+    (t.context.client.request.get as SinonStub).calledWith(
+      `${RegionUS.apiUrl}/customers?email=${encodeURIComponent(email)}`,
+    ),
+  );
 });
 
 test('#getCustomersByEmail: should throw error when email is empty', (t) => {

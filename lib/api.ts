@@ -8,7 +8,7 @@ import {
   SendInboxMessageRequest,
   SendInAppRequest,
 } from './api/requests';
-import { cleanEmail, isEmpty, isIdentifierType, MissingParamError } from './utils';
+import { isEmpty, isIdentifierType, MissingParamError } from './utils';
 import { Filter, IdentifierType } from './types';
 
 type APIDefaults = RequestOptions & { region: Region; url?: string };
@@ -120,7 +120,7 @@ export class APIClient {
       throw new Error('"email" must be a string');
     }
 
-    return this.request.get(`${this.apiRoot}/customers?email=${cleanEmail(email)}`);
+    return this.request.get(`${this.apiRoot}/customers?email=${encodeURIComponent(email)}`);
   }
 
   triggerBroadcast(broadcastId: string | number, data: RequestData, recipients: Recipients) {
