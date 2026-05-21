@@ -5,8 +5,6 @@ export const isEmpty = (value: unknown) => {
   return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
 };
 
-};
-
 export const isIdentifierType = (value: unknown) => {
   return Object.values(IdentifierType).includes(value as IdentifierType);
 };
