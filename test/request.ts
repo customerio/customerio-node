@@ -690,7 +690,6 @@ test.serial('#post calls the handler, makes a POST request with the correct args
   t.truthy((t.context.req.handler as SinonStub).calledWith(postOptions));
 });
 
-
 test.serial('#handler resolves on 202 Accepted', async (t) => {
   const body = { status: 'queued' };
   createMockRequest(t.context.httpsReq, 202, body);
