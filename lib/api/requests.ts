@@ -67,7 +67,6 @@ const EMAIL_OPTIONAL_KEYS = [
   'language',
 ] as const satisfies ReadonlyArray<keyof SendEmailRequestOptionalOptions>;
 
-
 /**
  * Builder for a transactional email request. Pass an instance to
  * {@link APIClient.sendEmail}.
@@ -207,7 +206,6 @@ const PUSH_OPTIONAL_KEYS = [
   'custom_data',
 ] as const satisfies ReadonlyArray<keyof SendPushRequestOptionalOptions>;
 
-
 /**
  * Builder for a transactional push notification request. Pass an instance to
  * {@link APIClient.sendPush}.
@@ -267,7 +265,6 @@ const SMS_OPTIONAL_KEYS = [
   'language',
 ] as const satisfies ReadonlyArray<keyof SendSMSRequestOptionalOptions>;
 
-
 /**
  * Builder for a transactional SMS request. Pass an instance to {@link APIClient.sendSMS}.
  */
@@ -314,7 +311,6 @@ const INBOX_OPTIONAL_KEYS = [
   'language',
 ] as const satisfies ReadonlyArray<keyof SendInboxMessageRequestOptionalOptions>;
 
-
 /**
  * Builder for a transactional inbox message request. Pass an instance to
  * {@link APIClient.sendInboxMessage}.
@@ -360,7 +356,6 @@ const IN_APP_OPTIONAL_KEYS = [
   'send_at',
   'language',
 ] as const satisfies ReadonlyArray<keyof SendInAppRequestOptionalOptions>;
-
 
 /**
  * Builder for a transactional in-app message request. Pass an instance to

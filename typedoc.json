@@ -12,5 +12,22 @@
   "sort": ["source-order"],
   "navigation": {
     "includeCategories": true
-  }
+  },
+  "intentionallyNotExported": [
+    "APIDefaults",
+    "TrackDefaults",
+    "Recipients",
+    "SendPushRequestWithCustomPayload",
+    "SendPushRequestWithoutCustomPayload",
+    "SendEmailRequestWithTemplate",
+    "SendEmailRequestWithoutTemplate",
+    "SendSMSRequestRequiredOptions",
+    "SendSMSRequestOptionalOptions",
+    "SendInboxMessageRequestRequiredOptions",
+    "SendInboxMessageRequestOptionalOptions",
+    "SendInAppRequestRequiredOptions",
+    "SendInAppRequestOptionalOptions",
+    "PipelinesIdentifier",
+    "default"
+  ]
 }
