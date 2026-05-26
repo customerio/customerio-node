@@ -17,6 +17,7 @@ coverage.html
 
 .DS_Store
 dist/
+docs/
 
 # Live integration test credentials (never commit)
 test/integration/live.env

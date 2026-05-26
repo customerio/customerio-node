@@ -1,0 +1,16 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["index.ts"],
+  "out": "docs",
+  "name": "customerio-node",
+  "readme": "README.md",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "githubPages": false,
+  "categorizeByGroup": true,
+  "sort": ["source-order"],
+  "navigation": {
+    "includeCategories": true
+  }
+}
