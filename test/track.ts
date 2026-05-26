@@ -22,27 +22,26 @@ const ID_INPUTS = Object.freeze([
 test('constructor sets necessary variables', (t) => {
   t.is(t.context.client.siteid, '123');
   t.is(t.context.client.apikey, 'abc');
-  t.is(t.context.client.trackRoot, RegionUS.trackUrl);
-  t.is(t.context.client.trackV2Root, RegionUS.trackUrl.replace('/api/v1', '/api/v2'));
+  t.is(t.context.client.trackRoot, 'https://track.customer.io/api/v1');
+  t.is(t.context.client.trackV2Root, 'https://track.customer.io/api/v2');
 
   t.truthy(t.context.client.request);
   t.is(t.context.client.request.siteid, '123');
   t.is(t.context.client.request.apikey, 'abc');
 });
 
-test('constructor sets correct URL for different regions', (t) => {
-  [RegionUS, RegionEU].forEach((region) => {
-    let client = new TrackClient('123', 'abc', { region });
+test('constructor sets correct URL for RegionUS', (t) => {
+  let client = new TrackClient('123', 'abc', { region: RegionUS });
 
-    t.is(client.siteid, '123');
-    t.is(client.apikey, 'abc');
-    t.is(client.trackRoot, region.trackUrl);
-    t.is(client.trackV2Root, region.trackUrl.replace('/api/v1', '/api/v2'));
+  t.is(client.trackRoot, 'https://track.customer.io/api/v1');
+  t.is(client.trackV2Root, 'https://track.customer.io/api/v2');
+});
 
-    t.truthy(client.request);
-    t.is(client.request.siteid, '123');
-    t.is(client.request.apikey, 'abc');
-  });
+test('constructor sets correct URL for RegionEU', (t) => {
+  let client = new TrackClient('123', 'abc', { region: RegionEU });
+
+  t.is(client.trackRoot, 'https://track-eu.customer.io/api/v1');
+  t.is(client.trackV2Root, 'https://track-eu.customer.io/api/v2');
 });
 
 test('constructor sets correct URL for custom URL', (t) => {
@@ -56,6 +55,13 @@ test('constructor sets correct URL for custom URL', (t) => {
   t.truthy(client.request);
   t.is(client.request.siteid, '123');
   t.is(client.request.apikey, 'abc');
+});
+
+test('constructor swaps /api/v1 to /api/v2 in a custom URL when present', (t) => {
+  let client = new TrackClient('123', 'abc', { url: 'https://example.com/api/v1' });
+
+  t.is(client.trackRoot, 'https://example.com/api/v1');
+  t.is(client.trackV2Root, 'https://example.com/api/v2');
 });
 
 test('passing in an invalid region throws an error', (t) => {
@@ -304,7 +310,7 @@ test('#mergeCustomers: fails if id_type is not id, cio_id nor email', (t) => {
 });
 
 test('#batch posts to /api/v2/batch with the operations array', (t) => {
-  sinon.stub(t.context.client.request, 'post');
+  const post = sinon.stub(t.context.client.request, 'post');
   const operations = [
     { type: 'person', identifiers: { id: '1' }, action: 'identify', attributes: { plan: 'pro' } },
     { type: 'person', identifiers: { id: '1' }, action: 'event', name: 'signup' },
@@ -312,19 +318,19 @@ test('#batch posts to /api/v2/batch with the operations array', (t) => {
 
   t.context.client.batch(operations);
 
-  const expectedUrl = `${RegionUS.trackUrl.replace('/api/v1', '/api/v2')}/batch`;
-  t.truthy((t.context.client.request.post as SinonStub).calledWith(expectedUrl, { batch: operations }));
+  t.true(post.calledOnce);
+  t.true(post.calledWith('https://track.customer.io/api/v2/batch', { batch: operations }));
 });
 
 test('#batch uses the EU v2 root when constructed with RegionEU', (t) => {
   let client = new TrackClient('123', 'abc', { region: RegionEU });
-  sinon.stub(client.request, 'post');
+  const post = sinon.stub(client.request, 'post');
   const operations = [{ type: 'person', identifiers: { id: '1' }, action: 'identify' }];
 
   client.batch(operations);
 
-  const expectedUrl = `${RegionEU.trackUrl.replace('/api/v1', '/api/v2')}/batch`;
-  t.truthy((client.request.post as SinonStub).calledWith(expectedUrl, { batch: operations }));
+  t.true(post.calledOnce);
+  t.true(post.calledWith('https://track-eu.customer.io/api/v2/batch', { batch: operations }));
 });
 
 test('#batch throws when operations is empty', (t) => {

@@ -1,9 +1,11 @@
 export class Region {
   readonly trackUrl: string;
+  readonly trackV2Url: string;
   readonly apiUrl: string;
 
   constructor(trackUrl: string, apiUrl: string) {
     this.trackUrl = trackUrl;
+    this.trackV2Url = trackUrl.replace('/api/v1', '/api/v2');
     this.apiUrl = apiUrl;
   }
 }

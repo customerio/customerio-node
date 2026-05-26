@@ -27,7 +27,9 @@ export class TrackClient {
     this.request = new Request({ siteid: this.siteid, apikey: this.apikey }, this.defaults);
 
     this.trackRoot = this.defaults.url ? this.defaults.url : this.defaults.region.trackUrl;
-    this.trackV2Root = this.trackRoot.replace('/api/v1', '/api/v2');
+    this.trackV2Root = this.defaults.url
+      ? this.defaults.url.replace('/api/v1', '/api/v2')
+      : this.defaults.region.trackV2Url;
   }
 
   identify(customerId: string | number, data: RequestData = {}) {
