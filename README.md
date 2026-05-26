@@ -264,6 +264,31 @@ cio.unsuppress(1);
 
 - **customer_id**: String or number (required)
 
+### cio.batch(operations)
+
+Send a batch of operations (identifies, events, etc.) to the [v2 batch endpoint](https://customer.io/docs/api/track/#operation/batch) in a single request. `operations` is an array of operation objects shaped per the API docs.
+
+```javascript
+cio.batch([
+  {
+    type: "person",
+    action: "identify",
+    identifiers: { id: "1" },
+    attributes: { plan: "pro" },
+  },
+  {
+    type: "person",
+    action: "event",
+    identifiers: { id: "1" },
+    name: "signup",
+  },
+]);
+```
+
+#### Options
+
+- **operations**: Array of operation objects (required, non-empty)
+
 ### Using Promises
 
 All calls to the library will return a native promise, allowing you to chain calls as such:

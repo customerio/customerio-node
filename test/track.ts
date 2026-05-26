@@ -23,6 +23,7 @@ test('constructor sets necessary variables', (t) => {
   t.is(t.context.client.siteid, '123');
   t.is(t.context.client.apikey, 'abc');
   t.is(t.context.client.trackRoot, RegionUS.trackUrl);
+  t.is(t.context.client.trackV2Root, RegionUS.trackUrl.replace('/api/v1', '/api/v2'));
 
   t.truthy(t.context.client.request);
   t.is(t.context.client.request.siteid, '123');
@@ -36,6 +37,7 @@ test('constructor sets correct URL for different regions', (t) => {
     t.is(client.siteid, '123');
     t.is(client.apikey, 'abc');
     t.is(client.trackRoot, region.trackUrl);
+    t.is(client.trackV2Root, region.trackUrl.replace('/api/v1', '/api/v2'));
 
     t.truthy(client.request);
     t.is(client.request.siteid, '123');
@@ -49,6 +51,7 @@ test('constructor sets correct URL for custom URL', (t) => {
   t.is(client.siteid, '123');
   t.is(client.apikey, 'abc');
   t.is(client.trackRoot, 'https://example.com/url');
+  t.is(client.trackV2Root, 'https://example.com/url');
 
   t.truthy(client.request);
   t.is(client.request.siteid, '123');
@@ -298,4 +301,37 @@ test('#mergeCustomers: fails if id_type is not id, cio_id nor email', (t) => {
   t.throws(() => (t.context.client.mergeCustomers as any)(IdentifierType.Id, 'id1', undefined, 'id2'), {
     message: 'primaryIdType and secondaryIdType must be one of "id", "cio_id", or "email"',
   });
+});
+
+test('#batch posts to /api/v2/batch with the operations array', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  const operations = [
+    { type: 'person', identifiers: { id: '1' }, action: 'identify', attributes: { plan: 'pro' } },
+    { type: 'person', identifiers: { id: '1' }, action: 'event', name: 'signup' },
+  ];
+
+  t.context.client.batch(operations);
+
+  const expectedUrl = `${RegionUS.trackUrl.replace('/api/v1', '/api/v2')}/batch`;
+  t.truthy((t.context.client.request.post as SinonStub).calledWith(expectedUrl, { batch: operations }));
+});
+
+test('#batch uses the EU v2 root when constructed with RegionEU', (t) => {
+  let client = new TrackClient('123', 'abc', { region: RegionEU });
+  sinon.stub(client.request, 'post');
+  const operations = [{ type: 'person', identifiers: { id: '1' }, action: 'identify' }];
+
+  client.batch(operations);
+
+  const expectedUrl = `${RegionEU.trackUrl.replace('/api/v1', '/api/v2')}/batch`;
+  t.truthy((client.request.post as SinonStub).calledWith(expectedUrl, { batch: operations }));
+});
+
+test('#batch throws when operations is empty', (t) => {
+  t.throws(() => t.context.client.batch([]), { message: 'operations is required' });
+});
+
+test('#batch throws when operations is not an array', (t) => {
+  t.throws(() => (t.context.client.batch as any)(undefined), { message: 'operations is required' });
+  t.throws(() => (t.context.client.batch as any)({ batch: [] }), { message: 'operations is required' });
 });
