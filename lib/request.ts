@@ -46,48 +46,50 @@ export default class CIORequest {
       this.auth = `Bearer ${this.appKey}`;
     }
 
-    this.defaults = Object.assign(
-      {
-        timeout: TIMEOUT,
-      },
-      defaults,
-    );
+    this.defaults = {
+      timeout: TIMEOUT,
+      ...defaults,
+    };
   }
 
   options(uri: string, method: RequestOptions['method'], data?: RequestData): RequestHandlerOptions {
     const body = data ? JSON.stringify(data) : null;
-    const headers = {
+    const headers: Record<string, string | number> = {
       Authorization: this.auth,
       'Content-Type': 'application/json',
-      'Content-Length': body ? Buffer.byteLength(body, 'utf8') : 0,
       'User-Agent': `Customer.io Node Client/${version}`,
     };
+
+    if (body) {
+      headers['Content-Length'] = Buffer.byteLength(body, 'utf8');
+    }
 
     return { method, uri, headers, body };
   }
 
   handler({ uri, body, method, headers }: RequestHandlerOptions): Promise<Record<string, any>> {
     return new Promise((resolve, reject) => {
-      let url = new URL(uri);
-      let options = Object.assign<{}, RequestOptions, RequestOptions>({}, this.defaults, {
+      const url = new URL(uri);
+      const options: RequestOptions = {
+        ...this.defaults,
         method,
         headers,
         hostname: url.hostname,
         path: `${url.pathname}${url.search}`,
-      });
-      let req = request(options, (res) => {
-        let chunks: Buffer[] = [];
+      };
+      const req = request(options, (res) => {
+        const chunks: Buffer[] = [];
 
         res.on('data', (data: Buffer) => {
           chunks.push(data);
         });
 
         res.on('end', () => {
-          let responseBody = Buffer.concat(chunks).toString('utf-8');
+          const responseBody = Buffer.concat(chunks).toString('utf-8');
           let json: Record<string, any> = {};
 
           if ([301, 302, 307, 308].includes(res.statusCode ?? 0)) {
-            let newURI = res.headers.location;
+            const newURI = res.headers.location;
 
             if (newURI == null) {
               return reject(new Error(`Received a ${res.statusCode} status, but no Location header was present`));
