@@ -1,12 +1,10 @@
 import avaTest, { TestFn } from 'ava';
-import https from 'https';
 import sinon, { SinonStub } from 'sinon';
-import { PassThrough } from 'stream';
 import { resolve } from 'path';
 import fs from 'fs';
 import Request from '../lib/request';
 
-type TestContext = { req: Request; httpsReq: sinon.SinonStub };
+type TestContext = { req: Request; fetchStub: sinon.SinonStub };
 
 const test = avaTest as TestFn<TestContext>;
 
@@ -36,44 +34,45 @@ const putOptions = Object.assign({}, baseOptions, {
   }),
 });
 
+// Build a Response-like object that exposes only the surface the request
+// handler reads (status, ok, headers, text). Using a plain object (rather than
+// the global Response constructor) lets us use status: 0 and other shapes the
+// Response constructor would reject.
+const makeMockResponse = (statusCode: number | null, body: string, headers: Record<string, string>) => {
+  const status = statusCode ?? 0;
+  return {
+    status,
+    ok: status >= 200 && status < 300,
+    headers: new Headers(headers),
+    text: async () => body,
+  } as unknown as Response;
+};
+
 const createMockRequest = (
-  httpsReq: SinonStub,
+  fetchStub: SinonStub,
   statusCode: number | null,
   body: Record<string, any> | string | null = '',
   error?: Error,
   headers: Record<string, string> = {},
 ): SinonStub => {
-  const response = new PassThrough();
-  const request = new PassThrough();
+  if (error) {
+    fetchStub.rejects(error);
+    return fetchStub;
+  }
 
-  // Don't start writing response until request has ended
-  // Use `finish` here, because calling `.end()` on a `PassThrough` doesn't emit the `end` event
-  // https://stackoverflow.com/questions/41155877/node-js-passthrough-stream-not-closing-properly
-  request.on('finish', () => {
-    // Cast to any because PassThrough doesn't have ClientResponse properties types
-    (response as any).statusCode = statusCode;
-    (response as any).headers = headers;
-    if (error) {
-      request.destroy(error);
-    } else {
-      response.write(typeof body === 'object' ? JSON.stringify(body) : body);
-      response.end();
-    }
-  });
+  const responseBody = typeof body === 'object' ? JSON.stringify(body) : body;
+  fetchStub.resolves(makeMockResponse(statusCode, responseBody, headers));
 
-  // Cast to any because PassThrough doesn't conform to ClientRequest
-  httpsReq.callsArgWith(1, response).returns(request as any);
-
-  return httpsReq;
+  return fetchStub;
 };
 
 test.beforeEach((t) => {
-  t.context.httpsReq = sinon.stub(https, 'request');
+  t.context.fetchStub = sinon.stub(global, 'fetch');
   t.context.req = new Request({ siteid: '123', apikey: 'abc' }, { timeout: 5000 });
 });
 
 test.afterEach((t) => {
-  t.context.httpsReq.restore();
+  t.context.fetchStub.restore();
 });
 
 // tests begin here
@@ -126,14 +125,14 @@ test.serial('#options sets Content-Length using body length in bytes', (t) => {
 });
 
 test.serial('#handler returns a promise', (t) => {
-  createMockRequest(t.context.httpsReq, 200);
+  createMockRequest(t.context.fetchStub, 200);
   const promise = t.context.req.handler(putOptions);
   t.is(promise.constructor.name, 'Promise');
 });
 
 test.serial('#handler makes a request and resolves a promise on success', async (t) => {
   const body = {};
-  createMockRequest(t.context.httpsReq, 200, body);
+  createMockRequest(t.context.fetchStub, 200, body);
 
   try {
     const res = await t.context.req.handler(putOptions);
@@ -143,14 +142,11 @@ test.serial('#handler makes a request and resolves a promise on success', async 
   }
 });
 
-test.serial('#handler makes a request and parses the uri correctly', async (t) => {
+test.serial('#handler makes a request and passes the uri and init correctly', async (t) => {
   const customOptions = {
     ...baseOptions,
     headers: {
       ...baseOptions.headers,
-      // Add identifier so that this specific call to the sinon stub can be
-      // traced. The stub is shared across all tests and tests run async, so
-      // order is not guaranteed.
       'X-Test-Identifier': 'uri test',
     },
     uri: 'https://track.customer.io/api/v1/customers/1/events',
@@ -159,20 +155,18 @@ test.serial('#handler makes a request and parses the uri correctly', async (t) =
   };
 
   const body = {};
-  createMockRequest(t.context.httpsReq, 200, body);
+  createMockRequest(t.context.fetchStub, 200, body);
 
   try {
-    t.context.httpsReq.resetHistory();
+    t.context.fetchStub.resetHistory();
     const res = await t.context.req.handler(customOptions);
-    t.truthy(
-      t.context.httpsReq.calledWith({
-        hostname: 'track.customer.io',
-        path: '/api/v1/customers/1/events',
-        method: 'POST',
-        headers: customOptions.headers,
-        timeout: 5000,
-      }),
-    );
+    const call = t.context.fetchStub.getCall(0);
+    t.is(call.args[0], customOptions.uri);
+    const init = call.args[1] as RequestInit;
+    t.is(init.method, 'POST');
+    t.is(init.body, customOptions.body);
+    t.deepEqual(init.headers as Record<string, unknown>, customOptions.headers);
+    t.is((init as { redirect?: string }).redirect, 'manual');
     t.deepEqual(res, body);
   } catch {
     t.fail();
@@ -191,7 +185,7 @@ test.serial('#handler makes a request and rejects with an error on failure', asy
 
   const message = 'test error message';
   const body = { meta: { error: message } };
-  createMockRequest(t.context.httpsReq, 400, body);
+  createMockRequest(t.context.fetchStub, 400, body);
 
   try {
     await t.context.req.handler(customOptions);
@@ -217,7 +211,7 @@ test.serial(
     const messageOne = 'test error message one';
     const messageTwo = 'test error message two';
     const body = { meta: { errors: [messageOne, messageTwo] } };
-    createMockRequest(t.context.httpsReq, 400, body);
+    createMockRequest(t.context.fetchStub, 400, body);
 
     try {
       await t.context.req.handler(customOptions);
@@ -248,7 +242,7 @@ test.serial(
 
     const message = 'test error message';
     const body = { meta: { errors: [message] } };
-    createMockRequest(t.context.httpsReq, 400, body);
+    createMockRequest(t.context.fetchStub, 400, body);
 
     try {
       await t.context.req.handler(customOptions);
@@ -278,7 +272,7 @@ test.serial(
 
     const message = 'test error message';
     const body = { error: message };
-    createMockRequest(t.context.httpsReq, 400, body);
+    createMockRequest(t.context.fetchStub, 400, body);
 
     try {
       await t.context.req.handler(customOptions);
@@ -302,7 +296,7 @@ test.serial('#handler makes a request and rejects with an error on failure and h
 
   const message = 'test error message';
   const body = { meta: { error: message } };
-  createMockRequest(t.context.httpsReq, null, body);
+  createMockRequest(t.context.fetchStub, null, body);
 
   try {
     await t.context.req.handler(customOptions);
@@ -320,7 +314,7 @@ test.serial('#handler makes a request and rejects with `null` as body', async (t
     method: 'POST',
   });
 
-  createMockRequest(t.context.httpsReq, 500, null);
+  createMockRequest(t.context.fetchStub, 500, null);
 
   try {
     await t.context.req.handler(customOptions);
@@ -338,7 +332,7 @@ test.serial('#handler makes a request and rejects with a bad JSON response', asy
     method: 'POST',
   });
 
-  createMockRequest(t.context.httpsReq, 200, '<html></html>');
+  createMockRequest(t.context.fetchStub, 200, '<html></html>');
 
   try {
     await t.context.req.handler(customOptions);
@@ -355,7 +349,7 @@ test.serial('#handler makes a request and rejects with timeout error', async (t)
     body: JSON.stringify(data),
     timeout: 1,
   });
-  createMockRequest(t.context.httpsReq, 200, null, new Error('ETIMEDOUT'));
+  createMockRequest(t.context.fetchStub, 200, null, new Error('ETIMEDOUT'));
 
   try {
     await t.context.req.handler(customOptions);
@@ -366,248 +360,196 @@ test.serial('#handler makes a request and rejects with timeout error', async (t)
   }
 });
 
-test.serial('#handler destroys the request and rejects when the socket times out', async (t) => {
+test.serial('#handler rejects with `Request timed out` when fetch is aborted by the timeout signal', async (t) => {
   const customOptions = Object.assign({}, baseOptions, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
 
-  const request = new PassThrough() as PassThrough & {
-    destroy: (err?: Error) => void;
-  };
-
-  const originalDestroy = request.destroy.bind(request);
-  request.destroy = (err?: Error) => {
-    if (err) {
-      request.emit('error', err);
-    }
-    return originalDestroy(err);
-  };
-
-  t.context.httpsReq.returns(request as any);
-
-  const promise = t.context.req.handler(customOptions);
-
-  setImmediate(() => request.emit('timeout'));
+  const abortError = new DOMException('The operation was aborted due to timeout', 'TimeoutError');
+  t.context.fetchStub.rejects(abortError);
 
   try {
-    await promise;
+    await t.context.req.handler(customOptions);
     t.fail('Expected handler to reject on timeout');
   } catch (err: any) {
     t.is(err.message, 'Request timed out after 5000ms');
   }
 });
 
+test.serial('#handler unwraps undici TypeError(`fetch failed`) and preserves the underlying err.code', async (t) => {
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'GET',
+    body: null,
+  });
+
+  const cause = Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:443'), { code: 'ECONNREFUSED' });
+  const wrapped = Object.assign(new TypeError('fetch failed'), { cause });
+  t.context.fetchStub.rejects(wrapped);
+
+  try {
+    await t.context.req.handler(customOptions);
+    t.fail('Expected handler to reject');
+  } catch (err: any) {
+    t.is(err.message, 'connect ECONNREFUSED 127.0.0.1:443');
+    t.is(err.code, 'ECONNREFUSED');
+  }
+});
+
 test.serial('#handler makes a request and follows redirects', async (t) => {
-  const usResponse = new PassThrough();
-  const usRequest = new PassThrough();
-  const euResponse = new PassThrough();
-  const euRequest = new PassThrough();
   const customOptions = Object.assign({}, baseOptions, {
     method: 'PUT',
     body: JSON.stringify(data),
-    timeout: 1,
   });
   const body = { redirected: true };
 
-  // Don't start writing response until request has ended
-  // Use `finish` here, because calling `.end()` on a `PassThrough` doesn't emit the `end` event
-  // https://stackoverflow.com/questions/41155877/node-js-passthrough-stream-not-closing-properly
-  usRequest.on('finish', () => {
-    // Cast to any because PassThrough doesn't have ClientResponse properties types
-    (usResponse as any).statusCode = 301;
-    (usResponse as any).headers = { location: 'https://track-eu.customer.io/api/v1/customers/1' };
-    usResponse.end();
-  });
-  euRequest.on('finish', () => {
-    // Cast to any because PassThrough doesn't have ClientResponse properties types
-    (euResponse as any).statusCode = 200;
-    (euResponse as any).headers = {};
-    euResponse.write(JSON.stringify(body));
-    euResponse.end();
-  });
-
-  // Cast to any because PassThrough doesn't conform to ClientRequest
-  t.context.httpsReq
-    .withArgs(sinon.match.any)
-    .callsArgWith(1, usResponse)
-    .returns(usRequest as any)
-    .withArgs(sinon.match.has('hostname', 'track-eu.customer.io'))
-    .callsArgWith(1, euResponse)
-    .returns(euRequest as any);
+  t.context.fetchStub
+    .onCall(0)
+    .resolves(makeMockResponse(301, '', { location: 'https://track-eu.customer.io/api/v1/customers/1' }));
+  t.context.fetchStub.onCall(1).resolves(makeMockResponse(200, JSON.stringify(body), {}));
 
   try {
     const res = await t.context.req.handler(customOptions);
     t.deepEqual(res, body);
-    t.is(t.context.httpsReq.callCount, 2);
+    t.is(t.context.fetchStub.callCount, 2);
   } catch {
     t.fail();
   }
 });
 
 test.serial('#handler forwards the original request body across redirects', async (t) => {
-  const usResponse = new PassThrough();
-  const usRequest = new PassThrough();
-  const euResponse = new PassThrough();
-  const euRequest = new PassThrough();
   const originalBody = JSON.stringify(data);
   const customOptions = Object.assign({}, baseOptions, {
     method: 'PUT',
     body: originalBody,
   });
 
-  // Capture what gets written to the second (redirected) request
-  let euRequestBody = '';
-  euRequest.on('data', (chunk: Buffer) => {
-    euRequestBody += chunk.toString('utf-8');
-  });
-
-  usRequest.on('finish', () => {
-    (usResponse as any).statusCode = 301;
-    (usResponse as any).headers = { location: 'https://track-eu.customer.io/api/v1/customers/1' };
-    // Write a non-empty response body to make sure we don't accidentally
-    // forward *this* as the next request body.
-    usResponse.write('redirect-response-body-not-a-payload');
-    usResponse.end();
-  });
-  euRequest.on('finish', () => {
-    (euResponse as any).statusCode = 200;
-    (euResponse as any).headers = {};
-    euResponse.write(JSON.stringify({ ok: true }));
-    euResponse.end();
-  });
-
-  t.context.httpsReq
-    .withArgs(sinon.match.any)
-    .callsArgWith(1, usResponse)
-    .returns(usRequest as any)
-    .withArgs(sinon.match.has('hostname', 'track-eu.customer.io'))
-    .callsArgWith(1, euResponse)
-    .returns(euRequest as any);
+  t.context.fetchStub.onCall(0).resolves(
+    makeMockResponse(301, 'redirect-response-body-not-a-payload', {
+      location: 'https://track-eu.customer.io/api/v1/customers/1',
+    }),
+  );
+  t.context.fetchStub.onCall(1).resolves(makeMockResponse(200, JSON.stringify({ ok: true }), {}));
 
   await t.context.req.handler(customOptions);
 
-  t.is(euRequestBody, originalBody);
+  const secondCallArgs = t.context.fetchStub.getCall(1).args[1] as RequestInit;
+  t.is(secondCallArgs.body as string, originalBody);
 });
 
 test.serial('#handler strips the Authorization header on redirects to non-customer.io hosts', async (t) => {
-  const usResponse = new PassThrough();
-  const usRequest = new PassThrough();
-  const evilResponse = new PassThrough();
-  const evilRequest = new PassThrough();
   const customOptions = Object.assign({}, baseOptions, {
     method: 'PUT',
     body: JSON.stringify(data),
-    timeout: 1,
   });
   const body = { redirected: true };
 
-  usRequest.on('finish', () => {
-    (usResponse as any).statusCode = 301;
-    (usResponse as any).headers = { location: 'https://evil.example.com/api/v1/customers/1' };
-    usResponse.end();
-  });
-  evilRequest.on('finish', () => {
-    (evilResponse as any).statusCode = 200;
-    (evilResponse as any).headers = {};
-    evilResponse.write(JSON.stringify(body));
-    evilResponse.end();
-  });
-
-  t.context.httpsReq
-    .withArgs(sinon.match.any)
-    .callsArgWith(1, usResponse)
-    .returns(usRequest as any)
-    .withArgs(sinon.match.has('hostname', 'evil.example.com'))
-    .callsArgWith(1, evilResponse)
-    .returns(evilRequest as any);
+  t.context.fetchStub
+    .onCall(0)
+    .resolves(makeMockResponse(301, '', { location: 'https://evil.example.com/api/v1/customers/1' }));
+  t.context.fetchStub.onCall(1).resolves(makeMockResponse(200, JSON.stringify(body), {}));
 
   const res = await t.context.req.handler(customOptions);
   t.deepEqual(res, body);
-  t.is(t.context.httpsReq.callCount, 2);
+  t.is(t.context.fetchStub.callCount, 2);
 
-  const secondCallArgs = t.context.httpsReq.getCall(1).args[0] as { headers: Record<string, string | undefined> };
-  t.false('Authorization' in secondCallArgs.headers);
-  t.is(secondCallArgs.headers.Authorization, undefined);
+  const secondCallArgs = t.context.fetchStub.getCall(1).args[1] as RequestInit;
+  const secondHeaders = secondCallArgs.headers as Record<string, string | undefined>;
+  t.false('Authorization' in secondHeaders);
+  t.is(secondHeaders.Authorization, undefined);
 });
 
 test.serial('#handler preserves the Authorization header on redirects within *.customer.io', async (t) => {
-  const usResponse = new PassThrough();
-  const usRequest = new PassThrough();
-  const euResponse = new PassThrough();
-  const euRequest = new PassThrough();
   const customOptions = Object.assign({}, baseOptions, {
     method: 'PUT',
     body: JSON.stringify(data),
-    timeout: 1,
   });
   const body = { redirected: true };
 
-  usRequest.on('finish', () => {
-    (usResponse as any).statusCode = 301;
-    (usResponse as any).headers = { location: 'https://track-eu.customer.io/api/v1/customers/1' };
-    usResponse.end();
-  });
-  euRequest.on('finish', () => {
-    (euResponse as any).statusCode = 200;
-    (euResponse as any).headers = {};
-    euResponse.write(JSON.stringify(body));
-    euResponse.end();
-  });
-
-  t.context.httpsReq
-    .withArgs(sinon.match.any)
-    .callsArgWith(1, usResponse)
-    .returns(usRequest as any)
-    .withArgs(sinon.match.has('hostname', 'track-eu.customer.io'))
-    .callsArgWith(1, euResponse)
-    .returns(euRequest as any);
+  t.context.fetchStub
+    .onCall(0)
+    .resolves(makeMockResponse(301, '', { location: 'https://track-eu.customer.io/api/v1/customers/1' }));
+  t.context.fetchStub.onCall(1).resolves(makeMockResponse(200, JSON.stringify(body), {}));
 
   const res = await t.context.req.handler(customOptions);
   t.deepEqual(res, body);
-  t.is(t.context.httpsReq.callCount, 2);
+  t.is(t.context.fetchStub.callCount, 2);
 
-  const secondCallArgs = t.context.httpsReq.getCall(1).args[0] as { headers: Record<string, string> };
-  t.is(secondCallArgs.headers.Authorization, trackAuth);
+  const secondCallArgs = t.context.fetchStub.getCall(1).args[1] as RequestInit;
+  const secondHeaders = secondCallArgs.headers as Record<string, string>;
+  t.is(secondHeaders.Authorization, trackAuth);
 });
 
-test.serial('#handler makes a request and errors when redirecting without a location header', async (t) => {
-  const usResponse = new PassThrough();
-  const usRequest = new PassThrough();
-  const euResponse = new PassThrough();
-  const euRequest = new PassThrough();
+test.serial('#handler preserves the Authorization header across 307 redirects', async (t) => {
   const customOptions = Object.assign({}, baseOptions, {
-    method: 'PUT',
+    method: 'POST',
     body: JSON.stringify(data),
-    timeout: 1,
   });
   const body = { redirected: true };
 
-  // Don't start writing response until request has ended
-  // Use `finish` here, because calling `.end()` on a `PassThrough` doesn't emit the `end` event
-  // https://stackoverflow.com/questions/41155877/node-js-passthrough-stream-not-closing-properly
-  usRequest.on('finish', () => {
-    // Cast to any because PassThrough doesn't have ClientResponse properties types
-    (usResponse as any).statusCode = 301;
-    (usResponse as any).headers = {};
-    usResponse.end();
+  t.context.fetchStub
+    .onCall(0)
+    .resolves(makeMockResponse(307, '', { location: 'https://track-eu.customer.io/api/v1/customers/1' }));
+  t.context.fetchStub.onCall(1).resolves(makeMockResponse(200, JSON.stringify(body), {}));
+
+  const res = await t.context.req.handler(customOptions);
+  t.deepEqual(res, body);
+  t.is(t.context.fetchStub.callCount, 2);
+
+  const secondCallArgs = t.context.fetchStub.getCall(1).args[1] as RequestInit;
+  const secondHeaders = secondCallArgs.headers as Record<string, string>;
+  t.is(secondHeaders.Authorization, trackAuth);
+  t.is(secondCallArgs.body as string, customOptions.body);
+});
+
+test.serial('#handler preserves the Authorization header across 308 redirects', async (t) => {
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: JSON.stringify(data),
   });
-  euRequest.on('finish', () => {
-    // Cast to any because PassThrough doesn't have ClientResponse properties types
-    (euResponse as any).statusCode = 200;
-    (euResponse as any).headers = {};
-    euResponse.write(JSON.stringify(body));
-    euResponse.end();
+  const body = { redirected: true };
+
+  t.context.fetchStub
+    .onCall(0)
+    .resolves(makeMockResponse(308, '', { location: 'https://track-eu.customer.io/api/v1/customers/1' }));
+  t.context.fetchStub.onCall(1).resolves(makeMockResponse(200, JSON.stringify(body), {}));
+
+  const res = await t.context.req.handler(customOptions);
+  t.deepEqual(res, body);
+  t.is(t.context.fetchStub.callCount, 2);
+
+  const secondCallArgs = t.context.fetchStub.getCall(1).args[1] as RequestInit;
+  const secondHeaders = secondCallArgs.headers as Record<string, string>;
+  t.is(secondHeaders.Authorization, trackAuth);
+  t.is(secondCallArgs.body as string, customOptions.body);
+});
+
+test.serial('#handler unwraps a DNS failure and preserves err.code === ENOTFOUND', async (t) => {
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: JSON.stringify(data),
   });
 
-  // Cast to any because PassThrough doesn't conform to ClientRequest
-  t.context.httpsReq
-    .withArgs(sinon.match.any)
-    .callsArgWith(1, usResponse)
-    .returns(usRequest as any)
-    .withArgs(sinon.match.has('hostname', 'track-eu.customer.io'))
-    .callsArgWith(1, euResponse)
-    .returns(euRequest as any);
+  const cause = Object.assign(new Error('getaddrinfo ENOTFOUND track.customer.io'), { code: 'ENOTFOUND' });
+  const wrapped = Object.assign(new TypeError('fetch failed'), { cause });
+  t.context.fetchStub.rejects(wrapped);
+
+  try {
+    await t.context.req.handler(customOptions);
+    t.fail('Expected handler to reject');
+  } catch (err: any) {
+    t.is(err.code, 'ENOTFOUND');
+    t.is(err.message, 'getaddrinfo ENOTFOUND track.customer.io');
+  }
+});
+
+test.serial('#handler makes a request and errors when redirecting without a location header', async (t) => {
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+  t.context.fetchStub.onCall(0).resolves(makeMockResponse(301, '', {}));
 
   try {
     await t.context.req.handler(customOptions);
@@ -617,28 +559,45 @@ test.serial('#handler makes a request and errors when redirecting without a loca
   }
 });
 
+test.serial('#handler does not strip Authorization when the redirect Location is relative or malformed', async (t) => {
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+  t.context.fetchStub
+    .onCall(0)
+    .resolves(makeMockResponse(301, '', { location: 'https://track.customer.io/api/v1/customers/2' }));
+  t.context.fetchStub.onCall(1).resolves(makeMockResponse(200, JSON.stringify({ ok: true }), {}));
+
+  await t.context.req.handler(customOptions);
+
+  const secondHeaders = (t.context.fetchStub.getCall(1).args[1] as RequestInit).headers as Record<string, string>;
+  t.is(secondHeaders.Authorization, trackAuth);
+});
+
 test.serial('#get calls the handler, makes GET request with the correct args', (t) => {
-  createMockRequest(t.context.httpsReq, 200);
+  createMockRequest(t.context.fetchStub, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.get(uri);
   t.truthy((t.context.req.handler as SinonStub).calledWith({ ...baseOptions, method: 'GET', body: null }));
 });
 
 test.serial('#get returns the promise generated by the handler', (t) => {
-  createMockRequest(t.context.httpsReq, 200);
+  createMockRequest(t.context.fetchStub, 200);
   const promise = t.context.req.get(uri);
   t.is(promise.constructor.name, 'Promise');
 });
 
 test.serial('#put calls the handler, makes PUT request with the correct args', (t) => {
-  createMockRequest(t.context.httpsReq, 200);
+  createMockRequest(t.context.fetchStub, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.put(uri, data);
   t.truthy((t.context.req.handler as SinonStub).calledWith(putOptions));
 });
 
 test.serial('#put calls the handler, makes PUT request with default data', (t) => {
-  createMockRequest(t.context.httpsReq, 200);
+  createMockRequest(t.context.fetchStub, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.put(uri);
   t.truthy(
@@ -653,7 +612,7 @@ test.serial('#put calls the handler, makes PUT request with default data', (t) =
 });
 
 test.serial('#put returns the promise generated by the handler', (t) => {
-  createMockRequest(t.context.httpsReq, 200);
+  createMockRequest(t.context.fetchStub, 200);
   const promise = t.context.req.put(uri, data);
   t.is(promise.constructor.name, 'Promise');
 });
@@ -661,14 +620,14 @@ test.serial('#put returns the promise generated by the handler', (t) => {
 const deleteOptions = Object.assign({}, baseOptions, { method: 'DELETE', body: null });
 
 test.serial('#destroy calls the handler, makes a DELETE request with the correct args', (t) => {
-  createMockRequest(t.context.httpsReq, 200);
+  createMockRequest(t.context.fetchStub, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.destroy(uri);
   t.truthy((t.context.req.handler as SinonStub).calledWith(deleteOptions));
 });
 
 test.serial('#destroy returns the promise generated by the handler', (t) => {
-  createMockRequest(t.context.httpsReq, 200);
+  createMockRequest(t.context.fetchStub, 200);
   const promise = t.context.req.destroy(uri);
   t.is(promise.constructor.name, 'Promise');
 });
@@ -682,16 +641,15 @@ const postOptions = Object.assign({}, baseOptions, {
 });
 
 test.serial('#post calls the handler, makes a POST request with the correct args', (t) => {
-  createMockRequest(t.context.httpsReq, 200);
+  createMockRequest(t.context.fetchStub, 200);
   sinon.stub(t.context.req, 'handler');
   t.context.req.post(uri, data);
   t.truthy((t.context.req.handler as SinonStub).calledWith(postOptions));
 });
 
-
 test.serial('#handler resolves on 202 Accepted', async (t) => {
   const body = { status: 'queued' };
-  createMockRequest(t.context.httpsReq, 202, body);
+  createMockRequest(t.context.fetchStub, 202, body);
 
   try {
     const res = await t.context.req.handler(putOptions);
@@ -702,7 +660,7 @@ test.serial('#handler resolves on 202 Accepted', async (t) => {
 });
 
 test.serial('#handler resolves on 204 No Content with empty body', async (t) => {
-  createMockRequest(t.context.httpsReq, 204, '');
+  createMockRequest(t.context.fetchStub, 204, '');
 
   try {
     const res = await t.context.req.handler(putOptions);
@@ -714,7 +672,7 @@ test.serial('#handler resolves on 204 No Content with empty body', async (t) => 
 
 test.serial('#handler rejects on 300 status code', async (t) => {
   const body = { meta: { error: 'multiple choices' } };
-  createMockRequest(t.context.httpsReq, 300, body);
+  createMockRequest(t.context.fetchStub, 300, body);
 
   try {
     await t.context.req.handler(putOptions);
@@ -723,8 +681,9 @@ test.serial('#handler rejects on 300 status code', async (t) => {
     t.is(err.statusCode, 300);
   }
 });
+
 test.serial('#post returns the promise generated by the handler', (t) => {
-  createMockRequest(t.context.httpsReq, 200);
+  createMockRequest(t.context.fetchStub, 200);
   const promise = t.context.req.post(uri);
   t.is(promise.constructor.name, 'Promise');
 });
