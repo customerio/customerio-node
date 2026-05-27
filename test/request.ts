@@ -1,6 +1,8 @@
-import avaTest, { TestFn } from 'ava';
+import type { TestFn } from 'ava';
+import avaTest from 'ava';
 import https from 'https';
-import sinon, { SinonStub } from 'sinon';
+import type { SinonStub } from 'sinon';
+import sinon from 'sinon';
 import { PassThrough } from 'stream';
 import { resolve } from 'path';
 import fs from 'fs';
@@ -687,7 +689,6 @@ test.serial('#post calls the handler, makes a POST request with the correct args
   t.context.req.post(uri, data);
   t.truthy((t.context.req.handler as SinonStub).calledWith(postOptions));
 });
-
 
 test.serial('#handler resolves on 202 Accepted', async (t) => {
   const body = { status: 'queued' };

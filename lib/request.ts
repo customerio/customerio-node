@@ -130,7 +130,7 @@ export default class CIORequest {
         });
       });
 
-      req.on('error', (error: any) => {
+      req.on('error', (error: Error) => {
         reject(error);
       });
 
