@@ -792,3 +792,24 @@ ID_INPUTS.forEach(([input, expected]) => {
     );
   });
 });
+
+test('sendEmail: cross-copy branded object passes instanceof check', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+
+  const brand = Symbol.for('customerio-node.SendEmailRequest');
+  const fakeCrossCopyReq = { message: { to: 'test@example.com', identifiers: { id: '2' }, attachments: {} } };
+  Object.defineProperty(fakeCrossCopyReq, brand, { value: true });
+
+  t.notThrows(() => t.context.client.sendEmail(fakeCrossCopyReq as any));
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/email`, fakeCrossCopyReq.message),
+  );
+});
+
+test('constructor: cross-copy branded Region passes instanceof check', (t) => {
+  const brand = Symbol.for('customerio-node.Region');
+  const fakeRegion = { trackUrl: 'https://track.example.com/api/v1', apiUrl: 'https://api.example.com/v1' };
+  Object.defineProperty(fakeRegion, brand, { value: true });
+
+  t.notThrows(() => new APIClient('appKey', { region: fakeRegion as any }));
+});
