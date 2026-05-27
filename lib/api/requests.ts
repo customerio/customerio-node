@@ -1,3 +1,9 @@
+const SEND_EMAIL_BRAND = Symbol.for('customerio-node.SendEmailRequest');
+const SEND_PUSH_BRAND = Symbol.for('customerio-node.SendPushRequest');
+const SEND_SMS_BRAND = Symbol.for('customerio-node.SendSMSRequest');
+const SEND_INBOX_MESSAGE_BRAND = Symbol.for('customerio-node.SendInboxMessageRequest');
+const SEND_IN_APP_BRAND = Symbol.for('customerio-node.SendInAppRequest');
+
 export type Identifiers = { id: string | number } | { email: string };
 
 export type SendEmailRequestRequiredOptions = {
@@ -45,7 +51,12 @@ export type EmailMessage = Partial<SendEmailRequestWithTemplate & SendEmailReque
 export class SendEmailRequest {
   message: EmailMessage;
 
+  static [Symbol.hasInstance](instance: unknown): instance is SendEmailRequest {
+    return typeof instance === 'object' && instance !== null && (instance as any)[SEND_EMAIL_BRAND] === true;
+  }
+
   constructor(opts: SendEmailRequestOptions) {
+    Object.defineProperty(this, SEND_EMAIL_BRAND, { value: true });
     this.message = {
       to: opts.to,
       identifiers: opts.identifiers,
@@ -143,7 +154,12 @@ export type PushMessage = Partial<
 export class SendPushRequest {
   message: PushMessage;
 
+  static [Symbol.hasInstance](instance: unknown): instance is SendPushRequest {
+    return typeof instance === 'object' && instance !== null && (instance as any)[SEND_PUSH_BRAND] === true;
+  }
+
   constructor(opts: SendPushRequestOptions) {
+    Object.defineProperty(this, SEND_PUSH_BRAND, { value: true });
     this.message = {
       identifiers: opts.identifiers,
       to: opts.to,
@@ -191,7 +207,12 @@ export type SendSMSRequestOptions = SendSMSRequestRequiredOptions & SendSMSReque
 export class SendSMSRequest {
   message: SMSMessage;
 
+  static [Symbol.hasInstance](instance: unknown): instance is SendSMSRequest {
+    return typeof instance === 'object' && instance !== null && (instance as any)[SEND_SMS_BRAND] === true;
+  }
+
   constructor(opts: SendSMSRequestOptions) {
+    Object.defineProperty(this, SEND_SMS_BRAND, { value: true });
     this.message = {
       identifiers: opts.identifiers,
       to: opts.to,
@@ -227,7 +248,12 @@ export type SendInboxMessageRequestOptions = SendInboxMessageRequestRequiredOpti
 export class SendInboxMessageRequest {
   message: InboxMessage;
 
+  static [Symbol.hasInstance](instance: unknown): instance is SendInboxMessageRequest {
+    return typeof instance === 'object' && instance !== null && (instance as any)[SEND_INBOX_MESSAGE_BRAND] === true;
+  }
+
   constructor(opts: SendInboxMessageRequestOptions) {
+    Object.defineProperty(this, SEND_INBOX_MESSAGE_BRAND, { value: true });
     this.message = {
       identifiers: opts.identifiers,
       transactional_message_id: opts.transactional_message_id,
@@ -260,7 +286,12 @@ export type SendInAppRequestOptions = SendInAppRequestRequiredOptions & SendInAp
 export class SendInAppRequest {
   message: InAppMessage;
 
+  static [Symbol.hasInstance](instance: unknown): instance is SendInAppRequest {
+    return typeof instance === 'object' && instance !== null && (instance as any)[SEND_IN_APP_BRAND] === true;
+  }
+
   constructor(opts: SendInAppRequestOptions) {
+    Object.defineProperty(this, SEND_IN_APP_BRAND, { value: true });
     this.message = {
       identifiers: opts.identifiers,
       transactional_message_id: opts.transactional_message_id,
