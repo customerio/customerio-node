@@ -41,6 +41,16 @@ ${json.meta.errors.map((error: string) => `  - ${error}`).join('\n')}`;
   }
 }
 
+export function pickDefined<T extends Record<string, unknown>>(source: T, keys: ReadonlyArray<keyof T>): Partial<T> {
+  const result: Partial<T> = {};
+  for (const key of keys) {
+    if (source[key] !== undefined) {
+      result[key] = source[key];
+    }
+  }
+  return result;
+}
+
 export class MissingParamError extends Error {
   constructor(param: string) {
     super(param);

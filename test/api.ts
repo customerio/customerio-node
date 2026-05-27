@@ -189,6 +189,18 @@ test('#sendPush: without custom payload: success', (t) => {
   t.falsy(req.message.custom_payload);
 });
 
+test('#sendPush: maps device to custom_device', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  let req = new SendPushRequest({
+    identifiers: { id: '2' },
+    transactional_message_id: 1,
+    device: { token: 'abc123' },
+  });
+
+  t.context.client.sendPush(req);
+  t.deepEqual(req.message.custom_device, { token: 'abc123' });
+});
+
 test('#getCustomersByEmail: searching for a customer email (default)', (t) => {
   sinon.stub(t.context.client.request, 'get');
 
@@ -245,12 +257,17 @@ test('#getCustomersByEmail: should throw error when email is not a string object
   t.throws(() => t.context.client.getCustomersByEmail(email as string));
 });
 
+test('#sendEmail: message does not include attachments key when none are added', (t) => {
+  let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
+  t.false('attachments' in req.message);
+});
+
 test('#sendEmail: adding attachments with encoding (default)', (t) => {
   sinon.stub(t.context.client.request, 'post');
   let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
 
   req.attach('test', 'hello world');
-  t.is(req.message.attachments.test, Buffer.from('hello world').toString('base64'));
+  t.is(req.message.attachments!.test, Buffer.from('hello world').toString('base64'));
 });
 
 test('#sendEmail: adding attachments without encoding', (t) => {
@@ -258,7 +275,7 @@ test('#sendEmail: adding attachments without encoding', (t) => {
   let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
 
   req.attach('file', 'test content', { encode: false });
-  t.truthy(req.message.attachments.file, 'test content');
+  t.truthy(req.message.attachments!.file, 'test content');
 });
 
 test('#sendEmail: adding attachments twice throws an error', (t) => {
@@ -267,7 +284,7 @@ test('#sendEmail: adding attachments twice throws an error', (t) => {
 
   req.attach('test', 'test content');
   t.throws(() => req.attach('test', 'test content 2'), { message: /attachment test already exists/ });
-  t.is(req.message.attachments.test, Buffer.from('test content').toString('base64'));
+  t.is(req.message.attachments!.test, Buffer.from('test content').toString('base64'));
 });
 
 test('#sendEmail: error', async (t) => {
