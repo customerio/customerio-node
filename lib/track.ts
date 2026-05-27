@@ -6,12 +6,15 @@ import { IdentifierType } from './types';
 
 type TrackDefaults = RequestOptions & { region: Region; url?: string };
 
+export type BatchOperation = Record<string, any>;
+
 export class TrackClient {
   siteid: BasicAuth['siteid'];
   apikey: BasicAuth['apikey'];
   defaults: TrackDefaults;
   request: Request;
   trackRoot: string;
+  trackV2Root: string;
 
   constructor(siteid: BasicAuth['siteid'], apikey: BasicAuth['apikey'], defaults: Partial<TrackDefaults> = {}) {
     if (defaults.region && !(defaults.region instanceof Region)) {
@@ -24,6 +27,9 @@ export class TrackClient {
     this.request = new Request({ siteid: this.siteid, apikey: this.apikey }, this.defaults);
 
     this.trackRoot = this.defaults.url ? this.defaults.url : this.defaults.region.trackUrl;
+    this.trackV2Root = this.defaults.url
+      ? this.defaults.url.replace('/api/v1', '/api/v2')
+      : this.defaults.region.trackV2Url;
   }
 
   identify(customerId: string | number, data: RequestData = {}) {
@@ -140,6 +146,14 @@ export class TrackClient {
     return this.request.destroy(
       `${this.trackRoot}/customers/${encodeURIComponent(customerId)}/devices/${encodeURIComponent(deviceToken)}`,
     );
+  }
+
+  batch(operations: BatchOperation[]) {
+    if (!Array.isArray(operations) || operations.length === 0) {
+      throw new MissingParamError('operations');
+    }
+
+    return this.request.post(`${this.trackV2Root}/batch`, { batch: operations });
   }
 
   mergeCustomers(
