@@ -1,0 +1,20 @@
+{
+  "scenario": "network__econnrefused",
+  "kind": "synthesized",
+  "note": "Connection refused. Replay snapshot must preserve err.code === 'ECONNREFUSED'.",
+  "sdkCall": {
+    "client": "TrackClient",
+    "method": "identify",
+    "args": ["abc", { "email": "x@example.com" }]
+  },
+  "mocks": [
+    {
+      "kind": "error",
+      "host": "track.customer.io",
+      "path": "/api/v1/customers/abc",
+      "method": "PUT",
+      "error": { "code": "ECONNREFUSED", "message": "connect ECONNREFUSED 127.0.0.1:443" }
+    }
+  ],
+  "expect": "reject"
+}

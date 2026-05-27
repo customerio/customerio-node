@@ -1,0 +1,29 @@
+{
+  "scenario": "redirect__301_same_host",
+  "kind": "synthesized",
+  "note": "PUT against /customers/{id} returns 301 to a same-host URL. Auth header must be preserved across the redirect.",
+  "sdkCall": {
+    "client": "TrackClient",
+    "method": "identify",
+    "args": ["abc", { "email": "x@example.com" }]
+  },
+  "mocks": [
+    {
+      "kind": "response",
+      "host": "track.customer.io",
+      "path": "/api/v1/customers/abc",
+      "method": "PUT",
+      "status": 301,
+      "headers": { "location": "https://track.customer.io/api/v1/customers/abc/" }
+    },
+    {
+      "kind": "response",
+      "host": "track.customer.io",
+      "path": "/api/v1/customers/abc/",
+      "method": "PUT",
+      "status": 200,
+      "body": ""
+    }
+  ],
+  "expect": "resolve"
+}

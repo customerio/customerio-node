@@ -1,0 +1,21 @@
+{
+  "scenario": "malformed_json__200",
+  "kind": "synthesized",
+  "note": "200 response with non-JSON body. SDK rejects with 'Unable to parse JSON' error. Replay snapshot fixes the error-message contract.",
+  "sdkCall": {
+    "client": "APIClient",
+    "method": "getCustomersByEmail",
+    "args": ["x@example.com"]
+  },
+  "mocks": [
+    {
+      "kind": "response",
+      "host": "api.customer.io",
+      "path": "/v1/customers?email=x%40example.com",
+      "method": "GET",
+      "status": 200,
+      "rawBody": "<<not-json>>"
+    }
+  ],
+  "expect": "reject"
+}

@@ -1,0 +1,29 @@
+{
+  "scenario": "redirect__302_off_domain",
+  "kind": "synthesized",
+  "note": "302 redirect target is off the customer.io domain. The legacy impl strips Authorization on the second hop (see lib/request.ts:89-112). Replay snapshots the final result; the auth-strip behavior itself is covered by test/request.ts.",
+  "sdkCall": {
+    "client": "TrackClient",
+    "method": "identify",
+    "args": ["abc", { "email": "x@example.com" }]
+  },
+  "mocks": [
+    {
+      "kind": "response",
+      "host": "track.customer.io",
+      "path": "/api/v1/customers/abc",
+      "method": "PUT",
+      "status": 302,
+      "headers": { "location": "https://offsite.example.com/redirected" }
+    },
+    {
+      "kind": "response",
+      "host": "offsite.example.com",
+      "path": "/redirected",
+      "method": "PUT",
+      "status": 200,
+      "body": { "redirected": true }
+    }
+  ],
+  "expect": "resolve"
+}

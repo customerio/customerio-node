@@ -10,13 +10,48 @@ jobs:
       matrix:
         # Supported Node.js versions: current + Active LTS + Maintenance LTS.
         # See https://nodejs.org/en/about/previous-releases
-        node: ["22", "24", "26"]
+        # Bun is also tested so consumers running the SDK under Bun get an
+        # early signal if anything regresses on that runtime.
+        runtime:
+          - { kind: node, version: "22" }
+          - { kind: node, version: "24" }
+          - { kind: node, version: "26" }
+          - { kind: bun, version: "latest" }
+    name: ${{ matrix.runtime.kind }} ${{ matrix.runtime.version }}
     steps:
       - uses: actions/checkout@v4
+
       - name: setup node
+        if: matrix.runtime.kind == 'node'
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.runtime.version }}
           cache: npm
-      - run: npm ci
-      - run: npm test
+
+      - name: install (node)
+        if: matrix.runtime.kind == 'node'
+        run: npm ci
+
+      - name: test (node)
+        if: matrix.runtime.kind == 'node'
+        run: npm test
+
+      - name: setup bun
+        if: matrix.runtime.kind == 'bun'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ matrix.runtime.version }}
+
+      - name: install (bun)
+        if: matrix.runtime.kind == 'bun'
+        # The repository ships a package-lock.json (npm), not a bun.lockb.
+        # `bun install` honors package-lock.json but does not gate on a frozen
+        # lockfile, so we leave it unfrozen here. The Node matrix entries
+        # already enforce lockfile-strict installs.
+        run: bun install
+
+      - name: test (bun)
+        if: matrix.runtime.kind == 'bun'
+        # Skip nyc on Bun: the coverage instrumentation has not been verified
+        # against Bun's runtime. Coverage gating remains in the Node jobs.
+        run: bun x ava
