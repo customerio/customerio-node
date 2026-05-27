@@ -25,6 +25,55 @@ export interface PushRequestData {
   event?: 'delivered' | 'opened' | 'converted';
   timestamp?: number;
 }
+export interface ReportEmailMetricsRequestData {
+  delivery_id: string;
+  metric: 'bounced' | 'clicked' | 'converted' | 'deferred' | 'delivered' | 'dropped' | 'opened' | 'spammed';
+  timestamp?: number;
+  recipient?: string;
+  reason?: string;
+  href?: string;
+}
+export interface ReportInappMetricsRequestData {
+  delivery_id: string;
+  metric: 'clicked' | 'converted' | 'opened';
+  timestamp?: number;
+  recipient?: string;
+  href?: string;
+}
+export interface ReportPushMetricsRequestData {
+  delivery_id: string;
+  metric: 'converted' | 'delivered' | 'opened';
+  timestamp?: number;
+  recipient?: string;
+}
+export interface ReportSlackMetricsRequestData {
+  delivery_id: string;
+  metric: 'clicked' | 'converted' | 'delivered' | 'opened';
+  timestamp?: number;
+  href?: string;
+}
+export interface ReportSMSMetricsRequestData {
+  delivery_id: string;
+  metric: 'bounced' | 'clicked' | 'delivered' | 'opened';
+  timestamp?: number;
+  recipient?: string;
+  reason?: string;
+  href?: string;
+}
+export interface ReportWebhookMetricsRequestData {
+  delivery_id: string;
+  metric: 'bounced' | 'clicked' | 'converted' | 'deferred' | 'delivered' | 'dropped' | 'opened' | 'spammed';
+  timestamp?: number;
+  reason?: string;
+  href?: string;
+}
+export type ReportMetricsRequestData =
+  | ReportEmailMetricsRequestData
+  | ReportInappMetricsRequestData
+  | ReportPushMetricsRequestData
+  | ReportSlackMetricsRequestData
+  | ReportSMSMetricsRequestData
+  | ReportWebhookMetricsRequestData;
 
 const TIMEOUT = 10_000;
 
