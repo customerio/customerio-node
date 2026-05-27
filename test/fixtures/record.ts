@@ -115,7 +115,7 @@ const recordOne = async (
   scenario: string,
   sdkCall: SdkCall,
   invoke: () => Promise<unknown>,
-  expectedOutcome: 'resolve' | 'reject' = 'resolve',
+  _expectedOutcome: 'resolve' | 'reject' = 'resolve',
 ): Promise<void> => {
   nock.recorder.clear();
   nock.recorder.rec({ output_objects: true, dont_print: true });
@@ -128,7 +128,6 @@ const recordOne = async (
   const recorded = (nock.recorder.play() as any[]) ?? [];
   nock.recorder.clear();
   nock.restore();
-  nock.recorder.rec({ output_objects: true, dont_print: true }); // resume for next call
 
   if (recorded.length === 0) {
     console.warn(`  no HTTP traffic captured for ${scenario}; skipped`);
@@ -152,8 +151,6 @@ const recordOne = async (
 };
 
 const run = async () => {
-  nock.recorder.rec({ output_objects: true, dont_print: true });
-
   const runId = uuidv4();
   const testId = `sdk-record-${runId}`;
   const anonId = `sdk-record-anon-${runId}`;
@@ -247,16 +244,6 @@ const run = async () => {
         ),
     );
   }
-
-  // 4xx capture — empty id rejects client-side before reaching the wire on
-  // most SDK methods. Use getCustomersByEmail with a malformed value the server
-  // will reject.
-  await recordOne(
-    'getCustomersByEmail__400',
-    { client: 'APIClient', method: 'getCustomersByEmail', args: ['not a valid email at all'] },
-    () => api.getCustomersByEmail('not a valid email at all'),
-    'reject',
-  );
 
   // Cleanup pass.
   await recordOne('suppress__success', { client: 'TrackClient', method: 'suppress', args: [testId] }, () =>

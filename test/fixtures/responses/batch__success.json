@@ -1,0 +1,42 @@
+{
+  "scenario": "batch__success",
+  "kind": "live",
+  "sdkCall": {
+    "client": "TrackClient",
+    "method": "batch",
+    "args": [
+      [
+        {
+          "type": "person",
+          "action": "identify",
+          "identifiers": {
+            "id": "sdk-record-62f6187a-6306-4573-9344-b5e6d4046bf0"
+          },
+          "attributes": {}
+        }
+      ]
+    ]
+  },
+  "mocks": [
+    {
+      "kind": "response",
+      "host": "track.customer.io",
+      "path": "/api/v2/batch",
+      "method": "POST",
+      "status": 200,
+      "headers": {
+        "access-control-allow-origin": "*",
+        "cache-control": "no-cache, no-store, must-revalidate, max-age=0",
+        "content-length": "3",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Wed, 27 May 2026 20:02:42 GMT",
+        "status": "200 OK",
+        "via": "1.1 google",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+      },
+      "body": {}
+    }
+  ],
+  "expect": "resolve"
+}
