@@ -19,9 +19,14 @@ The `engines` field in `package.json` reflects the current minimum supported ver
 
 ## Alternative Node runtimes
 
-Many runtimes often have subtle differences to the APIs and standard library offered by Node.js. These differences can cause issues when using this library with those runtimes.
+As of v5.0.0 the SDK is built on top of standard `fetch`, so it runs on any runtime that implements the [WHATWG fetch standard](https://fetch.spec.whatwg.org/).
 
-If you would like to use Customer.io with an alternate runtime, we recommend using either our [Track](https://customer.io/docs/api/#tag/trackOverview) and [App](https://customer.io/docs/api/#tag/appOverview) APIs directly using the built-in HTTP client available in your runtime, or our [React Native SDK](https://customer.io/docs/sdk/react-native/getting-started/) if applicable.
+[Bun](https://bun.sh/) is exercised in CI alongside Node.js, so the supported matrix is:
+
+- Node.js (Current, Active LTS, Maintenance LTS; see [Supported Node.js versions](#supported-nodejs-versions) above)
+- Bun (latest)
+
+Other fetch-compatible runtimes (Deno, Cloudflare Workers, etc.) should work but are not part of our test matrix. If you hit a runtime-specific issue, please open one against the [issue tracker](https://github.com/customerio/customerio-node/issues).
 
 ## Installation
 

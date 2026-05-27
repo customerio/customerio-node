@@ -19,7 +19,8 @@
     ],
     "files": [
       "test/**/*.ts",
-      "!test/fixtures/record.ts"
+      "!test/fixtures/record.ts",
+      "!test/integration/**"
     ]
   },
   "nyc": {
@@ -88,6 +89,7 @@
     "test": "nyc ava",
     "test:record": "CIO_RECORD=1 ts-node test/fixtures/record.ts",
     "test:replay": "ava test/fixtures/replay.ts",
+    "test:live": "CIO_LIVE=1 ava test/integration/live.ts",
     "build": "tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prepare": "husky install",

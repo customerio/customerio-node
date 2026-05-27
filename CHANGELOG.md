@@ -2,13 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.0.0]
+
+The internals of `lib/request.ts` have been rewritten on top of native `fetch` (no more `https.request`). The public method surface is unchanged. Most users will not need to update any code; the one TypeScript-only break is documented below.
+
+#### Breaking (TypeScript only)
+
+- **`CustomerIORequestError.response` type narrowed.** It is now a `ResponseLike` interface (`{ statusCode: number; headers: Record<string, string>; ok: boolean }`) instead of `http.IncomingMessage`. The runtime properties that the SDK has always populated (`statusCode`, response `headers`) are preserved. If your code reads `err.response.rawHeaders` or `err.response.socket`, or uses `instanceof http.IncomingMessage`, update it to read the lowercased `err.response.headers` object instead.
+
+#### Changed
+
+- **Outbound header names are now lowercased on the wire.** This is per the WHATWG fetch spec. The Customer.io API is case-insensitive, so this only matters if you grep your own outbound HTTP logs.
+- **TCP keepalive is enabled by default.** undici's connection pool reuses sockets across calls. Performance improves under sustained load; file-descriptor usage profile shifts slightly.
+- **`User-Agent` bumps from `Customer.io Node Client/4.x` to `Customer.io Node Client/5.0.0`.**
+
+#### Added
+
+- **Bun support.** Bun (latest) is now part of the CI matrix alongside Node 22 / 24 / 26. Runtimes that implement standard `fetch` should work, though only Bun and Node are explicitly tested.
+- **307 and 308 redirects are now explicitly covered** in the test suite (previously only 301/302 had direct test coverage).
+- **Live dogfood suite** (`npm run test:live`). Pre-release smoke test against a real workspace. Not part of `npm test`; gated on `CIO_LIVE=1` plus credentials.
+
+#### Internal
+
+- `lib/request.ts` rewritten on top of native `fetch` with `redirect: 'manual'` and `AbortSignal.timeout`. The Authorization-strip rule on cross-host redirects, the timeout error message string, and `err.code` on network errors (`ECONNREFUSED` / `ENOTFOUND` / `ECONNRESET`) are all preserved. No runtime dependency on the `https` module.
+- `nock` upgraded to `^14` (the only version that intercepts undici's `fetch`).
+
 ## [4.5.1]
 
 #### Fixed
 
 - Fix redirect handler shadowing request body with response body ([#185](https://github.com/customerio/customerio-node/pull/185))
 - Strip Authorization header on non-customer.io redirects ([#186](https://github.com/customerio/customerio-node/pull/186))
-- URL-encode path parameters in APIClient  ([#187](https://github.com/customerio/customerio-node/pull/187))
+- URL-encode path parameters in APIClient ([#187](https://github.com/customerio/customerio-node/pull/187))
 
 ## [4.5.0]
 
