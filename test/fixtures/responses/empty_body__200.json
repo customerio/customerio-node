@@ -1,0 +1,21 @@
+{
+  "scenario": "empty_body__200",
+  "kind": "synthesized",
+  "note": "200 with empty body. SDK should resolve with {} (legacy impl: lib/request.ts json defaults to {} when body length is 0).",
+  "sdkCall": {
+    "client": "TrackClient",
+    "method": "identify",
+    "args": ["abc", { "email": "x@example.com" }]
+  },
+  "mocks": [
+    {
+      "kind": "response",
+      "host": "track.customer.io",
+      "path": "/api/v1/customers/abc",
+      "method": "PUT",
+      "status": 200,
+      "rawBody": ""
+    }
+  ],
+  "expect": "resolve"
+}

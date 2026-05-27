@@ -1,0 +1,20 @@
+{
+  "scenario": "network__econnreset",
+  "kind": "synthesized",
+  "note": "Connection reset by peer. Replay snapshot must preserve err.code === 'ECONNRESET'.",
+  "sdkCall": {
+    "client": "TrackClient",
+    "method": "identify",
+    "args": ["abc", { "email": "x@example.com" }]
+  },
+  "mocks": [
+    {
+      "kind": "error",
+      "host": "track.customer.io",
+      "path": "/api/v1/customers/abc",
+      "method": "PUT",
+      "error": { "code": "ECONNRESET", "message": "socket hang up" }
+    }
+  ],
+  "expect": "reject"
+}
