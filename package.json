@@ -87,7 +87,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "prepublishOnly": "npm run build",
-    "prepare": "husky && node update-version.js"
+    "prepare": "(husky || true) && node update-version.js"
   },
   "lint-staged": {
     "*.{js,json,md,ts,yml,yaml}": "prettier --write",
