@@ -66,30 +66,19 @@ export default class CIORequest {
   }
 
   async handler({ uri, body, method, headers }: RequestHandlerOptions): Promise<Record<string, any>> {
-    const timeoutMs = this.defaults.timeout as number;
-
-    let response: Response;
-    try {
-      response = await fetch(uri, {
-        method,
-        headers: headers as Record<string, string>,
-        body,
-        redirect: 'manual',
-        signal: AbortSignal.timeout(timeoutMs),
-      });
-    } catch (err: unknown) {
-      const error = err as Error & { cause?: unknown };
-      if (error.name === 'TimeoutError') {
-        throw new Error(`Request timed out after ${timeoutMs}ms`);
-      }
-      // undici surfaces DNS/refused/reset as `TypeError: fetch failed` with
-      // `.cause` carrying the real SystemError (which has `.code`). Unwrap so
-      // callers continue to see `err.code === 'ECONNREFUSED'` etc.
-      if (error.cause instanceof Error) {
-        throw error.cause;
-      }
-      throw err;
-    }
+    // Network failures and timeouts surface as native fetch errors:
+    //   - DNS / refused / reset → `TypeError("fetch failed")` with the underlying
+    //     SystemError (carrying `.code`) on `.cause`.
+    //   - Timeout → `DOMException("TimeoutError")` from `AbortSignal.timeout`.
+    // These are intentionally not translated; callers should inspect `name`,
+    // `cause`, and `cause.code` rather than relying on the legacy error shapes.
+    const response = await fetch(uri, {
+      method,
+      headers: headers as Record<string, string>,
+      body,
+      redirect: 'manual',
+      signal: AbortSignal.timeout(this.defaults.timeout as number),
+    });
 
     const statusCode = response.status;
 
@@ -114,7 +103,7 @@ export default class CIORequest {
           const { Authorization: _stripped, ...rest } = headers as Record<string, unknown>;
           redirectHeaders = rest as RequestOptions['headers'];
         }
-      } catch (_err) {
+      } catch {
         // No need to do anything if the URL is malformed or relative
       }
 
