@@ -164,7 +164,7 @@ export class APIClient {
   }
 
   createCustomersExport(filters: Filter) {
-    if (isEmpty(filters)) {
+    if (filters == null) {
       throw new MissingParamError('filters');
     }
 
