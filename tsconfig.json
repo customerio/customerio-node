@@ -1,15 +1,13 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "alwaysStrict": true,
-    "baseUrl": ".",
     "declaration": true,
     "esModuleInterop": true,
     "inlineSourceMap": false,
     "inlineSources": false,
     "lib": ["es2022"],
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "noEmit": false,
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
@@ -19,13 +17,13 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "dist",
-    "paths": {},
     "resolveJsonModule": true,
     "sourceMap": false,
     "strict": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    "target": "es2022"
+    "target": "es2022",
+    "types": ["node"]
   },
   "include": ["index.ts", "lib/**/*"]
 }
