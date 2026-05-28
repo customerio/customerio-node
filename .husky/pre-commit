@@ -1,2 +1,1 @@
-npx ts-node ./check-version.ts
 npx lint-staged

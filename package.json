@@ -82,13 +82,13 @@
   "repository": "customerio/customerio-node",
   "scripts": {
     "test": "nyc ava",
+    "prebuild": "node update-version.js",
     "build": "tsc -p tsconfig.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "prepublishOnly": "npm run build",
-    "prepare": "husky",
-    "version": "node update-version.js"
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,json,md,ts,yml,yaml}": "prettier --write",
