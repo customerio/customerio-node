@@ -47,8 +47,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/sinon": "^21.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.59.4",
-    "@typescript-eslint/parser": "^8.59.4",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
+    "@typescript-eslint/parser": "^8.60.0",
     "ava": "^6.4.1",
     "eslint": "^10.4.0",
     "husky": "^9.1.7",
@@ -57,7 +57,7 @@
     "prettier": "^3.8.3",
     "sinon": "^19.0.5",
     "ts-node": "^10.9.1",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   },
   "homepage": "https://github.com/customerio/customerio-node",
   "keywords": [
