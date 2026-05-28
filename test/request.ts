@@ -573,6 +573,30 @@ test.serial('#handler preserves the Authorization header on redirects within *.c
   t.is(secondCallArgs.headers.Authorization, trackAuth);
 });
 
+test.serial('#handler rejects when redirect Location is an unparseable URL', async (t) => {
+  const firstResponse = new PassThrough();
+  const firstRequest = new PassThrough();
+  const customOptions = Object.assign({}, baseOptions, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+  firstRequest.on('finish', () => {
+    (firstResponse as any).statusCode = 301;
+    (firstResponse as any).headers = { location: '/relative/path' };
+    firstResponse.end();
+  });
+
+  createMockRequest(t.context.httpsReq, 200);
+  t.context.httpsReq
+    .onFirstCall()
+    .callsArgWith(1, firstResponse)
+    .returns(firstRequest as any);
+
+  const err = await t.throwsAsync(() => t.context.req.handler(customOptions));
+  t.true(err instanceof TypeError);
+});
+
 test.serial('#handler makes a request and errors when redirecting without a location header', async (t) => {
   const usResponse = new PassThrough();
   const usRequest = new PassThrough();

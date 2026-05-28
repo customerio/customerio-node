@@ -107,9 +107,8 @@ export default class CIORequest {
                 const { Authorization: _stripped, ...rest } = headers as Record<string, unknown>;
                 redirectHeaders = rest as RequestOptions['headers'];
               }
-            } catch (err) {
-              // No need to do anything if the URL is malformed or relative
-            }
+              /* c8 ignore next 2 -- V8 cannot instrument an empty catch body */
+            } catch {}
 
             return this.handler({ uri: newURI, body, method, headers: redirectHeaders }).then(resolve).catch(reject);
           }
