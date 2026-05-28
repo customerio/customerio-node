@@ -127,6 +127,35 @@ test.serial('#options sets Content-Length using body length in bytes', (t) => {
   t.deepEqual(resultOptions, expectedOptions);
 });
 
+test.serial('#options merges custom headers from defaults.headers', (t) => {
+  const req = new Request({ siteid, apikey }, { timeout: 5000, headers: { 'X-Strict-Mode': '1' } });
+  const result = req.options(uri, 'POST');
+
+  t.is((result.headers as Record<string, string>)['X-Strict-Mode'], '1');
+  // Standard headers must still be present and correct.
+  t.is((result.headers as Record<string, string>).Authorization, trackAuth);
+  t.is((result.headers as Record<string, string>)['Content-Type'], 'application/json');
+});
+
+test.serial('#options does not allow defaults.headers to clobber the standard headers', (t) => {
+  const req = new Request(
+    { siteid, apikey },
+    {
+      timeout: 5000,
+      headers: {
+        Authorization: 'Basic should-be-ignored',
+        'Content-Type': 'text/plain',
+        'User-Agent': 'spoofed',
+      },
+    },
+  );
+  const result = req.options(uri, 'POST');
+
+  t.is((result.headers as Record<string, string>).Authorization, trackAuth);
+  t.is((result.headers as Record<string, string>)['Content-Type'], 'application/json');
+  t.is((result.headers as Record<string, string>)['User-Agent'], `Customer.io Node Client/${PACKAGE_VERSION}`);
+});
+
 test.serial('#handler returns a promise', (t) => {
   createMockRequest(t.context.httpsReq, 200);
   const promise = t.context.req.handler(putOptions);

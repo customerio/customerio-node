@@ -54,7 +54,16 @@ export default class CIORequest {
 
   options(uri: string, method: RequestOptions['method'], data?: RequestData): RequestHandlerOptions {
     const body = data ? JSON.stringify(data) : null;
+    // Per-client custom headers (e.g. `X-Strict-Mode` for the Pipelines
+    // client) can be supplied via `defaults.headers`. They're merged in
+    // first so the standard headers below always win and cannot be
+    // clobbered. The cast is needed because `OutgoingHttpHeaders` has both
+    // named properties (with narrower types like `string | string[]`) and
+    // an index signature — spreading it into a literal that mixes those
+    // values with our own `number`-typed `Content-Length` confuses tsc.
+    const customHeaders = (this.defaults.headers ?? {}) as Record<string, string | number>;
     const headers: Record<string, string | number> = {
+      ...customHeaders,
       Authorization: this.auth,
       'Content-Type': 'application/json',
       'User-Agent': `Customer.io Node Client/${version}`,
