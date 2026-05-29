@@ -12,7 +12,7 @@ export default [
     ignores: ['coverage/**', 'dist/**', 'examples/**', 'node_modules/**'],
   },
   {
-    files: ['index.ts', 'lib/**/*.ts', 'check-version.ts'],
+    files: ['index.ts', 'lib/**/*.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
