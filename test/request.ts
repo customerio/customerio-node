@@ -360,7 +360,7 @@ test.serial('#handler makes a request and rejects with timeout error', async (t)
   }
 });
 
-test.serial('#handler rejects with `Request timed out` when fetch is aborted by the timeout signal', async (t) => {
+test.serial('#handler propagates the native TimeoutError when fetch is aborted by the timeout signal', async (t) => {
   const customOptions = Object.assign({}, baseOptions, {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -373,11 +373,12 @@ test.serial('#handler rejects with `Request timed out` when fetch is aborted by 
     await t.context.req.handler(customOptions);
     t.fail('Expected handler to reject on timeout');
   } catch (err: any) {
-    t.is(err.message, 'Request timed out after 5000ms');
+    t.is(err.name, 'TimeoutError');
+    t.is(err, abortError);
   }
 });
 
-test.serial('#handler unwraps undici TypeError(`fetch failed`) and preserves the underlying err.code', async (t) => {
+test.serial('#handler propagates the native TypeError(`fetch failed`) with the underlying cause intact', async (t) => {
   const customOptions = Object.assign({}, baseOptions, {
     method: 'GET',
     body: null,
@@ -391,8 +392,10 @@ test.serial('#handler unwraps undici TypeError(`fetch failed`) and preserves the
     await t.context.req.handler(customOptions);
     t.fail('Expected handler to reject');
   } catch (err: any) {
-    t.is(err.message, 'connect ECONNREFUSED 127.0.0.1:443');
-    t.is(err.code, 'ECONNREFUSED');
+    t.is(err, wrapped);
+    t.is(err.message, 'fetch failed');
+    t.is(err.cause, cause);
+    t.is(err.cause.code, 'ECONNREFUSED');
   }
 });
 
@@ -524,7 +527,7 @@ test.serial('#handler preserves the Authorization header across 308 redirects', 
   t.is(secondCallArgs.body as string, customOptions.body);
 });
 
-test.serial('#handler unwraps a DNS failure and preserves err.code === ENOTFOUND', async (t) => {
+test.serial('#handler propagates DNS failures with err.cause.code === ENOTFOUND intact', async (t) => {
   const customOptions = Object.assign({}, baseOptions, {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -538,8 +541,9 @@ test.serial('#handler unwraps a DNS failure and preserves err.code === ENOTFOUND
     await t.context.req.handler(customOptions);
     t.fail('Expected handler to reject');
   } catch (err: any) {
-    t.is(err.code, 'ENOTFOUND');
-    t.is(err.message, 'getaddrinfo ENOTFOUND track.customer.io');
+    t.is(err, wrapped);
+    t.is(err.cause, cause);
+    t.is(err.cause.code, 'ENOTFOUND');
   }
 });
 
