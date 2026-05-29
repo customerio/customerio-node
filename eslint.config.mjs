@@ -1,5 +1,5 @@
-const tsParser = require('@typescript-eslint/parser');
-const tsPlugin = require('@typescript-eslint/eslint-plugin');
+import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 const typeAwareRules = {
   '@typescript-eslint/consistent-type-imports': 'error',
@@ -7,7 +7,7 @@ const typeAwareRules = {
   '@typescript-eslint/no-floating-promises': 'error',
 };
 
-module.exports = [
+export default [
   {
     ignores: ['coverage/**', 'dist/**', 'examples/**', 'node_modules/**'],
   },
@@ -17,7 +17,7 @@ module.exports = [
       parser: tsParser,
       parserOptions: {
         project: './tsconfig.eslint.json',
-        tsconfigRootDir: __dirname,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {
@@ -37,7 +37,7 @@ module.exports = [
       parser: tsParser,
       parserOptions: {
         project: './tsconfig.eslint.json',
-        tsconfigRootDir: __dirname,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {
