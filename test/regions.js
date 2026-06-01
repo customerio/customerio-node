@@ -1,5 +1,5 @@
 import test from 'ava';
-import { Region, RegionUS, RegionEU } from '../lib/regions';
+import { Region, RegionUS, RegionEU } from '../lib/regions.js';
 
 test('RegionUS exposes the expected hosts', (t) => {
   t.is(RegionUS.trackUrl, 'https://track.customer.io/api/v1');

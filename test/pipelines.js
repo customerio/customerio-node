@@ -1,14 +1,8 @@
-import type { TestFn } from 'ava';
-import avaTest from 'ava';
+import test from 'ava';
 import sinon from 'sinon';
-import { PipelinesClient } from '../lib/pipelines';
-import { RegionUS, RegionEU } from '../lib/regions';
-import { version } from '../lib/version';
-import type { BatchItem } from '../lib/pipelines/payloads';
-
-type TestContext = { client: PipelinesClient };
-
-const test = avaTest as TestFn<TestContext>;
+import { PipelinesClient } from '../lib/pipelines.js';
+import { RegionUS, RegionEU } from '../lib/regions.js';
+import { version } from '../lib/version.js';
 
 const WRITE_KEY = 'wk-abc-123';
 const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -17,10 +11,6 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 test.beforeEach((t) => {
   t.context.client = new PipelinesClient(WRITE_KEY);
 });
-
-// -----------------------------------------------------------------------------
-// constructor
-// -----------------------------------------------------------------------------
 
 test('constructor sets necessary variables', (t) => {
   t.is(t.context.client.writeKey, WRITE_KEY);
@@ -44,7 +34,6 @@ test('constructor honors a custom url override', (t) => {
 });
 
 test('constructor uses Basic auth with the write key as username and a blank password', (t) => {
-  // Basic auth wire format: base64("<writeKey>:")
   const expected = `Basic ${Buffer.from(`${WRITE_KEY}:`, 'utf8').toString('base64')}`;
   t.is(t.context.client.request.auth, expected);
 });
@@ -54,14 +43,14 @@ test('constructor throws when writeKey is missing', (t) => {
 });
 
 test('constructor throws on an invalid region', (t) => {
-  t.throws(() => new PipelinesClient(WRITE_KEY, { region: 'au' } as any), {
+  t.throws(() => new PipelinesClient(WRITE_KEY, /** @type {any} */ ({ region: 'au' })), {
     message: 'region must be one of Regions.US or Regions.EU',
   });
 });
 
 test('constructor adds X-Strict-Mode: 1 to defaults.headers when strictMode is true', (t) => {
   const client = new PipelinesClient(WRITE_KEY, { strictMode: true });
-  t.is((client.defaults.headers as Record<string, string>)['X-Strict-Mode'], '1');
+  t.is(/** @type {Record<string, string>} */ (client.defaults.headers)['X-Strict-Mode'], '1');
 });
 
 test('constructor preserves caller-supplied headers when adding X-Strict-Mode', (t) => {
@@ -69,25 +58,21 @@ test('constructor preserves caller-supplied headers when adding X-Strict-Mode', 
     strictMode: true,
     headers: { 'X-Custom': 'yes' },
   });
-  const headers = client.defaults.headers as Record<string, string>;
+  const headers = /** @type {Record<string, string>} */ (client.defaults.headers);
   t.is(headers['X-Strict-Mode'], '1');
   t.is(headers['X-Custom'], 'yes');
 });
 
 test('constructor omits X-Strict-Mode when strictMode is not set', (t) => {
-  const headers = (t.context.client.defaults.headers ?? {}) as Record<string, string>;
+  const headers = /** @type {Record<string, string>} */ (t.context.client.defaults.headers ?? {});
   t.false('X-Strict-Mode' in headers);
 });
-
-// -----------------------------------------------------------------------------
-// envelope auto-fill
-// -----------------------------------------------------------------------------
 
 test('#identify auto-fills messageId, timestamp, and context.library', (t) => {
   const post = sinon.stub(t.context.client.request, 'post');
   t.context.client.identify({ userId: 'u1', traits: { plan: 'pro' } });
 
-  const [url, body] = post.firstCall.args as [string, any];
+  const [url, body] = /** @type {[string, any]} */ (post.firstCall.args);
   t.is(url, 'https://cdp.customer.io/v1/identify');
   t.regex(body.messageId, UUID_RE);
   t.regex(body.timestamp, ISO_TIMESTAMP_RE);
@@ -105,7 +90,7 @@ test('#identify preserves caller-supplied messageId, timestamp, and context.libr
     context: { library: { name: 'my-app', version: '9.9.9' } },
   });
 
-  const [, body] = post.firstCall.args as [string, any];
+  const [, body] = /** @type {[string, any]} */ (post.firstCall.args);
   t.is(body.messageId, 'caller-msg-id');
   t.is(body.timestamp, '2024-01-01T00:00:00.000Z');
   t.deepEqual(body.context.library, { name: 'my-app', version: '9.9.9' });
@@ -118,48 +103,42 @@ test('defaultContext from defaults merges under per-call context', (t) => {
   const post = sinon.stub(client.request, 'post');
 
   client.identify({ userId: 'u1', context: { locale: 'fr-FR' } });
-  const [, body] = post.firstCall.args as [string, any];
+  const [, body] = /** @type {[string, any]} */ (post.firstCall.args);
 
   t.is(body.context.ip, '10.0.0.1', 'defaultContext.ip flows through');
   t.is(body.context.locale, 'fr-FR', 'per-call context wins on conflict');
-  // The auto-filled library identifier is preserved even when the caller
-  // supplies a partial context that does not mention it.
   t.deepEqual(body.context.library, { name: 'customerio-node', version });
 });
 
-// -----------------------------------------------------------------------------
-// method routing + validation
-// -----------------------------------------------------------------------------
-
 test('#identify validates userId or anonymousId is required', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.identify({} as any), { message: 'userId or anonymousId is required' });
+  t.throws(() => t.context.client.identify(/** @type {any} */ ({})), { message: 'userId or anonymousId is required' });
 });
 
 test('#identify accepts anonymousId-only payloads', (t) => {
   const post = sinon.stub(t.context.client.request, 'post');
   t.context.client.identify({ anonymousId: 'anon-1' });
   t.is(post.firstCall.args[0], 'https://cdp.customer.io/v1/identify');
-  t.is((post.firstCall.args[1] as any).anonymousId, 'anon-1');
+  t.is(/** @type {any} */ (post.firstCall.args[1]).anonymousId, 'anon-1');
 });
 
 test('#track validates userId or anonymousId is required', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.track({ event: 'Signed Up' } as any), {
+  t.throws(() => t.context.client.track(/** @type {any} */ ({ event: 'Signed Up' })), {
     message: 'userId or anonymousId is required',
   });
 });
 
 test('#track validates event is required', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.track({ userId: 'u1' } as any), { message: 'event is required' });
+  t.throws(() => t.context.client.track(/** @type {any} */ ({ userId: 'u1' })), { message: 'event is required' });
 });
 
 test('#track posts to /track with the event payload', (t) => {
   const post = sinon.stub(t.context.client.request, 'post');
   t.context.client.track({ userId: 'u1', event: 'Signed Up', properties: { plan: 'pro' } });
 
-  const [url, body] = post.firstCall.args as [string, any];
+  const [url, body] = /** @type {[string, any]} */ (post.firstCall.args);
   t.is(url, 'https://cdp.customer.io/v1/track');
   t.is(body.event, 'Signed Up');
   t.deepEqual(body.properties, { plan: 'pro' });
@@ -167,7 +146,7 @@ test('#track posts to /track with the event payload', (t) => {
 
 test('#page validates userId or anonymousId is required', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.page({} as any), { message: 'userId or anonymousId is required' });
+  t.throws(() => t.context.client.page(/** @type {any} */ ({})), { message: 'userId or anonymousId is required' });
 });
 
 test('#page posts to /page', (t) => {
@@ -178,7 +157,7 @@ test('#page posts to /page', (t) => {
 
 test('#screen validates userId or anonymousId is required', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.screen({} as any), { message: 'userId or anonymousId is required' });
+  t.throws(() => t.context.client.screen(/** @type {any} */ ({})), { message: 'userId or anonymousId is required' });
 });
 
 test('#screen posts to /screen', (t) => {
@@ -189,21 +168,21 @@ test('#screen posts to /screen', (t) => {
 
 test('#group validates userId or anonymousId is required', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.group({ groupId: 'g1' } as any), {
+  t.throws(() => t.context.client.group(/** @type {any} */ ({ groupId: 'g1' })), {
     message: 'userId or anonymousId is required',
   });
 });
 
 test('#group validates groupId is required', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.group({ userId: 'u1' } as any), { message: 'groupId is required' });
+  t.throws(() => t.context.client.group(/** @type {any} */ ({ userId: 'u1' })), { message: 'groupId is required' });
 });
 
 test('#group posts to /group with the groupId and traits', (t) => {
   const post = sinon.stub(t.context.client.request, 'post');
   t.context.client.group({ userId: 'u1', groupId: 'g1', traits: { plan: 'enterprise' } });
 
-  const [url, body] = post.firstCall.args as [string, any];
+  const [url, body] = /** @type {[string, any]} */ (post.firstCall.args);
   t.is(url, 'https://cdp.customer.io/v1/group');
   t.is(body.groupId, 'g1');
   t.deepEqual(body.traits, { plan: 'enterprise' });
@@ -211,27 +190,23 @@ test('#group posts to /group with the groupId and traits', (t) => {
 
 test('#alias validates userId is required', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.alias({ previousId: 'p1' } as any), { message: 'userId is required' });
+  t.throws(() => t.context.client.alias(/** @type {any} */ ({ previousId: 'p1' })), { message: 'userId is required' });
 });
 
 test('#alias validates previousId is required', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.alias({ userId: 'u1' } as any), { message: 'previousId is required' });
+  t.throws(() => t.context.client.alias(/** @type {any} */ ({ userId: 'u1' })), { message: 'previousId is required' });
 });
 
 test('#alias posts to /alias', (t) => {
   const post = sinon.stub(t.context.client.request, 'post');
   t.context.client.alias({ userId: 'u1', previousId: 'p1' });
 
-  const [url, body] = post.firstCall.args as [string, any];
+  const [url, body] = /** @type {[string, any]} */ (post.firstCall.args);
   t.is(url, 'https://cdp.customer.io/v1/alias');
   t.is(body.userId, 'u1');
   t.is(body.previousId, 'p1');
 });
-
-// -----------------------------------------------------------------------------
-// batch
-// -----------------------------------------------------------------------------
 
 test('#batch throws when items is empty', (t) => {
   sinon.stub(t.context.client.request, 'post');
@@ -240,12 +215,12 @@ test('#batch throws when items is empty', (t) => {
 
 test('#batch throws when items is not an array', (t) => {
   sinon.stub(t.context.client.request, 'post');
-  t.throws(() => t.context.client.batch({} as any), { message: 'items is required' });
+  t.throws(() => t.context.client.batch(/** @type {any} */ ({})), { message: 'items is required' });
 });
 
 test('#batch posts to /batch, envelopes every item, and preserves the type discriminator', (t) => {
   const post = sinon.stub(t.context.client.request, 'post');
-  const items: BatchItem[] = [
+  const items = [
     { type: 'identify', userId: 'u1', traits: { plan: 'pro' } },
     { type: 'track', userId: 'u1', event: 'Signed Up' },
     { type: 'alias', userId: 'u1', previousId: 'p1' },
@@ -253,7 +228,7 @@ test('#batch posts to /batch, envelopes every item, and preserves the type discr
 
   t.context.client.batch(items);
 
-  const [url, body] = post.firstCall.args as [string, any];
+  const [url, body] = /** @type {[string, any]} */ (post.firstCall.args);
   t.is(url, 'https://cdp.customer.io/v1/batch');
   t.is(body.batch.length, 3);
 

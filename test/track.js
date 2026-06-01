@@ -1,14 +1,8 @@
-import type { TestFn } from 'ava';
-import avaTest from 'ava';
-import type { SinonStub } from 'sinon';
+import test from 'ava';
 import sinon from 'sinon';
-import { TrackClient } from '../lib/track';
-import { RegionUS, RegionEU } from '../lib/regions';
-import { IdentifierType } from '../lib/types';
-
-type TestContext = { client: TrackClient };
-
-const test = avaTest as TestFn<TestContext>;
+import { TrackClient } from '../lib/track.js';
+import { RegionUS, RegionEU } from '../lib/regions.js';
+import { IdentifierType } from '../lib/types.js';
 
 test.beforeEach((t) => {
   t.context.client = new TrackClient('123', 'abc');
@@ -34,26 +28,22 @@ test('constructor sets necessary variables', (t) => {
 
 test('constructor sets correct URL for RegionUS', (t) => {
   let client = new TrackClient('123', 'abc', { region: RegionUS });
-
   t.is(client.trackRoot, 'https://track.customer.io/api/v1');
   t.is(client.trackV2Root, 'https://track.customer.io/api/v2');
 });
 
 test('constructor sets correct URL for RegionEU', (t) => {
   let client = new TrackClient('123', 'abc', { region: RegionEU });
-
   t.is(client.trackRoot, 'https://track-eu.customer.io/api/v1');
   t.is(client.trackV2Root, 'https://track-eu.customer.io/api/v2');
 });
 
 test('constructor sets correct URL for custom URL', (t) => {
   let client = new TrackClient('123', 'abc', { url: 'https://example.com/url' });
-
   t.is(client.siteid, '123');
   t.is(client.apikey, 'abc');
   t.is(client.trackRoot, 'https://example.com/url');
   t.is(client.trackV2Root, 'https://example.com/url');
-
   t.truthy(client.request);
   t.is(client.request.siteid, '123');
   t.is(client.request.apikey, 'abc');
@@ -61,7 +51,6 @@ test('constructor sets correct URL for custom URL', (t) => {
 
 test('constructor swaps /api/v1 to /api/v2 in a custom URL when present', (t) => {
   let client = new TrackClient('123', 'abc', { url: 'https://example.com/api/v1' });
-
   t.is(client.trackRoot, 'https://example.com/api/v1');
   t.is(client.trackV2Root, 'https://example.com/api/v2');
 });
@@ -69,11 +58,9 @@ test('constructor swaps /api/v1 to /api/v2 in a custom URL when present', (t) =>
 test('passing in an invalid region throws an error', (t) => {
   t.throws(
     () => {
-      new TrackClient('123', 'abc', { region: 'au' } as any);
+      new TrackClient('123', 'abc', /** @type {any} */ ({ region: 'au' }));
     },
-    {
-      message: 'region must be one of Regions.US or Regions.EU',
-    },
+    { message: 'region must be one of Regions.US or Regions.EU' },
   );
 });
 
@@ -81,9 +68,13 @@ ID_INPUTS.forEach(([input, expected]) => {
   test(`#identify works for ${input}`, (t) => {
     sinon.stub(t.context.client.request, 'put');
     t.throws(() => t.context.client.identify(''), { message: 'customerId is required' });
-
     t.context.client.identify(input);
-    t.truthy((t.context.client.request.put as SinonStub).calledWith(`${RegionUS.trackUrl}/customers/${expected}`, {}));
+    t.truthy(
+      /** @type {import('sinon').SinonStub} */ (t.context.client.request.put).calledWith(
+        `${RegionUS.trackUrl}/customers/${expected}`,
+        {},
+      ),
+    );
   });
 });
 
@@ -91,9 +82,12 @@ ID_INPUTS.forEach(([input, expected]) => {
   test(`#destroy works for ${input}`, (t) => {
     sinon.stub(t.context.client.request, 'destroy');
     t.throws(() => t.context.client.destroy(''), { message: 'customerId is required' });
-
     t.context.client.destroy(input);
-    t.truthy((t.context.client.request.destroy as SinonStub).calledWith(`${RegionUS.trackUrl}/customers/${expected}`));
+    t.truthy(
+      /** @type {import('sinon').SinonStub} */ (t.context.client.request.destroy).calledWith(
+        `${RegionUS.trackUrl}/customers/${expected}`,
+      ),
+    );
   });
 });
 
@@ -101,10 +95,11 @@ ID_INPUTS.forEach(([input, expected]) => {
   test(`#suppress works for ${input}`, (t) => {
     sinon.stub(t.context.client.request, 'post');
     t.throws(() => t.context.client.suppress(''), { message: 'customerId is required' });
-
     t.context.client.suppress(input);
     t.truthy(
-      (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/customers/${expected}/suppress`),
+      /** @type {import('sinon').SinonStub} */ (t.context.client.request.post).calledWith(
+        `${RegionUS.trackUrl}/customers/${expected}/suppress`,
+      ),
     );
   });
 });
@@ -113,10 +108,11 @@ ID_INPUTS.forEach(([input, expected]) => {
   test(`#unsuppress works for ${input}`, (t) => {
     sinon.stub(t.context.client.request, 'post');
     t.throws(() => t.context.client.unsuppress(''), { message: 'customerId is required' });
-
     t.context.client.unsuppress(input);
     t.truthy(
-      (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/customers/${expected}/unsuppress`),
+      /** @type {import('sinon').SinonStub} */ (t.context.client.request.post).calledWith(
+        `${RegionUS.trackUrl}/customers/${expected}/unsuppress`,
+      ),
     );
   });
 });
@@ -125,14 +121,13 @@ ID_INPUTS.forEach(([input, expected]) => {
   test(`#track with customer id works for ${input}`, (t) => {
     sinon.stub(t.context.client.request, 'post');
     t.throws(() => t.context.client.track(''), { message: 'customerId is required' });
-
     t.throws(() => t.context.client.track(input, { data: {} }), { message: 'data.name is required' });
     t.context.client.track(input, { name: 'purchase', data: 'yep' });
     t.truthy(
-      (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/customers/${expected}/events`, {
-        name: 'purchase',
-        data: 'yep',
-      }),
+      /** @type {import('sinon').SinonStub} */ (t.context.client.request.post).calledWith(
+        `${RegionUS.trackUrl}/customers/${expected}/events`,
+        { name: 'purchase', data: 'yep' },
+      ),
     );
   });
 });
@@ -144,7 +139,7 @@ test('#trackAnonymous works', (t) => {
   t.throws(() => t.context.client.trackAnonymous('123', { data: {} }), { message: 'data.name is required' });
   t.context.client.trackAnonymous('123', { name: 'purchase', data: 'yep' });
   t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/events`, {
+    /** @type {import('sinon').SinonStub} */ (t.context.client.request.post).calledWith(`${RegionUS.trackUrl}/events`, {
       anonymous_id: '123',
       name: 'purchase',
       data: 'yep',
@@ -156,7 +151,7 @@ test('#trackAnonymous ignores blank anonymousId', (t) => {
   sinon.stub(t.context.client.request, 'post');
   t.context.client.trackAnonymous('', { name: 'purchase', data: 'yep' });
   t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/events`, {
+    /** @type {import('sinon').SinonStub} */ (t.context.client.request.post).calledWith(`${RegionUS.trackUrl}/events`, {
       name: 'purchase',
       data: 'yep',
     }),
@@ -166,8 +161,12 @@ test('#trackAnonymous ignores blank anonymousId', (t) => {
 test('#trackPush works', (t) => {
   sinon.stub(t.context.client.request, 'post');
   t.context.client.trackPush();
-  t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/push/events`, {}));
-
+  t.truthy(
+    /** @type {import('sinon').SinonStub} */ (t.context.client.request.post).calledWith(
+      `${RegionUS.trackUrl}/push/events`,
+      {},
+    ),
+  );
   t.context.client.trackPush({
     delivery_id: 'RPILAgUBcRhIBqSfeiIwdIYJKxTY',
     event: 'opened',
@@ -175,27 +174,29 @@ test('#trackPush works', (t) => {
     timestamp: 1613063089,
   });
   t.truthy(
-    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/push/events`, {
-      delivery_id: 'RPILAgUBcRhIBqSfeiIwdIYJKxTY',
-      event: 'opened',
-      device_id: 'CIO-Delivery-Token from the notification',
-      timestamp: 1613063089,
-    }),
+    /** @type {import('sinon').SinonStub} */ (t.context.client.request.post).calledWith(
+      `${RegionUS.trackUrl}/push/events`,
+      {
+        delivery_id: 'RPILAgUBcRhIBqSfeiIwdIYJKxTY',
+        event: 'opened',
+        device_id: 'CIO-Delivery-Token from the notification',
+        timestamp: 1613063089,
+      },
+    ),
   );
 });
 
 ID_INPUTS.forEach(([input, expected]) => {
   test(`#trackPageView works for ${input}`, (t) => {
     sinon.stub(t.context.client.request, 'post');
-    t.throws(() => (t.context.client.trackPageView as any)(''), { message: 'customerId is required' });
-
+    t.throws(() => /** @type {any} */ (t.context.client.trackPageView)(''), { message: 'customerId is required' });
     t.throws(() => t.context.client.trackPageView(input, ''), { message: 'path is required' });
     t.context.client.trackPageView(input, '#home');
     t.truthy(
-      (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/customers/${expected}/events`, {
-        type: 'page',
-        name: '#home',
-      }),
+      /** @type {import('sinon').SinonStub} */ (t.context.client.request.post).calledWith(
+        `${RegionUS.trackUrl}/customers/${expected}/events`,
+        { type: 'page', name: '#home' },
+      ),
     );
   });
 });
@@ -203,8 +204,7 @@ ID_INPUTS.forEach(([input, expected]) => {
 ID_INPUTS.forEach(([input, expected]) => {
   test(`#addDevice works for ${input}`, (t) => {
     sinon.stub(t.context.client.request, 'put');
-
-    t.throws(() => t.context.client.addDevice(null as any, '', 'ios', { primary: true }), {
+    t.throws(() => t.context.client.addDevice(/** @type {any} */ (null), '', 'ios', { primary: true }), {
       message: 'customerId is required',
     });
     t.throws(() => t.context.client.addDevice(input, '', 'ios', { primary: true }), {
@@ -213,19 +213,12 @@ ID_INPUTS.forEach(([input, expected]) => {
     t.throws(() => t.context.client.addDevice(input, '123', '', { primary: true }), {
       message: 'platform is required',
     });
-
     t.context.client.addDevice(input, '123', 'ios', { primary: true, last_used: 1613063089 });
     t.truthy(
-      (t.context.client.request.put as SinonStub).calledWith(`${RegionUS.trackUrl}/customers/${expected}/devices`, {
-        device: {
-          id: '123',
-          platform: 'ios',
-          last_used: 1613063089,
-          attributes: {
-            primary: true,
-          },
-        },
-      }),
+      /** @type {import('sinon').SinonStub} */ (t.context.client.request.put).calledWith(
+        `${RegionUS.trackUrl}/customers/${expected}/devices`,
+        { device: { id: '123', platform: 'ios', last_used: 1613063089, attributes: { primary: true } } },
+      ),
     );
   });
 });
@@ -234,20 +227,17 @@ test('#addDevice works with an empty data parameter', (t) => {
   sinon.stub(t.context.client.request, 'put');
   t.context.client.addDevice(1, '123', 'ios');
   t.truthy(
-    (t.context.client.request.put as SinonStub).calledWith(`${RegionUS.trackUrl}/customers/1/devices`, {
-      device: {
-        id: '123',
-        platform: 'ios',
-      },
-    }),
+    /** @type {import('sinon').SinonStub} */ (t.context.client.request.put).calledWith(
+      `${RegionUS.trackUrl}/customers/1/devices`,
+      { device: { id: '123', platform: 'ios' } },
+    ),
   );
 });
 
 test('#deleteDevice works', (t) => {
   sinon.stub(t.context.client.request, 'destroy');
-  t.throws(() => (t.context.client.deleteDevice as any)(''), { message: 'customerId is required' });
+  t.throws(() => /** @type {any} */ (t.context.client.deleteDevice)(''), { message: 'customerId is required' });
   t.throws(() => t.context.client.deleteDevice(1, ''), { message: 'deviceToken is required' });
-
   [
     [
       [1, '1'],
@@ -264,7 +254,7 @@ test('#deleteDevice works', (t) => {
   ].forEach(([[customerId, encodedCustomerId], [token, encodedToken]]) => {
     t.context.client.deleteDevice(customerId, token);
     t.truthy(
-      (t.context.client.request.destroy as SinonStub).calledWith(
+      /** @type {import('sinon').SinonStub} */ (t.context.client.request.destroy).calledWith(
         `${RegionUS.trackUrl}/customers/${encodedCustomerId}/devices/${encodedToken}`,
       ),
     );
@@ -287,26 +277,21 @@ test('#mergeCustomers works', (t) => {
     ['id', 'cool.person@company.com', 'cio_id', 'person2'],
     ['cio_id', 'CIO123', 'id', 'person1'],
   ].forEach(([pTypeString, pId, sTypeString, sId]) => {
-    t.context.client.mergeCustomers(pTypeString as IdentifierType, pId, sTypeString as IdentifierType, sId);
+    t.context.client.mergeCustomers(pTypeString, pId, sTypeString, sId);
     t.truthy(
-      (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.trackUrl}/merge_customers`, {
-        primary: {
-          [pTypeString]: pId,
-        },
-        secondary: {
-          [sTypeString]: sId,
-        },
-      }),
+      /** @type {import('sinon').SinonStub} */ (t.context.client.request.post).calledWith(
+        `${RegionUS.trackUrl}/merge_customers`,
+        { primary: { [pTypeString]: pId }, secondary: { [sTypeString]: sId } },
+      ),
     );
   });
 });
 
 test('#mergeCustomers: fails if id_type is not id, cio_id nor email', (t) => {
-  t.throws(() => (t.context.client.mergeCustomers as any)(undefined, 'id1', IdentifierType.Id, 'id2'), {
+  t.throws(() => /** @type {any} */ (t.context.client.mergeCustomers)(undefined, 'id1', IdentifierType.Id, 'id2'), {
     message: 'primaryIdType and secondaryIdType must be one of "id", "cio_id", or "email"',
   });
-
-  t.throws(() => (t.context.client.mergeCustomers as any)(IdentifierType.Id, 'id1', undefined, 'id2'), {
+  t.throws(() => /** @type {any} */ (t.context.client.mergeCustomers)(IdentifierType.Id, 'id1', undefined, 'id2'), {
     message: 'primaryIdType and secondaryIdType must be one of "id", "cio_id", or "email"',
   });
 });
@@ -317,9 +302,7 @@ test('#batch posts to /api/v2/batch with the operations array', (t) => {
     { type: 'person', identifiers: { id: '1' }, action: 'identify', attributes: { plan: 'pro' } },
     { type: 'person', identifiers: { id: '1' }, action: 'event', name: 'signup' },
   ];
-
   t.context.client.batch(operations);
-
   t.true(post.calledOnce);
   t.true(post.calledWith('https://track.customer.io/api/v2/batch', { batch: operations }));
 });
@@ -328,9 +311,7 @@ test('#batch uses the EU v2 root when constructed with RegionEU', (t) => {
   let client = new TrackClient('123', 'abc', { region: RegionEU });
   const post = sinon.stub(client.request, 'post');
   const operations = [{ type: 'person', identifiers: { id: '1' }, action: 'identify' }];
-
   client.batch(operations);
-
   t.true(post.calledOnce);
   t.true(post.calledWith('https://track-eu.customer.io/api/v2/batch', { batch: operations }));
 });
@@ -340,6 +321,6 @@ test('#batch throws when operations is empty', (t) => {
 });
 
 test('#batch throws when operations is not an array', (t) => {
-  t.throws(() => (t.context.client.batch as any)(undefined), { message: 'operations is required' });
-  t.throws(() => (t.context.client.batch as any)({ batch: [] }), { message: 'operations is required' });
+  t.throws(() => /** @type {any} */ (t.context.client.batch)(undefined), { message: 'operations is required' });
+  t.throws(() => /** @type {any} */ (t.context.client.batch)({ batch: [] }), { message: 'operations is required' });
 });

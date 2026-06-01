@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "allowJs": true,
+    "checkJs": true,
     "declaration": true,
+    "emitDeclarationOnly": true,
     "esModuleInterop": true,
-    "inlineSourceMap": false,
-    "inlineSources": false,
     "lib": ["es2022"],
-    "module": "node16",
-    "moduleResolution": "node16",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "noEmit": false,
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
@@ -18,12 +18,11 @@
     "noUnusedParameters": true,
     "outDir": "dist",
     "resolveJsonModule": true,
-    "sourceMap": false,
     "strict": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "target": "es2022",
     "types": ["node"]
   },
-  "include": ["index.ts", "lib/**/*"]
+  "include": ["index.js", "lib/**/*.js"]
 }

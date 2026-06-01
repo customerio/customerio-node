@@ -3,7 +3,7 @@ module.exports = {
   trailingComma: 'all',
   overrides: [
     {
-      files: ['*.js', '.*.js', '*.ts'],
+      files: ['*.js', '.*.js', '*.mjs', '*.cjs'],
       options: {
         singleQuote: true,
       },

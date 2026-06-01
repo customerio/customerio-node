@@ -11,29 +11,20 @@
   ],
   "ava": {
     "verbose": true,
-    "extensions": {
-      "ts": "commonjs"
-    },
-    "require": [
-      "ts-node/register"
+    "files": [
+      "test/**/*.js"
     ]
   },
-  "nyc": {
-    "extension": [
-      ".ts"
-    ],
-    "require": [
-      "ts-node/register"
-    ],
+  "c8": {
     "exclude": [
-      "**/*.d.ts",
-      "coverage/",
-      "test/"
+      "test/**",
+      "dist/**",
+      "coverage/**",
+      "examples/**"
     ],
     "reporter": [
       "text"
     ],
-    "cache": false,
     "check-coverage": true,
     "branches": 100,
     "lines": 100,
@@ -50,13 +41,12 @@
     "@typescript-eslint/eslint-plugin": "^8.60.0",
     "@typescript-eslint/parser": "^8.60.0",
     "ava": "^6.4.1",
+    "c8": "^11.0.0",
     "eslint": "^10.4.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
-    "nyc": "^18.0.0",
     "prettier": "^3.8.3",
     "sinon": "^19.0.5",
-    "ts-node": "^10.9.1",
     "typescript": "^6.0.3"
   },
   "homepage": "https://github.com/customerio/customerio-node",
@@ -65,9 +55,12 @@
     "node"
   ],
   "license": "MIT",
-  "main": "dist/index.js",
+  "type": "module",
+  "main": "index.js",
   "types": "dist/index.d.ts",
   "files": [
+    "index.js",
+    "lib",
     "dist",
     "README.md",
     "LICENSE"
@@ -75,24 +68,22 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
+      "import": "./index.js",
+      "default": "./index.js"
     }
   },
   "repository": "customerio/customerio-node",
   "scripts": {
-    "test": "nyc ava",
-    "prebuild": "node scripts/sync-version.js",
+    "test": "c8 ava",
     "build": "tsc -p tsconfig.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "prepublishOnly": "npm run build",
-    "prepare": "husky",
-    "version": "node scripts/sync-version.js && git add lib/version.ts"
+    "prepare": "husky"
   },
   "lint-staged": {
-    "*.{js,json,md,ts,yml,yaml}": "prettier --write",
-    "*.ts": "eslint --fix"
+    "*.{js,json,md,yml,yaml}": "prettier --write",
+    "*.js": "eslint --fix"
   }
 }
