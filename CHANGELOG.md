@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+#### Changed
+
+- **BREAKING:** The `Region` constructor now requires a third `pipelinesUrl` argument. Code that constructs `Region` directly with the two-argument signature (`new Region(trackUrl, apiUrl)`) will fail to type-check and must be updated to pass an explicit Pipelines host. Code that only consumes the exported `RegionUS` and `RegionEU` constants is unaffected.
+
+#### Added
+
+- New `PipelinesClient` for the [Pipelines API](https://docs.customer.io/files/pipelines.json). Provides `identify`, `track`, `page`, `screen`, `group`, `alias`, and `batch` methods. Auto-fills `messageId`, `timestamp`, and `context.library` on every payload, and supports an optional `defaultContext` and `strictMode` on the client. See the new Pipelines section in the README.
+- `Region` now exposes a `pipelinesUrl` field, and `RegionUS` / `RegionEU` point at `cdp.customer.io` and `cdp-eu.customer.io` respectively.
+- `CIORequest.options()` now merges custom headers supplied via `defaults.headers`. Standard headers (`Authorization`, `Content-Type`, `Content-Length`, `User-Agent`) always win and cannot be clobbered.
+
 ## [4.5.1]
 
 #### Fixed
