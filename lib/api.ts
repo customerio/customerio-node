@@ -1,5 +1,6 @@
 import type { RequestOptions } from 'https';
-import Request, { BearerAuth, RequestData } from './request';
+import type { BearerAuth, RequestData } from './request';
+import Request from './request';
 import { Region, RegionUS } from './regions';
 import {
   SendEmailRequest,
@@ -9,7 +10,8 @@ import {
   SendInAppRequest,
 } from './api/requests';
 import { isEmpty, isIdentifierType, MissingParamError } from './utils';
-import { Filter, IdentifierType } from './types';
+import type { Filter } from './types';
+import { IdentifierType } from './types';
 
 type APIDefaults = RequestOptions & { region: Region; url?: string };
 
@@ -162,7 +164,7 @@ export class APIClient {
   }
 
   createCustomersExport(filters: Filter) {
-    if (isEmpty(filters)) {
+    if (filters == null) {
       throw new MissingParamError('filters');
     }
 

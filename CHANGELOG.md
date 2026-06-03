@@ -4,11 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [5.0.0]
 
-The internals of `lib/request.ts` have been rewritten on top of native `fetch` (no more `https.request`). The public method surface is unchanged. Most users will not need to update any code; the one TypeScript-only break is documented below.
+The internals of `lib/request.ts` have been rewritten on top of native `fetch` (no more `https.request`), and a new `PipelinesClient` has been added for the Pipelines API. The existing `TrackClient` / `APIClient` method surface is unchanged. Most users will not need to update any code; the breaking changes are documented below.
 
-#### Breaking (TypeScript only)
+#### Breaking
 
-- **`CustomerIORequestError.response` type narrowed.** It is now a `ResponseLike` interface (`{ statusCode: number; headers: Record<string, string>; ok: boolean }`) instead of `http.IncomingMessage`. The runtime properties that the SDK has always populated (`statusCode`, response `headers`) are preserved. If your code reads `err.response.rawHeaders` or `err.response.socket`, or uses `instanceof http.IncomingMessage`, update it to read the lowercased `err.response.headers` object instead.
+- **`CustomerIORequestError.response` type narrowed (TypeScript only).** It is now a `ResponseLike` interface (`{ statusCode: number; headers: Record<string, string>; ok: boolean }`) instead of `http.IncomingMessage`. The runtime properties that the SDK has always populated (`statusCode`, response `headers`) are preserved. If your code reads `err.response.rawHeaders` or `err.response.socket`, or uses `instanceof http.IncomingMessage`, update it to read the lowercased `err.response.headers` object instead.
+- **The `Region` constructor now requires a third `pipelinesUrl` argument.** Code that constructs `Region` directly with the two-argument signature (`new Region(trackUrl, apiUrl)`) will fail to type-check and must be updated to pass an explicit Pipelines host. Code that only consumes the exported `RegionUS` and `RegionEU` constants is unaffected.
 
 #### Changed
 
@@ -18,6 +19,9 @@ The internals of `lib/request.ts` have been rewritten on top of native `fetch` (
 
 #### Added
 
+- New `PipelinesClient` for the [Pipelines API](https://docs.customer.io/files/pipelines.json). Provides `identify`, `track`, `page`, `screen`, `group`, `alias`, and `batch` methods. Auto-fills `messageId`, `timestamp`, and `context.library` on every payload, and supports an optional `defaultContext` and `strictMode` on the client. See the new Pipelines section in the README.
+- `Region` now exposes a `pipelinesUrl` field, and `RegionUS` / `RegionEU` point at `cdp.customer.io` and `cdp-eu.customer.io` respectively.
+- `CIORequest.options()` now merges custom headers supplied via `defaults.headers`. Standard headers (`Authorization`, `Content-Type`, `Content-Length`, `User-Agent`) always win and cannot be clobbered.
 - **Bun support.** Bun (latest) is now part of the CI matrix alongside Node 22 / 24 / 26. Runtimes that implement standard `fetch` should work, though only Bun and Node are explicitly tested.
 - **307 and 308 redirects are now explicitly covered** in the test suite (previously only 301/302 had direct test coverage).
 - **Live dogfood suite** (`npm run test:live`). Pre-release smoke test against a real workspace. Not part of `npm test`; gated on `CIO_LIVE=1` plus credentials.

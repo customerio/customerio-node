@@ -2,6 +2,7 @@ const config = {
   siteId: 'changeme',
   apiKey: 'changeme',
   appKey: 'changeme',
+  pipelinesWriteKey: 'changeme',
   customerId: '1',
   customerEmail: 'ami@customer.io',
   transactionalMessageId: '1',

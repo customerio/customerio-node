@@ -1,8 +1,9 @@
 import type { RequestOptions } from 'https';
-import Request, { BasicAuth, RequestData, PushRequestData } from './request';
+import type { BasicAuth, RequestData, PushRequestData } from './request';
+import Request from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty, isIdentifierType, MissingParamError } from './utils';
-import { IdentifierType } from './types';
+import type { IdentifierType } from './types';
 
 type TrackDefaults = RequestOptions & { region: Region; url?: string };
 
@@ -128,7 +129,7 @@ export class TrackClient {
       device: {
         id: device_id,
         platform,
-        ...(last_used && { last_used }),
+        ...(last_used ? { last_used } : {}),
         ...(Object.keys(attributes).length && { attributes }),
       },
     });

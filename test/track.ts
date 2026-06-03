@@ -1,5 +1,7 @@
-import avaTest, { TestFn } from 'ava';
-import sinon, { SinonStub } from 'sinon';
+import type { TestFn } from 'ava';
+import avaTest from 'ava';
+import type { SinonStub } from 'sinon';
+import sinon from 'sinon';
 import { TrackClient } from '../lib/track';
 import { RegionUS, RegionEU } from '../lib/regions';
 import { IdentifierType } from '../lib/types';

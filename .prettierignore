@@ -1,7 +1,9 @@
 .github/
 .nyc_output/
 dist/
-
 .gitpod.yml
 package.json
 package-lock.json
+coverage/
+node_modules/
+CHANGELOG.md

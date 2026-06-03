@@ -11,9 +11,9 @@
   ],
   "ava": {
     "verbose": true,
-    "extensions": [
-      "ts"
-    ],
+    "extensions": {
+      "ts": "commonjs"
+    },
     "require": [
       "ts-node/register"
     ],
@@ -51,18 +51,24 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "@types/sinon": "^17.0.0",
+    "@types/sinon": "^21.0.1",
     "@types/uuid": "^10.0.0",
-    "ava": "^5.3.1",
-    "husky": "^8.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
+    "@typescript-eslint/parser": "^8.60.0",
+    "ava": "^6.4.1",
+    "eslint": "^10.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "nock": "^14.0.15",
     "nyc": "^18.0.0",
-    "prettier": "^2.6.2",
-    "pretty-quick": "^3.3.1",
-    "sinon": "^17.0.2",
+    "prettier": "^3.8.3",
+    "sinon": "^19.0.5",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.4",
+    "typescript": "^6.0.3",
     "uuid": "^11.0.0"
+  },
+  "overrides": {
+    "uuid": "$uuid"
   },
   "homepage": "https://github.com/customerio/customerio-node",
   "keywords": [
@@ -90,9 +96,17 @@
     "test:record": "CIO_RECORD=1 ts-node test/fixtures/record.ts",
     "test:replay": "ava test/fixtures/replay.ts",
     "test:live": "CIO_LIVE=1 ava test/integration/live.ts",
+    "prebuild": "node scripts/sync-version.js",
     "build": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
     "prepublishOnly": "npm run build",
-    "prepare": "husky install",
-    "version": "node update-version.js"
+    "prepare": "husky",
+    "version": "node scripts/sync-version.js && git add lib/version.ts"
+  },
+  "lint-staged": {
+    "*.{js,json,md,ts,yml,yaml}": "prettier --write",
+    "*.ts": "eslint --fix"
   }
 }

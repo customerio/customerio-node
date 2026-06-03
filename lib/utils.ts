@@ -1,7 +1,9 @@
 import { IdentifierType } from '../lib/types';
 
-export const isEmpty = (value: unknown) => {
-  return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
+export const isEmpty = (value: string | number | null | undefined) => {
+  if (value === null || value === undefined) return true;
+  if (typeof value === 'string') return value.trim() === '';
+  return !Number.isFinite(value);
 };
 
 export const isIdentifierType = (value: unknown) => {
@@ -51,9 +53,19 @@ ${json.meta.errors.map((error: string) => `  - ${error}`).join('\n')}`;
   }
 }
 
+export function pickDefined<T extends Record<string, unknown>>(source: T, keys: ReadonlyArray<keyof T>): Partial<T> {
+  const result: Partial<T> = {};
+  for (const key of keys) {
+    if (source[key] !== undefined) {
+      result[key] = source[key];
+    }
+  }
+  return result;
+}
+
 export class MissingParamError extends Error {
   constructor(param: string) {
-    super(param);
-    this.message = `${param} is required`;
+    super(`${param} is required`);
+    this.name = 'MissingParamError';
   }
 }

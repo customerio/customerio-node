@@ -1,3 +1,11 @@
+import { pickDefined } from '../utils';
+
+const SEND_EMAIL_BRAND = Symbol.for('customerio-node.SendEmailRequest');
+const SEND_PUSH_BRAND = Symbol.for('customerio-node.SendPushRequest');
+const SEND_SMS_BRAND = Symbol.for('customerio-node.SendSMSRequest');
+const SEND_INBOX_MESSAGE_BRAND = Symbol.for('customerio-node.SendInboxMessageRequest');
+const SEND_IN_APP_BRAND = Symbol.for('customerio-node.SendInAppRequest');
+
 export type Identifiers = { id: string | number } | { email: string };
 
 export type SendEmailRequestRequiredOptions = {
@@ -39,32 +47,40 @@ export type SendEmailRequestWithoutTemplate = SendEmailRequestRequiredOptions &
 export type SendEmailRequestOptions = SendEmailRequestWithTemplate | SendEmailRequestWithoutTemplate;
 
 export type EmailMessage = Partial<SendEmailRequestWithTemplate & SendEmailRequestWithoutTemplate> & {
-  attachments: Record<string, string>;
+  attachments?: Record<string, string>;
 };
+
+const EMAIL_OPTIONAL_KEYS = [
+  'message_data',
+  'preheader',
+  'reply_to',
+  'bcc',
+  'body_plain',
+  'body_amp',
+  'fake_bcc',
+  'disable_message_retention',
+  'send_to_unsubscribed',
+  'tracked',
+  'queue_draft',
+  'send_at',
+  'disable_css_preprocessing',
+  'language',
+] as const satisfies ReadonlyArray<keyof SendEmailRequestOptionalOptions>;
 
 export class SendEmailRequest {
   message: EmailMessage;
 
+  static [Symbol.hasInstance](instance: unknown): instance is SendEmailRequest {
+    return typeof instance === 'object' && instance !== null && (instance as any)[SEND_EMAIL_BRAND] === true;
+  }
+
   constructor(opts: SendEmailRequestOptions) {
+    Object.defineProperty(this, SEND_EMAIL_BRAND, { value: true });
     this.message = {
       to: opts.to,
       identifiers: opts.identifiers,
-      attachments: {},
-      message_data: opts.message_data,
       headers: opts.headers || {},
-      preheader: opts.preheader,
-      reply_to: opts.reply_to,
-      bcc: opts.bcc,
-      body_plain: opts.body_plain,
-      body_amp: opts.body_amp,
-      fake_bcc: opts.fake_bcc,
-      disable_message_retention: opts.disable_message_retention,
-      send_to_unsubscribed: opts.send_to_unsubscribed,
-      tracked: opts.tracked,
-      queue_draft: opts.queue_draft,
-      send_at: opts.send_at,
-      disable_css_preprocessing: opts.disable_css_preprocessing,
-      language: opts.language,
+      ...pickDefined(opts, EMAIL_OPTIONAL_KEYS),
     };
 
     if ('transactional_message_id' in opts) {
@@ -87,6 +103,8 @@ export class SendEmailRequest {
   // Use `any` for data here, because union types and overloads in Typescript
   // don't work well together for `Buffer.from`.
   attach(name: string, data: any, { encode = true } = {}) {
+    this.message.attachments ??= {};
+
     if (this.message.attachments[name]) {
       throw new Error(`attachment ${name} already exists`);
     }
@@ -140,27 +158,37 @@ export type PushMessage = Partial<
   Omit<SendPushRequestWithoutCustomPayload, 'device'> & Omit<SendPushRequestWithCustomPayload, 'device'>
 >;
 
+const PUSH_OPTIONAL_KEYS = [
+  'to',
+  'title',
+  'message',
+  'disable_message_retention',
+  'send_to_unsubscribed',
+  'queue_draft',
+  'message_data',
+  'send_at',
+  'language',
+  'image_url',
+  'link',
+  'sound',
+  'custom_data',
+] as const satisfies ReadonlyArray<keyof SendPushRequestOptionalOptions>;
+
 export class SendPushRequest {
   message: PushMessage;
 
+  static [Symbol.hasInstance](instance: unknown): instance is SendPushRequest {
+    return typeof instance === 'object' && instance !== null && (instance as any)[SEND_PUSH_BRAND] === true;
+  }
+
   constructor(opts: SendPushRequestOptions) {
+    Object.defineProperty(this, SEND_PUSH_BRAND, { value: true });
     this.message = {
       identifiers: opts.identifiers,
-      to: opts.to,
       transactional_message_id: opts.transactional_message_id,
-      title: opts.title,
-      message: opts.message,
-      disable_message_retention: opts.disable_message_retention,
-      send_to_unsubscribed: opts.send_to_unsubscribed,
-      queue_draft: opts.queue_draft,
-      message_data: opts.message_data,
-      send_at: opts.send_at,
-      language: opts.language,
-      image_url: opts.image_url,
-      link: opts.link,
-      sound: opts.sound,
-      custom_data: opts.custom_data,
-      custom_device: opts.device,
+      ...pickDefined(opts, PUSH_OPTIONAL_KEYS),
+      // opts.device maps to custom_device on the wire
+      ...(opts.device !== undefined && { custom_device: opts.device }),
     };
 
     if ('custom_payload' in opts) {
@@ -188,20 +216,29 @@ export type SendSMSRequestOptionalOptions = Partial<{
 
 export type SendSMSRequestOptions = SendSMSRequestRequiredOptions & SendSMSRequestOptionalOptions & {};
 
+const SMS_OPTIONAL_KEYS = [
+  'to',
+  'disable_message_retention',
+  'send_to_unsubscribed',
+  'queue_draft',
+  'message_data',
+  'send_at',
+  'language',
+] as const satisfies ReadonlyArray<keyof SendSMSRequestOptionalOptions>;
+
 export class SendSMSRequest {
   message: SMSMessage;
 
+  static [Symbol.hasInstance](instance: unknown): instance is SendSMSRequest {
+    return typeof instance === 'object' && instance !== null && (instance as any)[SEND_SMS_BRAND] === true;
+  }
+
   constructor(opts: SendSMSRequestOptions) {
+    Object.defineProperty(this, SEND_SMS_BRAND, { value: true });
     this.message = {
       identifiers: opts.identifiers,
-      to: opts.to,
       transactional_message_id: opts.transactional_message_id,
-      disable_message_retention: opts.disable_message_retention,
-      send_to_unsubscribed: opts.send_to_unsubscribed,
-      queue_draft: opts.queue_draft,
-      message_data: opts.message_data,
-      send_at: opts.send_at,
-      language: opts.language,
+      ...pickDefined(opts, SMS_OPTIONAL_KEYS),
     };
   }
 }
@@ -224,18 +261,27 @@ export type SendInboxMessageRequestOptionalOptions = Partial<{
 export type SendInboxMessageRequestOptions = SendInboxMessageRequestRequiredOptions &
   SendInboxMessageRequestOptionalOptions & {};
 
+const INBOX_OPTIONAL_KEYS = [
+  'disable_message_retention',
+  'queue_draft',
+  'message_data',
+  'send_at',
+  'language',
+] as const satisfies ReadonlyArray<keyof SendInboxMessageRequestOptionalOptions>;
+
 export class SendInboxMessageRequest {
   message: InboxMessage;
 
+  static [Symbol.hasInstance](instance: unknown): instance is SendInboxMessageRequest {
+    return typeof instance === 'object' && instance !== null && (instance as any)[SEND_INBOX_MESSAGE_BRAND] === true;
+  }
+
   constructor(opts: SendInboxMessageRequestOptions) {
+    Object.defineProperty(this, SEND_INBOX_MESSAGE_BRAND, { value: true });
     this.message = {
       identifiers: opts.identifiers,
       transactional_message_id: opts.transactional_message_id,
-      disable_message_retention: opts.disable_message_retention,
-      queue_draft: opts.queue_draft,
-      message_data: opts.message_data,
-      send_at: opts.send_at,
-      language: opts.language,
+      ...pickDefined(opts, INBOX_OPTIONAL_KEYS),
     };
   }
 }
@@ -257,18 +303,27 @@ export type SendInAppRequestOptionalOptions = Partial<{
 
 export type SendInAppRequestOptions = SendInAppRequestRequiredOptions & SendInAppRequestOptionalOptions & {};
 
+const IN_APP_OPTIONAL_KEYS = [
+  'disable_message_retention',
+  'queue_draft',
+  'message_data',
+  'send_at',
+  'language',
+] as const satisfies ReadonlyArray<keyof SendInAppRequestOptionalOptions>;
+
 export class SendInAppRequest {
   message: InAppMessage;
 
+  static [Symbol.hasInstance](instance: unknown): instance is SendInAppRequest {
+    return typeof instance === 'object' && instance !== null && (instance as any)[SEND_IN_APP_BRAND] === true;
+  }
+
   constructor(opts: SendInAppRequestOptions) {
+    Object.defineProperty(this, SEND_IN_APP_BRAND, { value: true });
     this.message = {
       identifiers: opts.identifiers,
       transactional_message_id: opts.transactional_message_id,
-      disable_message_retention: opts.disable_message_retention,
-      queue_draft: opts.queue_draft,
-      message_data: opts.message_data,
-      send_at: opts.send_at,
-      language: opts.language,
+      ...pickDefined(opts, IN_APP_OPTIONAL_KEYS),
     };
   }
 }

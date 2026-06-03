@@ -1,9 +1,11 @@
-import avaTest, { TestFn } from 'ava';
-import sinon, { SinonStub } from 'sinon';
+import type { TestFn } from 'ava';
+import avaTest from 'ava';
+import type { SinonStub } from 'sinon';
+import sinon from 'sinon';
+import type { DeliveryExportRequestOptions } from '../lib/api';
 import {
   APIClient,
   DeliveryExportMetric,
-  DeliveryExportRequestOptions,
   SendEmailRequest,
   SendPushRequest,
   SendSMSRequest,
@@ -11,7 +13,8 @@ import {
   SendInAppRequest,
 } from '../lib/api';
 import { RegionUS, RegionEU } from '../lib/regions';
-import { Filter, IdentifierType } from '../lib/types';
+import type { Filter } from '../lib/types';
+import { IdentifierType } from '../lib/types';
 
 type TestContext = { client: APIClient };
 
@@ -186,6 +189,18 @@ test('#sendPush: without custom payload: success', (t) => {
   t.falsy(req.message.custom_payload);
 });
 
+test('#sendPush: maps device to custom_device', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  let req = new SendPushRequest({
+    identifiers: { id: '2' },
+    transactional_message_id: 1,
+    device: { token: 'abc123' },
+  });
+
+  t.context.client.sendPush(req);
+  t.deepEqual(req.message.custom_device, { token: 'abc123' });
+});
+
 test('#getCustomersByEmail: searching for a customer email (default)', (t) => {
   sinon.stub(t.context.client.request, 'get');
 
@@ -242,12 +257,17 @@ test('#getCustomersByEmail: should throw error when email is not a string object
   t.throws(() => t.context.client.getCustomersByEmail(email as string));
 });
 
+test('#sendEmail: message does not include attachments key when none are added', (t) => {
+  let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
+  t.false('attachments' in req.message);
+});
+
 test('#sendEmail: adding attachments with encoding (default)', (t) => {
   sinon.stub(t.context.client.request, 'post');
   let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
 
   req.attach('test', 'hello world');
-  t.is(req.message.attachments.test, Buffer.from('hello world').toString('base64'));
+  t.is(req.message.attachments!.test, Buffer.from('hello world').toString('base64'));
 });
 
 test('#sendEmail: adding attachments without encoding', (t) => {
@@ -255,7 +275,7 @@ test('#sendEmail: adding attachments without encoding', (t) => {
   let req = new SendEmailRequest({ to: 'test@example.com', identifiers: { id: '2' }, transactional_message_id: 1 });
 
   req.attach('file', 'test content', { encode: false });
-  t.truthy(req.message.attachments.file, 'test content');
+  t.truthy(req.message.attachments!.file, 'test content');
 });
 
 test('#sendEmail: adding attachments twice throws an error', (t) => {
@@ -264,7 +284,7 @@ test('#sendEmail: adding attachments twice throws an error', (t) => {
 
   req.attach('test', 'test content');
   t.throws(() => req.attach('test', 'test content 2'), { message: /attachment test already exists/ });
-  t.is(req.message.attachments.test, Buffer.from('test content').toString('base64'));
+  t.is(req.message.attachments!.test, Buffer.from('test content').toString('base64'));
 });
 
 test('#sendEmail: error', async (t) => {
@@ -788,4 +808,25 @@ ID_INPUTS.forEach(([input, expected]) => {
       ),
     );
   });
+});
+
+test('sendEmail: cross-copy branded object passes instanceof check', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+
+  const brand = Symbol.for('customerio-node.SendEmailRequest');
+  const fakeCrossCopyReq = { message: { to: 'test@example.com', identifiers: { id: '2' }, attachments: {} } };
+  Object.defineProperty(fakeCrossCopyReq, brand, { value: true });
+
+  t.notThrows(() => t.context.client.sendEmail(fakeCrossCopyReq as any));
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/email`, fakeCrossCopyReq.message),
+  );
+});
+
+test('constructor: cross-copy branded Region passes instanceof check', (t) => {
+  const brand = Symbol.for('customerio-node.Region');
+  const fakeRegion = { trackUrl: 'https://track.example.com/api/v1', apiUrl: 'https://api.example.com/v1' };
+  Object.defineProperty(fakeRegion, brand, { value: true });
+
+  t.notThrows(() => new APIClient('appKey', { region: fakeRegion as any }));
 });
