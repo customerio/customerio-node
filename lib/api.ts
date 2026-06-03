@@ -1,5 +1,5 @@
 import type { RequestOptions } from 'https';
-import type { BearerAuth, RequestData } from './request';
+import type { BearerAuth, RequestData, RetryOptions } from './request';
 import Request from './request';
 import { Region, RegionUS } from './regions';
 import {
@@ -13,7 +13,7 @@ import { isEmpty, isIdentifierType, MissingParamError } from './utils';
 import type { Filter } from './types';
 import { IdentifierType } from './types';
 
-type APIDefaults = RequestOptions & { region: Region; url?: string };
+type APIDefaults = RequestOptions & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
 

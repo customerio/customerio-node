@@ -59,6 +59,30 @@ const cio = new TrackClient('123', 'abc', {
 });
 ```
 
+#### Retries
+
+Requests that fail with a transient error are retried automatically with exponential backoff and jitter. This applies to every client (`TrackClient`, `APIClient`, and `PipelinesClient`). Transient failures are network errors (connection reset/refused, DNS, timeout) and the retryable HTTP status codes `408`, `429`, `500`, `502`, `503`, `504`, `522`, and `524`. A `Retry-After` response header is honored when present. Other 4xx responses (e.g. `400`, `401`, `404`, `422`) are returned immediately without retrying.
+
+Retries are safe to replay: each call builds its payload once and the exact same request body is reused for every attempt.
+
+Pass a `retry` object to tune or disable the policy. Any fields you omit fall back to the defaults shown below:
+
+```
+const cio = new TrackClient('123', 'abc', {
+  retry: {
+    maxRetries: 3, // set to 0 to disable retries entirely
+    minTimeoutMs: 200,
+    maxTimeoutMs: 5000,
+    retryStatusCodes: [408, 429, 500, 502, 503, 504, 522, 524],
+    respectRetryAfter: true,
+    retryAfterMaxSeconds: 300,
+    maxTotalBackoffMs: 30000,
+  },
+});
+```
+
+The backoff for attempt `n` (zero-based) is `min(maxTimeoutMs, (random() + 1) * minTimeoutMs * 2 ** n)`. The total time spent sleeping across all retries for a single call is capped at `maxTotalBackoffMs`; if the next backoff would exceed it, the last error is thrown instead.
+
 ---
 
 ### cio.identify(id, data)

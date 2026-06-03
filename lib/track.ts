@@ -1,11 +1,11 @@
 import type { RequestOptions } from 'https';
-import type { BasicAuth, RequestData, PushRequestData } from './request';
+import type { BasicAuth, RequestData, PushRequestData, RetryOptions } from './request';
 import Request from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty, isIdentifierType, MissingParamError } from './utils';
 import type { IdentifierType } from './types';
 
-type TrackDefaults = RequestOptions & { region: Region; url?: string };
+type TrackDefaults = RequestOptions & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 export type BatchOperation = Record<string, any>;
 

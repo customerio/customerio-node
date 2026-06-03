@@ -135,7 +135,11 @@ const applyMock = (mock: Mock): void => {
 
 const invokeSdk = async (fixture: Fixture): Promise<unknown> => {
   const { client, method, args } = fixture.sdkCall;
-  const opts = { region: RegionUS, ...(fixture.clientOptions ?? {}) };
+  // Replay validates the request/response/redirect/error contract for a single
+  // attempt; the recorded fixtures mock exactly one HTTP call each. Disable
+  // retries by default so a retryable status doesn't fan out into extra
+  // (unmocked) requests. A fixture can still opt in via `clientOptions.retry`.
+  const opts = { region: RegionUS, retry: { maxRetries: 0 }, ...(fixture.clientOptions ?? {}) };
 
   if (client === 'TrackClient') {
     const trackClient = new TrackClient('site-id-placeholder', 'api-key-placeholder', opts);
@@ -179,6 +183,13 @@ test.before(() => {
 
 test.beforeEach(() => {
   nock.cleanAll();
+});
+
+test.afterEach.always(() => {
+  // The timeout fixture leaves a delayed response scheduled after the SDK has
+  // already aborted the request. Cancel any such pending responses so they
+  // can't fire later in the run and surface as an uncaught InterceptorError.
+  nock.abortPendingRequests();
 });
 
 test.after.always(() => {
