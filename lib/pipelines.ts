@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import type { RequestOptions } from 'https';
 import Request from './request';
+import type { RetryOptions } from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty, MissingParamError } from './utils';
 import { version } from './version';
@@ -32,6 +33,11 @@ export type PipelinesDefaults = RequestOptions & {
    * `ip` or `locale` once per client instance.
    */
   defaultContext?: PipelinesContext;
+  /**
+   * Per-request retry policy. Merged over the SDK defaults (3 retries with
+   * exponential backoff). Pass `{ maxRetries: 0 }` to opt out entirely.
+   */
+  retry?: Partial<RetryOptions>;
 };
 
 export class PipelinesClient {

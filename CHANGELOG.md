@@ -19,6 +19,7 @@ The internals of `lib/request.ts` have been rewritten on top of native `fetch` (
 
 #### Added
 
+- **Automatic retries** with exponential backoff and jitter, shared across `TrackClient`, `APIClient`, and `PipelinesClient`. Transient network errors and the retryable status codes `408`, `429`, `500`, `502`, `503`, `504`, `522`, `524` are retried (default 3 attempts); other 4xx responses are not. A `Retry-After` header is honored when present, and retried attempts carry an `X-Retry-Count` header. Configure or disable via a `retry` option on any client (`{ maxRetries: 0 }` to opt out). See the Retries section in the README.
 - New `PipelinesClient` for the [Pipelines API](https://docs.customer.io/files/pipelines.json). Provides `identify`, `track`, `page`, `screen`, `group`, `alias`, and `batch` methods. Auto-fills `messageId`, `timestamp`, and `context.library` on every payload, and supports an optional `defaultContext` and `strictMode` on the client. See the new Pipelines section in the README.
 - `Region` now exposes a `pipelinesUrl` field, and `RegionUS` / `RegionEU` point at `cdp.customer.io` and `cdp-eu.customer.io` respectively.
 - `CIORequest.options()` now merges custom headers supplied via `defaults.headers`. Standard headers (`Authorization`, `Content-Type`, `Content-Length`, `User-Agent`) always win and cannot be clobbered.
