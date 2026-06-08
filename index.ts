@@ -4,8 +4,8 @@ export * from './lib/pipelines';
 export * from './lib/regions';
 export * from './lib/types';
 export { CustomerIORequestError, MissingParamError } from './lib/utils';
+export type { ResponseLike } from './lib/utils';
 export type { RetryOptions } from './lib/request';
-export type { RequestData, PushRequestData, BasicAuth, BearerAuth, RequestAuth } from './lib/request';
 export type {
   Identifiers,
   SendEmailRequestOptions,

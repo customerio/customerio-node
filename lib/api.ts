@@ -77,6 +77,9 @@ const filterRecipientsDataForField = (recipients: Recipients, field: BroadcastsA
  * transactional messages, trigger broadcasts, look up customers, and
  * manage exports.
  *
+ * Every method rejects with a {@link CustomerIORequestError} when the API
+ * returns a non-2xx status.
+ *
  * @example
  * ```ts
  * import { APIClient, RegionUS, SendEmailRequest } from 'customerio-node';
@@ -285,7 +288,7 @@ export class APIClient {
    *
    * @param filters Filter expression (segment / attribute / and / or / not).
    * @returns The parsed JSON response body, including the new export's id.
-   * @throws {MissingParamError} If `filters` is empty.
+   * @throws {MissingParamError} If `filters` is `null` or `undefined`.
    */
   createCustomersExport(filters: Filter) {
     if (filters == null) {

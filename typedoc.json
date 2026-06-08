@@ -28,6 +28,8 @@
     "SendInAppRequestRequiredOptions",
     "SendInAppRequestOptionalOptions",
     "PipelinesIdentifier",
+    "RequestData",
+    "PushRequestData",
     "default"
   ]
 }

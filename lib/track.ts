@@ -14,6 +14,9 @@ export type BatchOperation = Record<string, any>;
  * Authenticates with a site id + API key (basic auth). Use this client to
  * identify people, track events, manage devices, and merge profiles.
  *
+ * Every method rejects with a {@link CustomerIORequestError} when the API
+ * returns a non-2xx status.
+ *
  * @example
  * ```ts
  * import { TrackClient, RegionUS } from 'customerio-node';
@@ -69,7 +72,6 @@ export class TrackClient {
    *   send email messages; `created_at` is required for time-based segmentation.
    * @returns The parsed JSON response body.
    * @throws {MissingParamError} If `customerId` is empty.
-   * @throws {CustomerIORequestError} On non-2xx API responses.
    */
   identify(customerId: string | number, data: RequestData = {}) {
     if (isEmpty(customerId)) {
