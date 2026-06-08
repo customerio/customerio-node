@@ -96,6 +96,8 @@
     "test:record": "CIO_RECORD=1 ts-node test/fixtures/record.ts",
     "test:replay": "ava test/fixtures/replay.ts",
     "test:live": "CIO_LIVE=1 ava test/integration/live.ts",
+    "test:live:v5": "CIO_LIVE=1 ava test/integration/v5-live.ts",
+    "test:live:all": "CIO_LIVE=1 ava test/integration/live.ts test/integration/v5-live.ts",
     "prebuild": "node scripts/sync-version.js",
     "build": "tsc -p tsconfig.json",
     "lint": "eslint .",
