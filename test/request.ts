@@ -208,6 +208,47 @@ test.serial('#handler makes a request and passes the uri and init correctly', as
   }
 });
 
+test.serial('#handler forwards a custom dispatcher from defaults to fetch', async (t) => {
+  // A dispatcher is the fetch-era replacement for `https.Agent` (proxy / mTLS /
+  // keep-alive). We only care that whatever the caller passed reaches fetch.
+  const dispatcher = { sentinel: 'test-dispatcher' };
+  const req = new Request({ siteid, apikey }, { timeout: 5000, dispatcher: dispatcher as never });
+  createMockRequest(t.context.fetchStub, 200, {});
+
+  await req.handler(req.options(uri, 'GET'));
+
+  const init = t.context.fetchStub.getCall(0).args[1] as RequestInit;
+  t.is((init as { dispatcher?: unknown }).dispatcher, dispatcher);
+});
+
+test.serial('#handler forwards keepalive from defaults to fetch', async (t) => {
+  const req = new Request({ siteid, apikey }, { timeout: 5000, keepalive: true });
+  createMockRequest(t.context.fetchStub, 200, {});
+
+  await req.handler(req.options(uri, 'GET'));
+
+  const init = t.context.fetchStub.getCall(0).args[1] as RequestInit;
+  t.is(init.keepalive, true);
+});
+
+test.serial('#handler does not let defaults override the SDK-owned fetch fields', async (t) => {
+  // `method`/`body`/`redirect`/`signal` are owned by the SDK. Even if a caller
+  // smuggles them in via defaults (they're omitted from the type), the
+  // transport's own values must win.
+  const req = new Request(
+    { siteid, apikey },
+    { timeout: 5000, redirect: 'follow', method: 'PATCH', body: 'nope' } as never,
+  );
+  createMockRequest(t.context.fetchStub, 200, {});
+
+  await req.handler(req.options(uri, 'GET'));
+
+  const init = t.context.fetchStub.getCall(0).args[1] as RequestInit;
+  t.is(init.method, 'GET');
+  t.is(init.redirect, 'manual');
+  t.is(init.body, null);
+});
+
 test.serial('#handler makes a request and rejects with an error on failure', async (t) => {
   const customOptions = {
     ...baseOptions,
