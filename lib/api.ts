@@ -101,7 +101,9 @@ export class APIClient {
   /**
    * @param appKey Your Customer.io App API bearer token.
    * @param defaults Optional overrides. Use `region` to select {@link RegionUS} or {@link RegionEU},
-   *   `url` to point at a custom host, or any `https.RequestOptions` field such as `timeout`.
+   *   `url` to point at a custom host, `timeout` (ms, default `10000`), or any other fetch
+   *   {@link RequestDefaults} field — notably `dispatcher` (an undici `Agent` / `ProxyAgent`) for
+   *   proxies, custom TLS, or connection keep-alive.
    * @throws If `region` is provided and is not a {@link Region} instance.
    */
   constructor(appKey: BearerAuth, defaults: Partial<APIDefaults> = {}) {
@@ -325,7 +327,7 @@ export class APIClient {
    */
   getAttributes(id: string | number, idType: IdentifierType = IdentifierType.Id) {
     if (isEmpty(id)) {
-      throw new MissingParamError('customerId');
+      throw new MissingParamError('id');
     }
 
     if (!isIdentifierType(idType)) {

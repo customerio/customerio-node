@@ -30,6 +30,13 @@ export interface ResponseLike {
  * raw status code, response, and body are exposed for programmatic handling
  * (e.g. retry on 5xx, ignore on 404).
  *
+ * @remarks
+ * This is only thrown for HTTP responses with a non-2xx status. Transport-level
+ * failures (DNS, connection reset, refused) and timeouts are surfaced as the
+ * native `fetch` errors — `TypeError('fetch failed')` (with the underlying
+ * cause on `.cause`) and `DOMException('TimeoutError')` respectively — not as a
+ * `CustomerIORequestError`.
+ *
  * @example
  * ```ts
  * try {

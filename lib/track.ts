@@ -38,8 +38,9 @@ export class TrackClient {
    * @param siteid Your Customer.io workspace site id.
    * @param apikey Your Customer.io Track API key.
    * @param defaults Optional overrides. Use `region` to select {@link RegionUS} or {@link RegionEU},
-   *   `url` to point at a custom host (e.g. a mock server), or any `https.RequestOptions` field
-   *   such as `timeout` (default `10000`).
+   *   `url` to point at a custom host (e.g. a mock server), `timeout` (ms, default `10000`), or any
+   *   other fetch {@link RequestDefaults} field — notably `dispatcher` (an undici `Agent` /
+   *   `ProxyAgent`) for proxies, custom TLS, or connection keep-alive.
    * @throws If `region` is provided and is not a {@link Region} instance.
    */
   constructor(siteid: BasicAuth['siteid'], apikey: BasicAuth['apikey'], defaults: Partial<TrackDefaults> = {}) {

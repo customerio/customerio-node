@@ -74,7 +74,8 @@ export class PipelinesClient {
    * @param defaults Optional overrides. Use `region` to select {@link RegionUS} or
    *   {@link RegionEU}, `url` to point at a custom host, `strictMode` to have the API
    *   validate payloads and return real HTTP errors, or `defaultContext` to merge a
-   *   base `context` under every call. Accepts any `https.RequestOptions` field too.
+   *   base `context` under every call. Accepts any fetch {@link RequestDefaults} field too
+   *   (e.g. `timeout`, or `dispatcher` for proxies / custom TLS / keep-alive).
    * @throws {MissingParamError} If `writeKey` is empty.
    * @throws {Error} If `region` is provided and is not a {@link Region} instance.
    */
