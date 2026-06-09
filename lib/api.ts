@@ -1,5 +1,4 @@
-import type { RequestOptions } from 'https';
-import type { BearerAuth, RequestData, RetryOptions } from './request';
+import type { BearerAuth, RequestData, RequestDefaults, RetryOptions } from './request';
 import Request from './request';
 import { Region, RegionUS } from './regions';
 import {
@@ -13,7 +12,7 @@ import { isEmpty, isIdentifierType, MissingParamError } from './utils';
 import type { Filter } from './types';
 import { IdentifierType } from './types';
 
-type APIDefaults = RequestOptions & { region: Region; url?: string; retry?: Partial<RetryOptions> };
+type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
 
@@ -72,7 +71,10 @@ export class APIClient {
 
     this.appKey = appKey;
     this.defaults = { ...defaults, region: defaults.region || RegionUS };
-    this.request = new Request(this.appKey, this.defaults);
+    // `region`/`url` are SDK concerns (they select the host); strip them so the
+    // transport receives only fetch init. `retry` is handled by `Request`.
+    const { region: _region, url: _url, ...requestDefaults } = this.defaults;
+    this.request = new Request(this.appKey, requestDefaults);
 
     this.apiRoot = this.defaults.url ? this.defaults.url : this.defaults.region.apiUrl;
   }

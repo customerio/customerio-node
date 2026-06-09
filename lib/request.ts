@@ -1,22 +1,42 @@
-import type { RequestOptions } from 'https';
 import { CustomerIORequestError } from './utils';
 import { version } from './version';
 
-export type BasicAuth = {
+export interface BasicAuth {
   apikey: string;
   siteid: string;
-};
+}
 
 export type BearerAuth = string;
 
 export type RequestAuth = BasicAuth | BearerAuth;
 export type RequestData = Record<string, any> | undefined;
-export type RequestHandlerOptions = {
-  method: RequestOptions['method'];
-  uri: string;
-  headers: RequestOptions['headers'];
-  body?: string | null;
+
+/**
+ * Options forwarded to the underlying `fetch` call.
+ *
+ * This is the native fetch `RequestInit`, minus the fields the SDK owns and
+ * sets itself (`method`, `body`, `signal`, `redirect`), plus a convenience
+ * `timeout`. `headers` is narrowed to a plain record since that's the only
+ * shape the SDK ever merges.
+ *
+ * Use `dispatcher` (an undici `Agent` / `ProxyAgent`) for HTTP(S) proxies,
+ * custom TLS (mTLS or a private CA), or connection keep-alive — it is the
+ * fetch-era replacement for the `https.Agent` knob that the old transport
+ * accepted but `fetch` cannot honor.
+ */
+export type RequestDefaults = Omit<RequestInit, 'method' | 'body' | 'signal' | 'redirect' | 'headers'> & {
+  /** Per-request headers merged into every call. SDK headers always win on conflict. */
+  headers?: Record<string, string>;
+  /** Request timeout in milliseconds. Defaults to `10000`. */
+  timeout?: number;
 };
+
+export interface RequestHandlerOptions {
+  method: string;
+  uri: string;
+  headers: Record<string, string | number>;
+  body?: string | null;
+}
 export interface PushRequestData {
   delivery_id?: string;
   device_id?: string;
@@ -64,10 +84,10 @@ export default class CIORequest {
   siteid?: BasicAuth['siteid'];
   appKey?: BearerAuth;
   auth: string;
-  defaults: RequestOptions;
+  defaults: RequestDefaults;
   retry: RetryOptions;
 
-  constructor(auth: RequestAuth, defaults?: RequestOptions & { retry?: Partial<RetryOptions> }) {
+  constructor(auth: RequestAuth, defaults?: RequestDefaults & { retry?: Partial<RetryOptions> }) {
     if (typeof auth === 'object') {
       this.apikey = auth.apikey;
       this.siteid = auth.siteid;
@@ -78,8 +98,8 @@ export default class CIORequest {
       this.auth = `Bearer ${this.appKey}`;
     }
 
-    // `retry` is kept off `this.defaults` so the latter stays a pure
-    // `RequestOptions` bag that gets forwarded to the HTTP layer untouched.
+    // `retry` is kept off `this.defaults` so the latter stays a pure fetch
+    // `RequestInit` bag (plus `timeout`) that is forwarded to `fetch` untouched.
     const { retry, ...requestDefaults } = defaults ?? {};
     this.defaults = {
       timeout: TIMEOUT,
@@ -88,15 +108,13 @@ export default class CIORequest {
     this.retry = { ...DEFAULT_RETRY, ...retry };
   }
 
-  options(uri: string, method: RequestOptions['method'], data?: RequestData): RequestHandlerOptions {
+  options(uri: string, method: string, data?: RequestData): RequestHandlerOptions {
     const body = data ? JSON.stringify(data) : null;
     // Per-client custom headers (e.g. `X-Strict-Mode` for the Pipelines
     // client) can be supplied via `defaults.headers`. They're merged in
     // first so the standard headers below always win and cannot be
-    // clobbered. The cast is needed because `OutgoingHttpHeaders` has both
-    // named properties (with narrower types like `string | string[]`) and
-    // an index signature — spreading it into a literal that mixes those
-    // values with our own `number`-typed `Content-Length` confuses tsc.
+    // clobbered. The widening cast lets us mix our own `number`-typed
+    // `Content-Length` into the same record as the string-valued headers.
     const customHeaders = (this.defaults.headers ?? {}) as Record<string, string | number>;
     const headers: Record<string, string | number> = {
       ...customHeaders,
@@ -119,12 +137,19 @@ export default class CIORequest {
     //   - Timeout → `DOMException("TimeoutError")` from `AbortSignal.timeout`.
     // These are intentionally not translated; callers should inspect `name`,
     // `cause`, and `cause.code` rather than relying on the legacy error shapes.
+    //
+    // User-supplied fetch init (`dispatcher`, `keepalive`, …) is forwarded via
+    // the spread. `headers` and `timeout` are handled specially, and the
+    // SDK-owned fields (`method`, `body`, `redirect`, `signal`) are applied
+    // after the spread so a caller can never override them.
+    const { headers: _headers, timeout, ...fetchInit } = this.defaults;
     const response = await fetch(uri, {
+      ...fetchInit,
       method,
       headers: headers as Record<string, string>,
       body,
       redirect: 'manual',
-      signal: AbortSignal.timeout(this.defaults.timeout as number),
+      signal: AbortSignal.timeout(timeout as number),
     });
 
     const statusCode = response.status;
@@ -148,7 +173,7 @@ export default class CIORequest {
         const newHostname = new URL(newURI).hostname;
         if (!newHostname.endsWith('.customer.io') && headers && 'Authorization' in headers) {
           const { Authorization: _stripped, ...rest } = headers as Record<string, unknown>;
-          redirectHeaders = rest as RequestOptions['headers'];
+          redirectHeaders = rest as Record<string, string | number>;
         }
       } catch {
         // No need to do anything if the URL is malformed or relative

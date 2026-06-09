@@ -1,7 +1,6 @@
 import { randomUUID } from 'crypto';
-import type { RequestOptions } from 'https';
 import Request from './request';
-import type { RetryOptions } from './request';
+import type { RequestDefaults, RetryOptions } from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty, MissingParamError } from './utils';
 import { version } from './version';
@@ -17,7 +16,7 @@ import type {
   TrackPayload,
 } from './pipelines/payloads';
 
-export type PipelinesDefaults = RequestOptions & {
+export type PipelinesDefaults = RequestDefaults & {
   region: Region;
   /** Overrides the region-derived host. Useful for testing against a proxy. */
   url?: string;
@@ -68,7 +67,18 @@ export class PipelinesClient {
     // into `siteid` and leave `apikey` empty so the encoded credential is
     // exactly `base64(writeKey:)`. The field names are an internal artifact
     // and never leak through to the public API.
-    this.request = new Request({ siteid: writeKey, apikey: '' }, this.defaults);
+    //
+    // Strip the SDK-only keys; the remainder (the computed `headers`, plus any
+    // `dispatcher`/`keepalive`/`timeout`/retry the caller supplied) is fetch
+    // init for the transport.
+    const {
+      region: _region,
+      url: _url,
+      strictMode: _strictMode,
+      defaultContext: _defaultContext,
+      ...requestDefaults
+    } = this.defaults;
+    this.request = new Request({ siteid: writeKey, apikey: '' }, requestDefaults);
 
     this.pipelinesRoot = this.defaults.url ? this.defaults.url : this.defaults.region.pipelinesUrl;
 

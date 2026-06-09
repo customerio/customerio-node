@@ -1,11 +1,10 @@
-import type { RequestOptions } from 'https';
-import type { BasicAuth, RequestData, PushRequestData, RetryOptions } from './request';
+import type { BasicAuth, RequestData, PushRequestData, RequestDefaults, RetryOptions } from './request';
 import Request from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty, isIdentifierType, MissingParamError } from './utils';
 import type { IdentifierType } from './types';
 
-type TrackDefaults = RequestOptions & { region: Region; url?: string; retry?: Partial<RetryOptions> };
+type TrackDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 export type BatchOperation = Record<string, any>;
 
@@ -25,7 +24,10 @@ export class TrackClient {
     this.siteid = siteid;
     this.apikey = apikey;
     this.defaults = { ...defaults, region: defaults.region || RegionUS };
-    this.request = new Request({ siteid: this.siteid, apikey: this.apikey }, this.defaults);
+    // `region`/`url` are SDK concerns (they select the host); strip them so the
+    // transport receives only fetch init. `retry` is handled by `Request`.
+    const { region: _region, url: _url, ...requestDefaults } = this.defaults;
+    this.request = new Request({ siteid: this.siteid, apikey: this.apikey }, requestDefaults);
 
     this.trackRoot = this.defaults.url ? this.defaults.url : this.defaults.region.trackUrl;
     this.trackV2Root = this.defaults.url
