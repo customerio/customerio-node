@@ -487,10 +487,10 @@ test('#createDeliveriesExport: fails without id', (t) => {
   t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/exports/deliveries`));
 });
 
-test('#getAttributes: fails without customerId', (t) => {
+test('#getAttributes: fails without id', (t) => {
   sinon.stub(t.context.client.request, 'get');
   t.throws(() => (t.context.client.getAttributes as any)(), {
-    message: 'customerId is required',
+    message: 'id is required',
   });
   t.falsy(
     (t.context.client.request.get as SinonStub).calledWith(`${RegionUS.apiUrl}/customers/1/attributes?id_type=id`),

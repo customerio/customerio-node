@@ -1,0 +1,35 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["index.ts"],
+  "out": "docs",
+  "name": "customerio-node",
+  "readme": "README.md",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "githubPages": false,
+  "categorizeByGroup": true,
+  "sort": ["source-order"],
+  "navigation": {
+    "includeCategories": true
+  },
+  "intentionallyNotExported": [
+    "APIDefaults",
+    "TrackDefaults",
+    "Recipients",
+    "SendPushRequestWithCustomPayload",
+    "SendPushRequestWithoutCustomPayload",
+    "SendEmailRequestWithTemplate",
+    "SendEmailRequestWithoutTemplate",
+    "SendSMSRequestRequiredOptions",
+    "SendSMSRequestOptionalOptions",
+    "SendInboxMessageRequestRequiredOptions",
+    "SendInboxMessageRequestOptionalOptions",
+    "SendInAppRequestRequiredOptions",
+    "SendInAppRequestOptionalOptions",
+    "PipelinesIdentifier",
+    "RequestData",
+    "PushRequestData",
+    "default"
+  ]
+}
