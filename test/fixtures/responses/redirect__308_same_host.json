@@ -1,0 +1,29 @@
+{
+  "scenario": "redirect__308_same_host",
+  "kind": "synthesized",
+  "note": "308 Permanent Redirect, same host. Gap-fill on the existing test suite which only covers 301/302.",
+  "sdkCall": {
+    "client": "TrackClient",
+    "method": "identify",
+    "args": ["abc", { "email": "x@example.com" }]
+  },
+  "mocks": [
+    {
+      "kind": "response",
+      "host": "track.customer.io",
+      "path": "/api/v1/customers/abc",
+      "method": "PUT",
+      "status": 308,
+      "headers": { "location": "https://track.customer.io/api/v1/customers/abc/" }
+    },
+    {
+      "kind": "response",
+      "host": "track.customer.io",
+      "path": "/api/v1/customers/abc/",
+      "method": "PUT",
+      "status": 200,
+      "body": ""
+    }
+  ],
+  "expect": "resolve"
+}

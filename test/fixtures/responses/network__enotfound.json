@@ -1,0 +1,20 @@
+{
+  "scenario": "network__enotfound",
+  "kind": "synthesized",
+  "note": "DNS resolution failure. Replay snapshot must preserve err.code === 'ENOTFOUND'.",
+  "sdkCall": {
+    "client": "TrackClient",
+    "method": "identify",
+    "args": ["abc", { "email": "x@example.com" }]
+  },
+  "mocks": [
+    {
+      "kind": "error",
+      "host": "track.customer.io",
+      "path": "/api/v1/customers/abc",
+      "method": "PUT",
+      "error": { "code": "ENOTFOUND", "message": "getaddrinfo ENOTFOUND track.customer.io" }
+    }
+  ],
+  "expect": "reject"
+}

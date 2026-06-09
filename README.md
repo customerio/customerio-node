@@ -19,9 +19,14 @@ The `engines` field in `package.json` reflects the current minimum supported ver
 
 ## Alternative Node runtimes
 
-Many runtimes often have subtle differences to the APIs and standard library offered by Node.js. These differences can cause issues when using this library with those runtimes.
+As of v5.0.0 the SDK is built on top of standard `fetch`, so it runs on any runtime that implements the [WHATWG fetch standard](https://fetch.spec.whatwg.org/).
 
-If you would like to use Customer.io with an alternate runtime, we recommend using either our [Track](https://customer.io/docs/api/#tag/trackOverview) and [App](https://customer.io/docs/api/#tag/appOverview) APIs directly using the built-in HTTP client available in your runtime, or our [React Native SDK](https://customer.io/docs/sdk/react-native/getting-started/) if applicable.
+[Bun](https://bun.sh/) is exercised in CI alongside Node.js, so the supported matrix is:
+
+- Node.js (Current, Active LTS, Maintenance LTS; see [Supported Node.js versions](#supported-nodejs-versions) above)
+- Bun (latest)
+
+Other fetch-compatible runtimes (Deno, Cloudflare Workers, etc.) should work but are not part of our test matrix. If you hit a runtime-specific issue, please open one against the [issue tracker](https://github.com/customerio/customerio-node/issues).
 
 ## Installation
 
@@ -53,6 +58,30 @@ const cio = new TrackClient('123', 'abc', {
   timeout: 5000
 });
 ```
+
+#### Retries
+
+Requests that fail with a transient error are retried automatically with exponential backoff and jitter. This applies to every client (`TrackClient`, `APIClient`, and `PipelinesClient`). Transient failures are network errors (connection reset/refused, DNS, timeout) and the retryable HTTP status codes `408`, `429`, `500`, `502`, `503`, `504`, `522`, and `524`. A `Retry-After` response header is honored when present. Other 4xx responses (e.g. `400`, `401`, `404`, `422`) are returned immediately without retrying.
+
+Retries are safe to replay: each call builds its payload once and the exact same request body is reused for every attempt.
+
+Pass a `retry` object to tune or disable the policy. Any fields you omit fall back to the defaults shown below:
+
+```
+const cio = new TrackClient('123', 'abc', {
+  retry: {
+    maxRetries: 3, // set to 0 to disable retries entirely
+    minTimeoutMs: 200,
+    maxTimeoutMs: 5000,
+    retryStatusCodes: [408, 429, 500, 502, 503, 504, 522, 524],
+    respectRetryAfter: true,
+    retryAfterMaxSeconds: 300,
+    maxTotalBackoffMs: 30000,
+  },
+});
+```
+
+The backoff for attempt `n` (zero-based) is `min(maxTimeoutMs, (random() + 1) * minTimeoutMs * 2 ** n)`. The total time spent sleeping across all retries for a single call is capped at `maxTotalBackoffMs`; if the next backoff would exceed it, the last error is thrown instead.
 
 ---
 
@@ -543,16 +572,16 @@ You can read more about the available options on the [export deliveries data](ht
 
 ## Pipelines API
 
-The Pipelines API is Customer.io's ingestion endpoint for the Segment-compatible identify/track/page/screen/group/alias event model. It runs at a different host (`cdp.customer.io`) from the Track and App APIs and authenticates with a **Pipelines write key** (set up under *Data Pipelines → Sources* in the dashboard).
+The Pipelines API is Customer.io's ingestion endpoint for the Segment-compatible identify/track/page/screen/group/alias event model. It runs at a different host (`cdp.customer.io`) from the Track and App APIs and authenticates with a **Pipelines write key** (set up under _Data Pipelines → Sources_ in the dashboard).
 
 > **Need client-side batching, buffered flushes, or retries?** Use [`@customerio/cdp-analytics-node`](https://www.npmjs.com/package/@customerio/cdp-analytics-node) instead. `PipelinesClient` in this package is a thin, stateless client that issues one HTTP request per call — same as `TrackClient` and `APIClient`.
 
 ### Creating a Pipelines client
 
 ```js
-const { PipelinesClient, RegionUS, RegionEU } = require('customerio-node');
+const { PipelinesClient, RegionUS, RegionEU } = require("customerio-node");
 
-const pipelines = new PipelinesClient('YOUR_PIPELINES_WRITE_KEY', {
+const pipelines = new PipelinesClient("YOUR_PIPELINES_WRITE_KEY", {
   region: RegionUS, // or RegionEU; defaults to RegionUS
 });
 ```
@@ -585,8 +614,8 @@ Add or update a person and their traits.
 
 ```js
 pipelines.identify({
-  userId: '1',
-  traits: { email: 'customer@example.com', plan: 'pro' },
+  userId: "1",
+  traits: { email: "customer@example.com", plan: "pro" },
 });
 ```
 
@@ -598,9 +627,9 @@ Record an event.
 
 ```js
 pipelines.track({
-  userId: '1',
-  event: 'Order Completed',
-  properties: { price: 23.45, product: 'socks' },
+  userId: "1",
+  event: "Order Completed",
+  properties: { price: 23.45, product: "socks" },
 });
 ```
 
@@ -612,9 +641,9 @@ Log a page view.
 
 ```js
 pipelines.page({
-  userId: '1',
-  name: 'Pricing',
-  properties: { path: '/pricing', referrer: 'https://example.com' },
+  userId: "1",
+  name: "Pricing",
+  properties: { path: "/pricing", referrer: "https://example.com" },
 });
 ```
 
@@ -624,8 +653,8 @@ Capture a mobile screen view from a server-side handler.
 
 ```js
 pipelines.screen({
-  userId: '1',
-  name: 'Settings',
+  userId: "1",
+  name: "Settings",
 });
 ```
 
@@ -635,9 +664,9 @@ Create an object/group and associate a person with it.
 
 ```js
 pipelines.group({
-  userId: '1',
-  groupId: 'acme-co',
-  traits: { plan: 'enterprise' },
+  userId: "1",
+  groupId: "acme-co",
+  traits: { plan: "enterprise" },
 });
 ```
 
@@ -649,8 +678,8 @@ Merge profiles by reconciling identifiers.
 
 ```js
 pipelines.alias({
-  userId: '1',
-  previousId: 'anon-abc-123',
+  userId: "1",
+  previousId: "anon-abc-123",
 });
 ```
 
@@ -662,8 +691,8 @@ Submit up to 500 KB worth of identify/track/page/screen/group/alias events in a 
 
 ```js
 pipelines.batch([
-  { type: 'identify', userId: '1', traits: { plan: 'pro' } },
-  { type: 'track', userId: '1', event: 'Subscribed', properties: { plan: 'pro' } },
+  { type: "identify", userId: "1", traits: { plan: "pro" } },
+  { type: "track", userId: "1", event: "Subscribed", properties: { plan: "pro" } },
 ]);
 ```
 

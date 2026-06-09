@@ -271,3 +271,36 @@ test('#batch routes EU traffic to the EU host', (t) => {
   client.batch([{ type: 'track', userId: 'u1', event: 'X' }]);
   t.is(post.firstCall.args[0], 'https://cdp-eu.customer.io/v1/batch');
 });
+
+// -----------------------------------------------------------------------------
+// retry idempotency
+// -----------------------------------------------------------------------------
+
+const mockResponse = (status: number, body: string) =>
+  ({
+    status,
+    ok: status >= 200 && status < 300,
+    headers: new Headers({}),
+    text: async () => body,
+  }) as unknown as Response;
+
+test.serial('retries reuse the same auto-filled messageId and timestamp across attempts', async (t) => {
+  const fetchStub = sinon.stub(global, 'fetch');
+  t.teardown(() => sinon.restore());
+  // The envelope (messageId, timestamp) is built once in `identify()` before
+  // the request, so the retry loop must replay the identical body — otherwise
+  // a transient 500 would create two distinct events server-side.
+  sinon.stub(t.context.client.request, 'sleep').resolves();
+
+  fetchStub.onCall(0).resolves(mockResponse(500, JSON.stringify({})));
+  fetchStub.onCall(1).resolves(mockResponse(200, JSON.stringify({})));
+
+  await t.context.client.identify({ userId: 'u1', traits: { plan: 'pro' } });
+
+  t.is(fetchStub.callCount, 2);
+  const firstBody = JSON.parse((fetchStub.getCall(0).args[1] as RequestInit).body as string);
+  const secondBody = JSON.parse((fetchStub.getCall(1).args[1] as RequestInit).body as string);
+  t.regex(firstBody.messageId, UUID_RE);
+  t.is(firstBody.messageId, secondBody.messageId);
+  t.is(firstBody.timestamp, secondBody.timestamp);
+});

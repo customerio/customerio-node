@@ -67,7 +67,27 @@ const EMAIL_OPTIONAL_KEYS = [
   'language',
 ] as const satisfies ReadonlyArray<keyof SendEmailRequestOptionalOptions>;
 
+/**
+ * Builder for a transactional email request. Pass an instance to
+ * {@link APIClient.sendEmail}.
+ *
+ * Provide either a `transactional_message_id` (to use a Customer.io-managed
+ * template) **or** inline `body`, `subject`, and `from` fields.
+ *
+ * @example
+ * ```ts
+ * const req = new SendEmailRequest({
+ *   to: 'a@example.com',
+ *   identifiers: { email: 'a@example.com' },
+ *   transactional_message_id: 'welcome',
+ *   message_data: { first_name: 'Alex' },
+ * });
+ * req.attach('invoice.pdf', pdfBuffer);
+ * await api.sendEmail(req);
+ * ```
+ */
 export class SendEmailRequest {
+  /** The fully-shaped message payload sent to the API. */
   message: EmailMessage;
 
   static [Symbol.hasInstance](instance: unknown): instance is SendEmailRequest {
@@ -100,6 +120,18 @@ export class SendEmailRequest {
     }
   }
 
+  /**
+   * Attach a file to the email.
+   *
+   * By default the data is base64-encoded for you. Pass `{ encode: false }` if
+   * `data` is already base64.
+   *
+   * @param name Filename (and attachment key — must be unique on this request).
+   * @param data File contents. Any `Buffer.from`-compatible value when `encode` is `true`;
+   *   a base64 string when `encode` is `false`.
+   * @param options `encode` defaults to `true`.
+   * @throws {Error} If an attachment with `name` already exists on this request.
+   */
   // Use `any` for data here, because union types and overloads in Typescript
   // don't work well together for `Buffer.from`.
   attach(name: string, data: any, { encode = true } = {}) {
@@ -174,6 +206,13 @@ const PUSH_OPTIONAL_KEYS = [
   'custom_data',
 ] as const satisfies ReadonlyArray<keyof SendPushRequestOptionalOptions>;
 
+/**
+ * Builder for a transactional push notification request. Pass an instance to
+ * {@link APIClient.sendPush}.
+ *
+ * Either supply a `transactional_message_id` to use a Customer.io template,
+ * or include a `custom_payload` for a fully-custom message.
+ */
 export class SendPushRequest {
   message: PushMessage;
 
@@ -226,6 +265,9 @@ const SMS_OPTIONAL_KEYS = [
   'language',
 ] as const satisfies ReadonlyArray<keyof SendSMSRequestOptionalOptions>;
 
+/**
+ * Builder for a transactional SMS request. Pass an instance to {@link APIClient.sendSMS}.
+ */
 export class SendSMSRequest {
   message: SMSMessage;
 
@@ -269,6 +311,10 @@ const INBOX_OPTIONAL_KEYS = [
   'language',
 ] as const satisfies ReadonlyArray<keyof SendInboxMessageRequestOptionalOptions>;
 
+/**
+ * Builder for a transactional inbox message request. Pass an instance to
+ * {@link APIClient.sendInboxMessage}.
+ */
 export class SendInboxMessageRequest {
   message: InboxMessage;
 
@@ -311,6 +357,10 @@ const IN_APP_OPTIONAL_KEYS = [
   'language',
 ] as const satisfies ReadonlyArray<keyof SendInAppRequestOptionalOptions>;
 
+/**
+ * Builder for a transactional in-app message request. Pass an instance to
+ * {@link APIClient.sendInApp}.
+ */
 export class SendInAppRequest {
   message: InAppMessage;
 

@@ -1,0 +1,23 @@
+{
+  "scenario": "network__timeout",
+  "kind": "synthesized",
+  "note": "Slow response triggers the SDK's request timeout. Generous delay vs timeout ratio so CI variance does not flake.",
+  "clientOptions": { "timeout": 100 },
+  "sdkCall": {
+    "client": "TrackClient",
+    "method": "identify",
+    "args": ["abc", { "email": "x@example.com" }]
+  },
+  "mocks": [
+    {
+      "kind": "response",
+      "host": "track.customer.io",
+      "path": "/api/v1/customers/abc",
+      "method": "PUT",
+      "status": 200,
+      "body": "",
+      "delayMs": 1500
+    }
+  ],
+  "expect": "reject"
+}

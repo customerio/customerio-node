@@ -1,0 +1,21 @@
+{
+  "scenario": "empty_body__204",
+  "kind": "synthesized",
+  "note": "204 No Content. SDK resolves with {}; covers CDP-5967 2xx range.",
+  "sdkCall": {
+    "client": "TrackClient",
+    "method": "destroy",
+    "args": ["abc"]
+  },
+  "mocks": [
+    {
+      "kind": "response",
+      "host": "track.customer.io",
+      "path": "/api/v1/customers/abc",
+      "method": "DELETE",
+      "status": 204,
+      "rawBody": ""
+    }
+  ],
+  "expect": "resolve"
+}
