@@ -224,6 +224,12 @@ export class APIClient {
    * Both `data` and `recipients` are optional; omitting `recipients` sends the
    * broadcast to its configured recipients.
    *
+   * Note that the parameters are positional: to pass `recipients` without
+   * `data`, pass `undefined` for `data` — e.g.
+   * `triggerBroadcast(1, undefined, { emails: ['user@example.com'] })`.
+   * Passing the recipient selector as the second argument would send it as
+   * liquid `data` and trigger the broadcast's configured recipients instead.
+   *
    * @param broadcastId The broadcast (campaign) id.
    * @param data Liquid `data` payload made available to the broadcast template.
    * @param recipients Recipient selector. See above.
