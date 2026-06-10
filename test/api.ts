@@ -299,6 +299,36 @@ test('#sendEmail: error', async (t) => {
   t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/email`, req.message));
 });
 
+test('#triggerBroadcast works with no data or recipients', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.triggerBroadcast(1);
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
+      data: {},
+    }),
+  );
+});
+
+test('#triggerBroadcast works with data only', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.triggerBroadcast(1, { type: 'data' });
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
+      data: { type: 'data' },
+    }),
+  );
+});
+
+test('#triggerBroadcast works with empty recipients', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.triggerBroadcast(1, { type: 'data' }, {});
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
+      data: { type: 'data' },
+    }),
+  );
+});
+
 test('#triggerBroadcast works', (t) => {
   sinon.stub(t.context.client.request, 'post');
   t.context.client.triggerBroadcast(1, { type: 'data' }, { type: 'recipients' });
