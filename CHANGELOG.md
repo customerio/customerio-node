@@ -10,27 +10,36 @@ The internals of `lib/request.ts` have been rewritten on top of native `fetch` (
 
 - **`CustomerIORequestError.response` type narrowed (TypeScript only).** It is now a `ResponseLike` interface (`{ statusCode: number; headers: Record<string, string>; ok: boolean }`) instead of `http.IncomingMessage`. The runtime properties that the SDK has always populated (`statusCode`, response `headers`) are preserved. If your code reads `err.response.rawHeaders` or `err.response.socket`, or uses `instanceof http.IncomingMessage`, update it to read the lowercased `err.response.headers` object instead.
 - **The `Region` constructor now requires a third `pipelinesUrl` argument.** Code that constructs `Region` directly with the two-argument signature (`new Region(trackUrl, apiUrl)`) will fail to type-check and must be updated to pass an explicit Pipelines host. Code that only consumes the exported `RegionUS` and `RegionEU` constants is unaffected.
+- **The underlying request mechanism now uses `fetch`.** If you were handling errors based on `instanceof` or `Error.message` you may need to update your handlers to use native `fetch` errors.
 
 #### Changed
 
 - **Outbound header names are now lowercased on the wire.** This is per the WHATWG fetch spec. The Customer.io API is case-insensitive, so this only matters if you grep your own outbound HTTP logs.
 - **TCP keepalive is enabled by default.** undici's connection pool reuses sockets across calls. Performance improves under sustained load; file-descriptor usage profile shifts slightly.
 - **`User-Agent` bumps from `Customer.io Node Client/4.x` to `Customer.io Node Client/5.0.0`.**
+- **Dependency updates** ([#196](https://github.com/customerio/customerio-node/pull/196)), ([#207](https://github.com/customerio/customerio-node/pull/207)), ([#208](https://github.com/customerio/customerio-node/pull/208)), ([#209](https://github.com/customerio/customerio-node/pull/209))
+- **Make `getCustomersByEmail` query safe** ([#193](https://github.com/customerio/customerio-node/pull/193))
+- **Resolve on any 2XX status code** ([#192](https://github.com/customerio/customerio-node/pull/192))
 
 #### Added
 
-- **Automatic retries** with exponential backoff and jitter, shared across `TrackClient`, `APIClient`, and `PipelinesClient`. Transient network errors and the retryable status codes `408`, `429`, `500`, `502`, `503`, `504`, `522`, `524` are retried (default 3 attempts); other 4xx responses are not. A `Retry-After` header is honored when present, and retried attempts carry an `X-Retry-Count` header. Configure or disable via a `retry` option on any client (`{ maxRetries: 0 }` to opt out). See the Retries section in the README.
-- New `PipelinesClient` for the [Pipelines API](https://docs.customer.io/files/pipelines.json). Provides `identify`, `track`, `page`, `screen`, `group`, `alias`, and `batch` methods. Auto-fills `messageId`, `timestamp`, and `context.library` on every payload, and supports an optional `defaultContext` and `strictMode` on the client. See the new Pipelines section in the README.
-- `Region` now exposes a `pipelinesUrl` field, and `RegionUS` / `RegionEU` point at `cdp.customer.io` and `cdp-eu.customer.io` respectively.
-- `CIORequest.options()` now merges custom headers supplied via `defaults.headers`. Standard headers (`Authorization`, `Content-Type`, `Content-Length`, `User-Agent`) always win and cannot be clobbered.
-- **Bun support.** Bun (latest) is now part of the CI matrix alongside Node 22 / 24 / 26. Runtimes that implement standard `fetch` should work, though only Bun and Node are explicitly tested.
+- **Automatic retries** with exponential backoff and jitter, shared across `TrackClient`, `APIClient`, and `PipelinesClient`. Transient network errors and the retryable status codes `408`, `429`, `500`, `502`, `503`, `504`, `522`, `524` are retried (default 3 attempts); other 4xx responses are not. A `Retry-After` header is honored when present, and retried attempts carry an `X-Retry-Count` header. Configure or disable via a `retry` option on any client (`{ maxRetries: 0 }` to opt out). See the Retries section in the README. ([#213](https://github.com/customerio/customerio-node/pull/213))
+- New `PipelinesClient` for the [Pipelines API](https://docs.customer.io/files/pipelines.json). Provides `identify`, `track`, `page`, `screen`, `group`, `alias`, and `batch` methods. Auto-fills `messageId`, `timestamp`, and `context.library` on every payload, and supports an optional `defaultContext` and `strictMode` on the client. See the new Pipelines section in the README. ([#204](https://github.com/customerio/customerio-node/pull/204))
+- `Region` now exposes a `pipelinesUrl` field, and `RegionUS` / `RegionEU` point at `cdp.customer.io` and `cdp-eu.customer.io` respectively. ([#203](https://github.com/customerio/customerio-node/pull/203))
+- `CIORequest.options()` now merges custom headers supplied via `defaults.headers`. Standard headers (`Authorization`, `Content-Type`, `Content-Length`, `User-Agent`) always win and cannot be clobbered. ([#215](https://github.com/customerio/customerio-node/pull/215))
+- **Bun support.** Bun (latest) is now part of the CI matrix alongside Node 22 / 24 / 26. Runtimes that implement standard `fetch` should work, though only Bun and Node are explicitly tested. ([#197](https://github.com/customerio/customerio-node/pull/197))
 - **307 and 308 redirects are now explicitly covered** in the test suite (previously only 301/302 had direct test coverage).
-- **Live dogfood suite** (`npm run test:live`). Pre-release smoke test against a real workspace. Not part of `npm test`; gated on `CIO_LIVE=1` plus credentials.
+- **Live dogfood suite** (`npm run test:live`). Pre-release smoke test against a real workspace. Not part of `npm test`; gated on `CIO_LIVE=1` plus credentials. ([#201](https://github.com/customerio/customerio-node/pull/201))
+- **v2 Batch method** added to the `Track` client ([#194](https://github.com/customerio/customerio-node/pull/194))
+- **Fix `instanceof` checks** for safety in cases of duplicate installs or cross-realm matching ([#198](https://github.com/customerio/customerio-node/pull/198))
 
 #### Internal
 
-- `lib/request.ts` rewritten on top of native `fetch` with `redirect: 'manual'` and `AbortSignal.timeout`. The Authorization-strip rule on cross-host redirects, the timeout error message string, and `err.code` on network errors (`ECONNREFUSED` / `ENOTFOUND` / `ECONNRESET`) are all preserved. No runtime dependency on the `https` module.
+- `lib/request.ts` rewritten on top of native `fetch` with `redirect: 'manual'` and `AbortSignal.timeout`. The Authorization-strip rule on cross-host redirects, the timeout error message string, and `err.code` on network errors (`ECONNREFUSED` / `ENOTFOUND` / `ECONNRESET`) are all preserved. No runtime dependency on the `https` module. ([#200](https://github.com/customerio/customerio-node/pull/200))
 - `nock` upgraded to `^14` (the only version that intercepts undici's `fetch`).
+- Omit `Content-Length` header on requests without a body ([#199](https://github.com/customerio/customerio-node/pull/199))
+- Convert ESLint config from CJS to ESM ([#211](https://github.com/customerio/customerio-node/pull/211))
+- Dynamically create `lib/version.ts` file ([#210](https://github.com/customerio/customerio-node/pull/210))
 
 ## [4.5.1]
 
