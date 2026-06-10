@@ -221,24 +221,31 @@ export class APIClient {
    * Otherwise the entire `recipients` object is forwarded verbatim alongside
    * `data` (use this for segment-based recipients).
    *
+   * Both `data` and `recipients` are optional; omitting `recipients` sends the
+   * broadcast to its configured recipients.
+   *
    * @param broadcastId The broadcast (campaign) id.
    * @param data Liquid `data` payload made available to the broadcast template.
    * @param recipients Recipient selector. See above.
    * @returns The parsed JSON response body.
    */
-  triggerBroadcast(broadcastId: string | number, data: RequestData, recipients: Recipients) {
-    let payload = {};
-    let customRecipientField = (
-      Object.keys(BROADCASTS_ALLOWED_RECIPIENT_FIELDS) as BroadcastsAllowedRecipientFieldsKeys[]
-    ).find((field) => recipients[field]);
+  triggerBroadcast(broadcastId: string | number, data?: RequestData, recipients?: Recipients) {
+    let payload: Record<string, unknown> = {};
 
-    if (customRecipientField) {
-      payload = Object.assign({ data }, filterRecipientsDataForField(recipients, customRecipientField));
-    } else {
-      payload = {
-        data,
-        recipients,
-      };
+    if (data && Object.keys(data).length > 0) {
+      payload.data = data;
+    }
+
+    if (recipients && Object.keys(recipients).length > 0) {
+      let customRecipientField = (
+        Object.keys(BROADCASTS_ALLOWED_RECIPIENT_FIELDS) as BroadcastsAllowedRecipientFieldsKeys[]
+      ).find((field) => recipients[field]);
+
+      if (customRecipientField) {
+        payload = Object.assign(payload, filterRecipientsDataForField(recipients, customRecipientField));
+      } else {
+        payload.recipients = recipients;
+      }
     }
 
     return this.request.post(`${this.apiRoot}/campaigns/${encodeURIComponent(broadcastId)}/triggers`, payload);
