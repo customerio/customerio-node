@@ -390,6 +390,36 @@ test('#triggerBroadcast discards extraneous fields', (t) => {
   );
 });
 
+test('#triggerBroadcast works with broadcastId only', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.triggerBroadcast(1);
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
+      data: {},
+    }),
+  );
+});
+
+test('#triggerBroadcast works with broadcastId and data only', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.triggerBroadcast(1, { type: 'data' });
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
+      data: { type: 'data' },
+    }),
+  );
+});
+
+test('#triggerBroadcast works with empty recipients', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.triggerBroadcast(1, { type: 'data' }, {});
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
+      data: { type: 'data' },
+    }),
+  );
+});
+
 test('#listExports: success', (t) => {
   sinon.stub(t.context.client.request, 'get');
   t.context.client.listExports();
