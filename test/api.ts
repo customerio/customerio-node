@@ -390,6 +390,56 @@ test('#triggerBroadcast discards extraneous fields', (t) => {
   );
 });
 
+test('#triggerBroadcast works with no data and no recipients', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.triggerBroadcast(1);
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
+      data: {},
+    }),
+  );
+});
+
+test('#triggerBroadcast works with data only (no recipients)', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.triggerBroadcast(1, { type: 'data' });
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
+      data: { type: 'data' },
+    }),
+  );
+});
+
+test('#triggerBroadcast works with empty recipients object', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.triggerBroadcast(1, { type: 'data' }, {});
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
+      data: { type: 'data' },
+    }),
+  );
+});
+
+test('#triggerBroadcast works with undefined data and undefined recipients', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.triggerBroadcast(1, undefined, undefined);
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
+      data: {},
+    }),
+  );
+});
+
+test('#triggerBroadcast works with empty data and empty recipients', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  t.context.client.triggerBroadcast(1, {}, {});
+  t.truthy(
+    (t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/campaigns/1/triggers`, {
+      data: {},
+    }),
+  );
+});
+
 test('#listExports: success', (t) => {
   sinon.stub(t.context.client.request, 'get');
   t.context.client.listExports();

@@ -226,19 +226,22 @@ export class APIClient {
    * @param recipients Recipient selector. See above.
    * @returns The parsed JSON response body.
    */
-  triggerBroadcast(broadcastId: string | number, data: RequestData, recipients: Recipients) {
-    let payload = {};
-    let customRecipientField = (
-      Object.keys(BROADCASTS_ALLOWED_RECIPIENT_FIELDS) as BroadcastsAllowedRecipientFieldsKeys[]
-    ).find((field) => recipients[field]);
+  triggerBroadcast(broadcastId: string | number, data: RequestData = {}, recipients: Recipients = {}) {
+    let payload: Record<string, unknown>;
+    const hasRecipients = Object.keys(recipients).length > 0;
 
-    if (customRecipientField) {
-      payload = Object.assign({ data }, filterRecipientsDataForField(recipients, customRecipientField));
+    if (hasRecipients) {
+      const customRecipientField = (
+        Object.keys(BROADCASTS_ALLOWED_RECIPIENT_FIELDS) as BroadcastsAllowedRecipientFieldsKeys[]
+      ).find((field) => recipients[field]);
+
+      if (customRecipientField) {
+        payload = Object.assign({ data }, filterRecipientsDataForField(recipients, customRecipientField));
+      } else {
+        payload = { data, recipients };
+      }
     } else {
-      payload = {
-        data,
-        recipients,
-      };
+      payload = { data };
     }
 
     return this.request.post(`${this.apiRoot}/campaigns/${encodeURIComponent(broadcastId)}/triggers`, payload);
