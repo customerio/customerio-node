@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.0.1]
+
+#### Fixed
+
+- **`triggerBroadcast` now treats `data` and `recipients` as optional**, matching the documented API. Calling with only a broadcast id no longer throws a `TypeError`, and empty `data` / `recipients` objects are omitted from the request payload instead of producing a 422 (`empty recipients filter is not valid`) from the API — so `api.triggerBroadcast(id)` sends the broadcast to its configured recipients. The parameters are positional: to pass `recipients` without `data`, use `triggerBroadcast(id, undefined, recipients)`. ([#220](https://github.com/customerio/customerio-node/pull/220))
+
 ## [5.0.0]
 
 The internals of `lib/request.ts` have been rewritten on top of native `fetch` (no more `https.request`), and a new `PipelinesClient` has been added for the Pipelines API. The existing `TrackClient` / `APIClient` method surface is unchanged. Most users will not need to update any code; the breaking changes are documented below.
