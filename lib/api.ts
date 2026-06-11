@@ -238,11 +238,11 @@ export class APIClient {
   triggerBroadcast(broadcastId: string | number, data?: RequestData, recipients?: Recipients) {
     let payload: Record<string, unknown> = {};
 
-    if (data && Object.keys(data).length > 0) {
+    if (data != null && Object.keys(data).length > 0) {
       payload.data = data;
     }
 
-    if (recipients && Object.keys(recipients).length > 0) {
+    if (recipients != null && Object.keys(recipients).length > 0) {
       let customRecipientField = (
         Object.keys(BROADCASTS_ALLOWED_RECIPIENT_FIELDS) as BroadcastsAllowedRecipientFieldsKeys[]
       ).find((field) => recipients[field]);
