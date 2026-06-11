@@ -450,6 +450,13 @@ api.triggerBroadcast(1, { name: "foo" }, { emails: ["example@emails.com"], email
 
 [You can learn more about the available recipient fields here](https://customer.io/docs/api/#operation/triggerBroadcast).
 
+Both `data` and `recipients` are optional. Omitting `recipients` sends the broadcast to its configured recipients. Note that the parameters are positional: to pass `recipients` without `data`, pass `undefined` for `data` — passing the recipient selector as the second argument would send it as liquid data instead.
+
+```javascript
+api.triggerBroadcast(1); // broadcast's configured recipients
+api.triggerBroadcast(1, undefined, { emails: ["example@emails.com"], email_ignore_missing: true });
+```
+
 #### Options
 
 - **id**: String or number (required)
