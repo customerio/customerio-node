@@ -255,7 +255,7 @@ export class TrackClient {
       device: {
         id: device_id,
         platform,
-        ...(last_used ? { last_used } : {}),
+        ...(last_used != null ? { last_used } : {}),
         ...(Object.keys(attributes).length && { attributes }),
       },
     });

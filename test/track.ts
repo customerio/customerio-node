@@ -243,6 +243,20 @@ test('#addDevice works with an empty data parameter', (t) => {
   );
 });
 
+test('#addDevice preserves a last_used timestamp of 0', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.context.client.addDevice(1, '123', 'ios', { last_used: 0 });
+  t.true(
+    put.calledWith(`${RegionUS.trackUrl}/customers/1/devices`, {
+      device: {
+        id: '123',
+        platform: 'ios',
+        last_used: 0,
+      },
+    }),
+  );
+});
+
 test('#deleteDevice works', (t) => {
   sinon.stub(t.context.client.request, 'destroy');
   t.throws(() => (t.context.client.deleteDevice as any)(''), { message: 'customerId is required' });
