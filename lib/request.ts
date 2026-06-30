@@ -45,6 +45,28 @@ export interface PushRequestData {
 }
 
 /**
+ * Payload for {@link TrackClient.reportMetric} — a delivery metric reported to
+ * the Track API `/metrics` endpoint. The valid `metric` values depend on the
+ * channel of the delivery (e.g. email supports `delivered`/`opened`/`clicked`/
+ * `bounced`; push supports `delivered`/`opened`/`converted`), so `metric` is
+ * left as a loose string rather than a per-channel union.
+ */
+export interface MetricRequestData {
+  /** The `CIO-Delivery-ID` of the message the metric applies to. */
+  delivery_id?: string;
+  /** The metric/event being reported. Channel-specific. */
+  metric?: string;
+  /** The unix timestamp (seconds) when the event occurred. */
+  timestamp?: number;
+  /** The recipient address/token the delivery was sent to. */
+  recipient?: string;
+  /** Reason for a `bounced`/`dropped` metric, when applicable. */
+  reason?: string;
+  /** The link that was clicked, for `clicked` metrics. */
+  href?: string;
+}
+
+/**
  * Per-request retry policy. Retries are stateless and happen at the HTTP layer,
  * so every client (`TrackClient`, `APIClient`, `PipelinesClient`) inherits them.
  */

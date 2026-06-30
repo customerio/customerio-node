@@ -318,6 +318,97 @@ cio.batch([
 
 - **operations**: Array of operation objects (required, non-empty)
 
+### cio.entity(operation)
+
+Send a single self-describing operation to the [v2 entity endpoint](https://customer.io/docs/api/track/#operation/entity). This is the singular counterpart to `cio.batch` — `operation` is shaped like one element of a `batch` array.
+
+```javascript
+cio.entity({
+  type: "person",
+  action: "identify",
+  identifiers: { id: "1" },
+  attributes: { plan: "pro" },
+});
+```
+
+#### Options
+
+- **operation**: A single operation object (required, non-empty)
+
+### cio.addCustomersToSegment(segmentId, customerIds, idType)
+
+Add people to a manual segment.
+
+```javascript
+cio.addCustomersToSegment(7, ["1", "2"]);
+cio.addCustomersToSegment(7, ["a@example.com"], IdentifierType.Email);
+```
+
+#### Options
+
+- **segmentId**: The manual segment's id (required)
+- **customerIds**: Array of 1–1000 identifiers, matching `idType` (required, non-empty)
+- **idType**: One of `id`, `email`, or `cio_id` (optional; the API defaults to `id`)
+
+### cio.removeCustomersFromSegment(segmentId, customerIds, idType)
+
+Remove people from a manual segment. Same arguments as `addCustomersToSegment`.
+
+```javascript
+cio.removeCustomersFromSegment(7, ["1", "2"]);
+```
+
+### cio.submitForm(formId, data)
+
+Submit a [form](https://customer.io/docs/api/track/#operation/submitForm) on behalf of a person. `data` holds the submitted form fields and must contain exactly one identifier (`email` or `id`) so the submission can be attributed to a person.
+
+```javascript
+cio.submitForm("signup", { email: "a@example.com", plan: "pro" });
+```
+
+#### Options
+
+- **formId**: The form's id (required)
+- **data**: The submitted form fields, including the identifier (required, non-empty)
+
+### cio.reportMetric(data)
+
+Report a delivery metric (open, click, bounce, etc.) for any channel to the [metrics endpoint](https://customer.io/docs/api/track/#operation/metrics). Unlike `cio.trackPush` (push only), this works for email, SMS, push, in-app, Slack, and webhook deliveries.
+
+```javascript
+cio.reportMetric({
+  delivery_id: "RPILAgUBcRhIBqSfeiIwdIYJKxTY",
+  metric: "opened",
+  timestamp: 1613063089,
+});
+```
+
+#### Options
+
+- **data**: Metric payload. `delivery_id` is required; `metric`, `timestamp`, `recipient`, `reason`, and `href` are optional. Valid `metric` values depend on the delivery's channel.
+
+### cio.getAccountRegion()
+
+Look up the data region (US or EU) your account belongs to.
+
+```javascript
+cio.getAccountRegion();
+```
+
+### cio.unsubscribe(deliveryId, unsubscribe)
+
+Custom [unsubscribe handling](https://customer.io/docs/api/track/#operation/unsubscribe) for a specific delivery. Sets (or clears) the recipient's `unsubscribed` attribute and attributes the change to the delivery.
+
+```javascript
+cio.unsubscribe("RPILAgUBcRhIBqSfeiIwdIYJKxTY");
+cio.unsubscribe("RPILAgUBcRhIBqSfeiIwdIYJKxTY", false); // resubscribe
+```
+
+#### Options
+
+- **deliveryId**: The `CIO-Delivery-ID` of the message (required)
+- **unsubscribe**: `true` (default) to unsubscribe, `false` to resubscribe
+
 ### Using Promises
 
 All calls to the library will return a native promise, allowing you to chain calls as such:
