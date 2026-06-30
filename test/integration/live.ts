@@ -19,6 +19,9 @@
  *   CIO_TEST_SMS_RECIPIENT           E.164 phone number for sendSMS
  *   CIO_TEST_PUSH_TRANSACTIONAL_ID   transactional_message_id for sendPush
  *   CIO_TEST_PUSH_DEVICE_ID          device id for sendPush + addDevice
+ *   CIO_TEST_MANUAL_SEGMENT_ID       manual segment id for add/removeCustomersFromSegment
+ *   CIO_TEST_FORM_ID                 form id for submitForm
+ *   CIO_TEST_DELIVERY_ID             CIO-Delivery-ID for reportMetric + unsubscribe
  *
  * Profile lifecycle: one throwaway customer per run, id = `sdk-live-${uuid()}`.
  * Cleanup is best-effort; the dedicated workspace tolerates orphans.
@@ -70,6 +73,12 @@ liveTest('getCustomersByEmail returns the expected shape for an unknown address'
 liveTest('listExports resolves', async (t) => {
   const result = (await api!.listExports()) as { exports: unknown };
   t.true('exports' in result);
+});
+
+liveTest('getAccountRegion reports the workspace region', async (t) => {
+  const result = (await track!.getAccountRegion()) as { url?: string; region?: string };
+  t.truthy(result.url);
+  t.truthy(result.region);
 });
 
 // 2. Idempotent writes. Order matters: later tests assume the profile exists.
@@ -127,6 +136,16 @@ liveTest('batch sends a mixed batch', async (t) => {
       name: 'sdk_live_batch_event',
     },
   ]);
+  t.pass();
+});
+
+liveTest('entity sends a single identify operation', async (t) => {
+  await track!.entity({
+    type: 'person',
+    action: 'identify',
+    identifiers: { id: customerId },
+    attributes: { entity_at: new Date().toISOString() },
+  });
   t.pass();
 });
 
@@ -214,7 +233,36 @@ needs('CIO_TEST_NEWSLETTER_ID')('createDeliveriesExport queues an export', async
   t.truthy(result.export);
 });
 
-// 5. Destructive cleanup. Runs last; failures here are warnings on a dedicated
+// 5. Manual segments, forms, and metrics. Gated on workspace-specific IDs.
+
+needs('CIO_TEST_MANUAL_SEGMENT_ID')('add + removeCustomersFromSegment round-trip', async (t) => {
+  const segmentId = Number(process.env.CIO_TEST_MANUAL_SEGMENT_ID!);
+  await track!.addCustomersToSegment(segmentId, [customerId], IdentifierType.Id);
+  await track!.removeCustomersFromSegment(segmentId, [customerId], IdentifierType.Id);
+  t.pass();
+});
+
+needs('CIO_TEST_FORM_ID')('submitForm submits a form for the profile', async (t) => {
+  await track!.submitForm(process.env.CIO_TEST_FORM_ID!, { email: customerEmail, source: 'sdk-live-test' });
+  t.pass();
+});
+
+needs('CIO_TEST_DELIVERY_ID')('reportMetric reports a delivery metric', async (t) => {
+  await track!.reportMetric({
+    delivery_id: process.env.CIO_TEST_DELIVERY_ID!,
+    metric: 'opened',
+    timestamp: Math.floor(Date.now() / 1000),
+  });
+  t.pass();
+});
+
+needs('CIO_TEST_DELIVERY_ID')('unsubscribe toggles the unsubscribe state for a delivery', async (t) => {
+  await track!.unsubscribe(process.env.CIO_TEST_DELIVERY_ID!, true);
+  await track!.unsubscribe(process.env.CIO_TEST_DELIVERY_ID!, false);
+  t.pass();
+});
+
+// 6. Destructive cleanup. Runs last; failures here are warnings on a dedicated
 // test workspace.
 
 liveTest('deleteDevice removes the device from the profile', async (t) => {
