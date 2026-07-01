@@ -17,7 +17,9 @@ coverage.html
 
 .DS_Store
 dist/
-docs/
+# Generated Typedoc API reference output (see typedoc.json `out`).
+# The `docs/` folder itself holds hand-written guides and IS committed.
+typedoc/
 
 # Live integration test credentials (never commit)
 test/integration/live.env

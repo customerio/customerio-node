@@ -1,7 +1,7 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["index.ts"],
-  "out": "docs",
+  "out": "typedoc",
   "name": "customerio-node",
   "readme": "README.md",
   "excludePrivate": true,
