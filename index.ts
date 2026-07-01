@@ -3,6 +3,7 @@ export * from './lib/api';
 export * from './lib/pipelines';
 export * from './lib/regions';
 export * from './lib/types';
+export * from './lib/webhooks';
 export { CustomerIORequestError, MissingParamError } from './lib/utils';
 export type { ResponseLike } from './lib/utils';
 export type { RequestDefaults, RetryOptions, PushRequestData, MetricRequestData } from './lib/request';
