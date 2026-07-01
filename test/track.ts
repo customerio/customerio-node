@@ -243,6 +243,20 @@ test('#addDevice works with an empty data parameter', (t) => {
   );
 });
 
+test('#addDevice preserves a last_used timestamp of 0', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.context.client.addDevice(1, '123', 'ios', { last_used: 0 });
+  t.true(
+    put.calledWith(`${RegionUS.trackUrl}/customers/1/devices`, {
+      device: {
+        id: '123',
+        platform: 'ios',
+        last_used: 0,
+      },
+    }),
+  );
+});
+
 test('#deleteDevice works', (t) => {
   sinon.stub(t.context.client.request, 'destroy');
   t.throws(() => (t.context.client.deleteDevice as any)(''), { message: 'customerId is required' });
@@ -342,4 +356,174 @@ test('#batch throws when operations is empty', (t) => {
 test('#batch throws when operations is not an array', (t) => {
   t.throws(() => (t.context.client.batch as any)(undefined), { message: 'operations is required' });
   t.throws(() => (t.context.client.batch as any)({ batch: [] }), { message: 'operations is required' });
+});
+
+test('#getAccountRegion gets the accounts/region endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+
+  t.context.client.getAccountRegion();
+
+  t.true(get.calledOnce);
+  t.true(get.calledWith('https://track.customer.io/api/v1/accounts/region'));
+});
+
+test('#getAccountRegion uses the EU root when constructed with RegionEU', (t) => {
+  let client = new TrackClient('123', 'abc', { region: RegionEU });
+  const get = sinon.stub(client.request, 'get');
+
+  client.getAccountRegion();
+
+  t.true(get.calledWith('https://track-eu.customer.io/api/v1/accounts/region'));
+});
+
+test('#entity posts the operation to /api/v2/entity', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  const operation = { type: 'person', identifiers: { id: '1' }, action: 'identify', attributes: { plan: 'pro' } };
+
+  t.context.client.entity(operation);
+
+  t.true(post.calledOnce);
+  t.true(post.calledWith('https://track.customer.io/api/v2/entity', operation));
+});
+
+test('#entity uses the EU v2 root when constructed with RegionEU', (t) => {
+  let client = new TrackClient('123', 'abc', { region: RegionEU });
+  const post = sinon.stub(client.request, 'post');
+  const operation = { type: 'person', identifiers: { id: '1' }, action: 'identify' };
+
+  client.entity(operation);
+
+  t.true(post.calledWith('https://track-eu.customer.io/api/v2/entity', operation));
+});
+
+test('#entity throws when the operation is not a non-empty object', (t) => {
+  t.throws(() => (t.context.client.entity as any)(undefined), { message: 'operation is required' });
+  t.throws(() => (t.context.client.entity as any)('nope'), { message: 'operation is required' });
+  t.throws(() => (t.context.client.entity as any)([]), { message: 'operation is required' });
+  t.throws(() => t.context.client.entity({}), { message: 'operation is required' });
+});
+
+test('#addCustomersToSegment posts ids to the add_customers endpoint', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+
+  t.context.client.addCustomersToSegment(7, ['1', '2']);
+
+  t.true(post.calledOnce);
+  t.true(
+    post.calledWith('https://track.customer.io/api/v1/segments/7/add_customers', { ids: ['1', '2'] }),
+  );
+});
+
+test('#addCustomersToSegment appends id_type when provided', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+
+  t.context.client.addCustomersToSegment(7, ['a@example.com'], IdentifierType.Email);
+
+  t.true(
+    post.calledWith('https://track.customer.io/api/v1/segments/7/add_customers?id_type=email', {
+      ids: ['a@example.com'],
+    }),
+  );
+});
+
+test('#addCustomersToSegment validates its inputs', (t) => {
+  t.throws(() => t.context.client.addCustomersToSegment('', ['1']), { message: 'segmentId is required' });
+  t.throws(() => t.context.client.addCustomersToSegment(7, []), { message: 'customerIds is required' });
+  t.throws(() => (t.context.client.addCustomersToSegment as any)(7, '1'), { message: 'customerIds is required' });
+  t.throws(() => t.context.client.addCustomersToSegment(7, ['1'], 'nope' as any), {
+    message: 'idType must be one of "id", "cio_id", or "email"',
+  });
+});
+
+test('#removeCustomersFromSegment posts ids to the remove_customers endpoint', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+
+  t.context.client.removeCustomersFromSegment(7, ['1', '2'], IdentifierType.Id);
+
+  t.true(post.calledOnce);
+  t.true(
+    post.calledWith('https://track.customer.io/api/v1/segments/7/remove_customers?id_type=id', {
+      ids: ['1', '2'],
+    }),
+  );
+});
+
+test('#removeCustomersFromSegment omits id_type when not provided', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+
+  t.context.client.removeCustomersFromSegment(7, ['1', '2']);
+
+  t.true(
+    post.calledWith('https://track.customer.io/api/v1/segments/7/remove_customers', { ids: ['1', '2'] }),
+  );
+});
+
+test('#removeCustomersFromSegment validates its inputs', (t) => {
+  t.throws(() => t.context.client.removeCustomersFromSegment('', ['1']), { message: 'segmentId is required' });
+  t.throws(() => t.context.client.removeCustomersFromSegment(7, []), { message: 'customerIds is required' });
+  t.throws(() => t.context.client.removeCustomersFromSegment(7, ['1'], 'nope' as any), {
+    message: 'idType must be one of "id", "cio_id", or "email"',
+  });
+});
+
+test('#submitForm posts the data wrapped under a data key', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+
+  t.context.client.submitForm('signup', { email: 'a@example.com', plan: 'pro' });
+
+  t.true(post.calledOnce);
+  t.true(
+    post.calledWith('https://track.customer.io/api/v1/forms/signup/submit', {
+      data: { email: 'a@example.com', plan: 'pro' },
+    }),
+  );
+});
+
+test('#submitForm validates its inputs', (t) => {
+  t.throws(() => t.context.client.submitForm('', { email: 'a@example.com' }), { message: 'formId is required' });
+  t.throws(() => t.context.client.submitForm('signup', {}), { message: 'data is required' });
+  t.throws(() => (t.context.client.submitForm as any)('signup', null), { message: 'data is required' });
+  t.throws(() => (t.context.client.submitForm as any)('signup', 'nope'), { message: 'data is required' });
+  t.throws(() => (t.context.client.submitForm as any)('signup'), { message: 'data is required' });
+});
+
+test('#reportMetric posts to the /metrics endpoint', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  const data = { delivery_id: 'abc', metric: 'opened', timestamp: 1613063089 };
+
+  t.context.client.reportMetric(data);
+
+  t.true(post.calledOnce);
+  t.true(post.calledWith('https://track.customer.io/api/v1/metrics', data));
+});
+
+test('#reportMetric throws when delivery_id is missing', (t) => {
+  t.throws(() => t.context.client.reportMetric(), { message: 'data.delivery_id is required' });
+  t.throws(() => t.context.client.reportMetric({ metric: 'opened' }), {
+    message: 'data.delivery_id is required',
+  });
+});
+
+test('#unsubscribe posts to the root-level /unsubscribe path', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+
+  t.context.client.unsubscribe('RPILAgUBcRhIBqSfeiIwdIYJKxTY');
+
+  t.true(post.calledOnce);
+  t.true(
+    post.calledWith('https://track.customer.io/unsubscribe/RPILAgUBcRhIBqSfeiIwdIYJKxTY', { unsubscribe: true }),
+  );
+});
+
+test('#unsubscribe forwards a false flag and uses the EU host', (t) => {
+  let client = new TrackClient('123', 'abc', { region: RegionEU });
+  const post = sinon.stub(client.request, 'post');
+
+  client.unsubscribe('abc', false);
+
+  t.true(post.calledWith('https://track-eu.customer.io/unsubscribe/abc', { unsubscribe: false }));
+});
+
+test('#unsubscribe throws when deliveryId is empty', (t) => {
+  t.throws(() => t.context.client.unsubscribe(''), { message: 'deliveryId is required' });
 });

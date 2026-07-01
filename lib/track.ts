@@ -1,4 +1,11 @@
-import type { BasicAuth, RequestData, PushRequestData, RequestDefaults, RetryOptions } from './request';
+import type {
+  BasicAuth,
+  RequestData,
+  PushRequestData,
+  MetricRequestData,
+  RequestDefaults,
+  RetryOptions,
+} from './request';
 import Request from './request';
 import { Region, RegionUS } from './regions';
 import { isEmpty, isIdentifierType, MissingParamError } from './utils';
@@ -248,7 +255,7 @@ export class TrackClient {
       device: {
         id: device_id,
         platform,
-        ...(last_used ? { last_used } : {}),
+        ...(last_used != null ? { last_used } : {}),
         ...(Object.keys(attributes).length && { attributes }),
       },
     });
@@ -335,5 +342,175 @@ export class TrackClient {
         [secondaryIdType]: secondaryId,
       },
     });
+  }
+
+  /**
+   * Look up the data region your account belongs to.
+   *
+   * Confirms whether your workspace is hosted in the US or EU region and
+   * returns the base URL your other Track API calls should use.
+   *
+   * @returns The parsed JSON response body (`{ url, region, environment_id }`).
+   */
+  getAccountRegion() {
+    return this.request.get(`${this.trackRoot}/accounts/region`);
+  }
+
+  /**
+   * Send a single self-describing Track operation to the v2 entity endpoint.
+   *
+   * This is the singular counterpart to {@link TrackClient.batch}: `operation`
+   * is the same shape as one element of a `batch` array — an identify, track,
+   * delete, merge, add/remove relationship, add/remove device, etc.
+   *
+   * @param operation A single batch-style operation object.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `operation` is not a non-empty object.
+   */
+  entity(operation: BatchOperation) {
+    if (operation == null || typeof operation !== 'object' || Array.isArray(operation)) {
+      throw new MissingParamError('operation');
+    }
+
+    if (Object.keys(operation).length === 0) {
+      throw new MissingParamError('operation');
+    }
+
+    return this.request.post(`${this.trackV2Root}/entity`, operation);
+  }
+
+  /**
+   * Add people to a manual segment.
+   *
+   * @param segmentId The manual segment's id.
+   * @param customerIds The identifiers of the people to add (1–1000). The value
+   *   type must match `idType`; entries that don't match are ignored by the API.
+   * @param idType Which identifier kind the values in `customerIds` are. When
+   *   omitted, the API uses its default (`id`).
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `segmentId` is empty or `customerIds` is not a non-empty array.
+   * @throws {Error} If `idType` is provided and is not a valid {@link IdentifierType}.
+   */
+  addCustomersToSegment(segmentId: string | number, customerIds: Array<string | number>, idType?: IdentifierType) {
+    if (isEmpty(segmentId)) {
+      throw new MissingParamError('segmentId');
+    }
+
+    if (!Array.isArray(customerIds) || customerIds.length === 0) {
+      throw new MissingParamError('customerIds');
+    }
+
+    if (idType != null && !isIdentifierType(idType)) {
+      throw new Error('idType must be one of "id", "cio_id", or "email"');
+    }
+
+    const query = idType ? `?id_type=${idType}` : '';
+
+    return this.request.post(
+      `${this.trackRoot}/segments/${encodeURIComponent(segmentId)}/add_customers${query}`,
+      { ids: customerIds },
+    );
+  }
+
+  /**
+   * Remove people from a manual segment.
+   *
+   * @param segmentId The manual segment's id.
+   * @param customerIds The identifiers of the people to remove (1–1000). The value
+   *   type must match `idType`; entries that don't match are ignored by the API.
+   * @param idType Which identifier kind the values in `customerIds` are. When
+   *   omitted, the API uses its default (`id`).
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `segmentId` is empty or `customerIds` is not a non-empty array.
+   * @throws {Error} If `idType` is provided and is not a valid {@link IdentifierType}.
+   */
+  removeCustomersFromSegment(segmentId: string | number, customerIds: Array<string | number>, idType?: IdentifierType) {
+    if (isEmpty(segmentId)) {
+      throw new MissingParamError('segmentId');
+    }
+
+    if (!Array.isArray(customerIds) || customerIds.length === 0) {
+      throw new MissingParamError('customerIds');
+    }
+
+    if (idType != null && !isIdentifierType(idType)) {
+      throw new Error('idType must be one of "id", "cio_id", or "email"');
+    }
+
+    const query = idType ? `?id_type=${idType}` : '';
+
+    return this.request.post(
+      `${this.trackRoot}/segments/${encodeURIComponent(segmentId)}/remove_customers${query}`,
+      { ids: customerIds },
+    );
+  }
+
+  /**
+   * Submit a form on behalf of a person.
+   *
+   * The `data` object holds the submitted form fields. It must contain exactly
+   * one identifier (`email` or `id`, depending on your workspace settings) so
+   * the submission can be attributed to a person; the person is created if they
+   * don't already exist.
+   *
+   * @param formId The form's id.
+   * @param data The submitted form fields, including the identifier.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `formId` is empty or `data` is not a non-empty object.
+   */
+  submitForm(formId: string | number, data: RequestData = {}) {
+    if (isEmpty(formId)) {
+      throw new MissingParamError('formId');
+    }
+
+    if (data == null || typeof data !== 'object' || Object.keys(data).length === 0) {
+      throw new MissingParamError('data');
+    }
+
+    return this.request.post(`${this.trackRoot}/forms/${encodeURIComponent(formId)}/submit`, { data });
+  }
+
+  /**
+   * Report a delivery metric (open, click, bounce, etc.) back to Customer.io.
+   *
+   * Unlike {@link TrackClient.trackPush} (which targets push deliveries only via
+   * `/push/events`), this reports metrics for any channel — email, SMS, push,
+   * in-app, Slack, or webhook — to the `/metrics` endpoint. The valid `metric`
+   * values depend on the delivery's channel.
+   *
+   * @param data Metric payload. `delivery_id` is required; optionally include
+   *   `metric`, `timestamp`, `recipient`, `reason`, and `href`.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `data.delivery_id` is empty.
+   */
+  reportMetric(data: MetricRequestData = {}) {
+    if (isEmpty(data.delivery_id)) {
+      throw new MissingParamError('data.delivery_id');
+    }
+
+    return this.request.post(`${this.trackRoot}/metrics`, data);
+  }
+
+  /**
+   * Custom unsubscribe handling for a specific delivery.
+   *
+   * Sets (or clears) the recipient's `unsubscribed` attribute and attributes the
+   * change to the given delivery. This endpoint lives at the host root (not under
+   * `/api/v1`) and does not require authentication — the `deliveryId` itself is
+   * the secret.
+   *
+   * @param deliveryId The `CIO-Delivery-ID` of the message to unsubscribe from.
+   * @param unsubscribe When `true` (default) the person is unsubscribed; `false` resubscribes them.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `deliveryId` is empty.
+   */
+  unsubscribe(deliveryId: string | number, unsubscribe: boolean = true) {
+    if (isEmpty(deliveryId)) {
+      throw new MissingParamError('deliveryId');
+    }
+
+    const host = this.trackRoot.replace('/api/v1', '');
+
+    return this.request.post(`${host}/unsubscribe/${encodeURIComponent(deliveryId)}`, { unsubscribe });
   }
 }
