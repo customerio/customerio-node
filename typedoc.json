@@ -4,7 +4,7 @@
   "out": "typedoc",
   "name": "customerio-node",
   "readme": "README.md",
-  "projectDocuments": ["docs/track.md", "docs/app.md", "docs/pipelines.md"],
+  "projectDocuments": ["docs/track.md", "docs/app.md", "docs/pipelines.md", "docs/webhooks.md"],
   "excludePrivate": true,
   "excludeInternal": true,
   "excludeExternals": true,
