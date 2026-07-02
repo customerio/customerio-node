@@ -123,7 +123,7 @@ return cio.track(customerId, {
 
 ## API reference
 
-Method-level documentation for each client lives in the [`docs/`](./docs) folder:
+Method-level documentation for each client lives in the [`docs/`](https://github.com/customerio/customerio-node/tree/main/docs) folder:
 
 - [Track API](./docs/track.md) — `TrackClient`
 - [App API](./docs/app.md) — `APIClient`
