@@ -8,9 +8,66 @@ import {
   SendInboxMessageRequest,
   SendInAppRequest,
 } from './api/requests';
-import { isEmpty, isIdentifierType, MissingParamError } from './utils';
+import { isEmpty, isIdentifierType, buildQueryString, MissingParamError } from './utils';
 import type { Filter } from './types';
 import { IdentifierType } from './types';
+
+/** Which identifier kind the values in an object endpoint refer to. */
+export type ObjectIdType = 'object_id' | 'cio_object_id';
+
+/** Cursor pagination shared by most App API list endpoints. */
+export type PaginationOptions = {
+  /** Pagination cursor returned as `next` by a previous page. */
+  start?: string;
+  /** Maximum number of results to return in the page. */
+  limit?: number;
+};
+
+/** Options for {@link APIClient.getCustomerActivities}. */
+export type CustomerActivitiesOptions = PaginationOptions & {
+  /** Which identifier kind `customerId` is. Defaults to the API's default (`id`). */
+  idType?: IdentifierType;
+  /** Filter to a single activity type (e.g. `attribute_change`, `event`). */
+  type?: string;
+  /** Filter to activities with this name (e.g. the event name). */
+  name?: string;
+};
+
+/** Options for {@link APIClient.getCustomerMessages}. */
+export type CustomerMessagesOptions = PaginationOptions & {
+  idType?: IdentifierType;
+  /** Only include messages after this Unix timestamp (seconds). */
+  start_ts?: number;
+  /** Only include messages before this Unix timestamp (seconds). */
+  end_ts?: number;
+};
+
+/** Options for {@link APIClient.getCustomerSubscriptionPreferences}. */
+export type CustomerSubscriptionPreferencesOptions = {
+  idType?: IdentifierType;
+  /** IETF language tag used to localize topic names in the response. */
+  language?: string;
+};
+
+/** Options for {@link APIClient.getObjectRelationships}. */
+export type ObjectRelationshipsOptions = PaginationOptions & {
+  /** Which identifier kind `objectId` is. Defaults to the API's default (`object_id`). */
+  idType?: ObjectIdType;
+};
+
+/** Options for {@link APIClient.listActivities}. */
+export type ListActivitiesOptions = PaginationOptions & {
+  /** Filter to a single activity type. */
+  type?: string;
+  /** Filter to activities with this name. */
+  name?: string;
+  /** Include activities from deleted people. */
+  deleted?: boolean;
+  /** Scope to a single person's activities. */
+  customerId?: string | number;
+  /** Which identifier kind `customerId` is. */
+  idType?: IdentifierType;
+};
 
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
@@ -348,6 +405,277 @@ export class APIClient {
     }
 
     return this.request.get(`${this.apiRoot}/customers/${encodeURIComponent(id)}/attributes?id_type=${idType}`);
+  }
+
+  /**
+   * Look up a person's activities (events, attribute changes, message activity, …).
+   *
+   * @param customerId The person's identifier value.
+   * @param options Optional filters/pagination. See {@link CustomerActivitiesOptions}.
+   * @returns The parsed JSON response body (`{ activities: [...], next }`).
+   * @throws {MissingParamError} If `customerId` is empty.
+   * @throws {Error} If `options.idType` is provided and is not a valid {@link IdentifierType}.
+   */
+  getCustomerActivities(customerId: string | number, options: CustomerActivitiesOptions = {}) {
+    if (isEmpty(customerId)) {
+      throw new MissingParamError('customerId');
+    }
+
+    if (options.idType !== undefined && !isIdentifierType(options.idType)) {
+      throw new Error('idType must be one of "id", "cio_id", or "email"');
+    }
+
+    const query = buildQueryString({
+      id_type: options.idType,
+      start: options.start,
+      limit: options.limit,
+      type: options.type,
+      name: options.name,
+    });
+
+    return this.request.get(`${this.apiRoot}/customers/${encodeURIComponent(customerId)}/activities${query}`);
+  }
+
+  /**
+   * Look up messages sent to a person.
+   *
+   * @param customerId The person's identifier value.
+   * @param options Optional filters/pagination. See {@link CustomerMessagesOptions}.
+   * @returns The parsed JSON response body (`{ messages: [...], next }`).
+   * @throws {MissingParamError} If `customerId` is empty.
+   * @throws {Error} If `options.idType` is provided and is not a valid {@link IdentifierType}.
+   */
+  getCustomerMessages(customerId: string | number, options: CustomerMessagesOptions = {}) {
+    if (isEmpty(customerId)) {
+      throw new MissingParamError('customerId');
+    }
+
+    if (options.idType !== undefined && !isIdentifierType(options.idType)) {
+      throw new Error('idType must be one of "id", "cio_id", or "email"');
+    }
+
+    const query = buildQueryString({
+      id_type: options.idType,
+      start: options.start,
+      limit: options.limit,
+      start_ts: options.start_ts,
+      end_ts: options.end_ts,
+    });
+
+    return this.request.get(`${this.apiRoot}/customers/${encodeURIComponent(customerId)}/messages${query}`);
+  }
+
+  /**
+   * Look up a person's relationships to objects.
+   *
+   * @param customerId The person's identifier value.
+   * @param options Optional pagination. See {@link PaginationOptions}.
+   * @returns The parsed JSON response body (`{ identifiers: [...], relationships: [...], next }`).
+   * @throws {MissingParamError} If `customerId` is empty.
+   */
+  getCustomerRelationships(customerId: string | number, options: PaginationOptions = {}) {
+    if (isEmpty(customerId)) {
+      throw new MissingParamError('customerId');
+    }
+
+    const query = buildQueryString({ start: options.start, limit: options.limit });
+
+    return this.request.get(`${this.apiRoot}/customers/${encodeURIComponent(customerId)}/relationships${query}`);
+  }
+
+  /**
+   * Look up the segments a person belongs to.
+   *
+   * @param customerId The person's identifier value.
+   * @param idType Which identifier kind `customerId` is. Defaults to {@link IdentifierType.Id}.
+   * @returns The parsed JSON response body (`{ segments: [...] }`).
+   * @throws {MissingParamError} If `customerId` is empty.
+   * @throws {Error} If `idType` is not a valid {@link IdentifierType}.
+   */
+  getCustomerSegments(customerId: string | number, idType: IdentifierType = IdentifierType.Id) {
+    if (isEmpty(customerId)) {
+      throw new MissingParamError('customerId');
+    }
+
+    if (!isIdentifierType(idType)) {
+      throw new Error('idType must be one of "id", "cio_id", or "email"');
+    }
+
+    const query = buildQueryString({ id_type: idType });
+
+    return this.request.get(`${this.apiRoot}/customers/${encodeURIComponent(customerId)}/segments${query}`);
+  }
+
+  /**
+   * Look up a person's subscription (topic) preferences.
+   *
+   * @param customerId The person's identifier value.
+   * @param options Optional identifier kind and localization. See {@link CustomerSubscriptionPreferencesOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `customerId` is empty.
+   * @throws {Error} If `options.idType` is provided and is not a valid {@link IdentifierType}.
+   */
+  getCustomerSubscriptionPreferences(
+    customerId: string | number,
+    options: CustomerSubscriptionPreferencesOptions = {},
+  ) {
+    if (isEmpty(customerId)) {
+      throw new MissingParamError('customerId');
+    }
+
+    if (options.idType !== undefined && !isIdentifierType(options.idType)) {
+      throw new Error('idType must be one of "id", "cio_id", or "email"');
+    }
+
+    const query = buildQueryString({ id_type: options.idType, language: options.language });
+
+    return this.request.get(
+      `${this.apiRoot}/customers/${encodeURIComponent(customerId)}/subscription_preferences${query}`,
+    );
+  }
+
+  /**
+   * Search for people matching a filter.
+   *
+   * @param filter A segment/attribute filter expression (and/or/not). See {@link Filter}.
+   * @param options Optional pagination. See {@link PaginationOptions}.
+   * @returns The parsed JSON response body (`{ identifiers: [...], ids: [...], next }`).
+   * @throws {MissingParamError} If `filter` is `null` or `undefined`.
+   */
+  searchCustomers(filter: Filter, options: PaginationOptions = {}) {
+    if (filter == null) {
+      throw new MissingParamError('filter');
+    }
+
+    const query = buildQueryString({ start: options.start, limit: options.limit });
+
+    return this.request.post(`${this.apiRoot}/customers${query}`, { filter });
+  }
+
+  /**
+   * Look up attributes and devices for a set of people in one request.
+   *
+   * @param ids The identifiers of the people to look up (non-empty).
+   * @returns The parsed JSON response body (`{ customers: [...] }`).
+   * @throws {MissingParamError} If `ids` is not a non-empty array.
+   */
+  getCustomersAttributes(ids: Array<string | number>) {
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new MissingParamError('ids');
+    }
+
+    return this.request.post(`${this.apiRoot}/customers/attributes`, { ids });
+  }
+
+  /**
+   * Get an object's attributes.
+   *
+   * @param objectTypeId The object type's numeric id.
+   * @param objectId The object's identifier value.
+   * @param idType Which identifier kind `objectId` is (`object_id` or `cio_object_id`).
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `objectTypeId` or `objectId` is empty.
+   */
+  getObjectAttributes(objectTypeId: string | number, objectId: string | number, idType?: ObjectIdType) {
+    if (isEmpty(objectTypeId)) {
+      throw new MissingParamError('objectTypeId');
+    }
+
+    if (isEmpty(objectId)) {
+      throw new MissingParamError('objectId');
+    }
+
+    const query = buildQueryString({ id_type: idType });
+
+    return this.request.get(
+      `${this.apiRoot}/objects/${encodeURIComponent(objectTypeId)}/${encodeURIComponent(objectId)}/attributes${query}`,
+    );
+  }
+
+  /**
+   * Get an object's relationships to people.
+   *
+   * @param objectTypeId The object type's numeric id.
+   * @param objectId The object's identifier value.
+   * @param options Optional identifier kind and pagination. See {@link ObjectRelationshipsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `objectTypeId` or `objectId` is empty.
+   */
+  getObjectRelationships(
+    objectTypeId: string | number,
+    objectId: string | number,
+    options: ObjectRelationshipsOptions = {},
+  ) {
+    if (isEmpty(objectTypeId)) {
+      throw new MissingParamError('objectTypeId');
+    }
+
+    if (isEmpty(objectId)) {
+      throw new MissingParamError('objectId');
+    }
+
+    const query = buildQueryString({ id_type: options.idType, start: options.start, limit: options.limit });
+
+    return this.request.get(
+      `${this.apiRoot}/objects/${encodeURIComponent(objectTypeId)}/${encodeURIComponent(objectId)}/relationships${query}`,
+    );
+  }
+
+  /**
+   * Find objects of a given type matching a filter.
+   *
+   * @param objectTypeId The object type's numeric id.
+   * @param filter A filter expression (and/or/not). See {@link Filter}.
+   * @param options Optional pagination. See {@link PaginationOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `objectTypeId` is empty or `filter` is `null`/`undefined`.
+   */
+  findObjects(objectTypeId: string | number, filter: Filter, options: PaginationOptions = {}) {
+    if (isEmpty(objectTypeId)) {
+      throw new MissingParamError('objectTypeId');
+    }
+
+    if (filter == null) {
+      throw new MissingParamError('filter');
+    }
+
+    const query = buildQueryString({ start: options.start, limit: options.limit });
+
+    return this.request.post(`${this.apiRoot}/objects${query}`, { object_type_id: objectTypeId, filter });
+  }
+
+  /**
+   * List the object types defined in your workspace.
+   *
+   * @returns The parsed JSON response body (`{ types: [...] }`).
+   */
+  listObjectTypes() {
+    return this.request.get(`${this.apiRoot}/object_types`);
+  }
+
+  /**
+   * List activities across your workspace.
+   *
+   * @param options Optional filters/pagination. See {@link ListActivitiesOptions}.
+   * @returns The parsed JSON response body (`{ activities: [...], next }`).
+   * @throws {Error} If `options.idType` is provided and is not a valid {@link IdentifierType}.
+   */
+  listActivities(options: ListActivitiesOptions = {}) {
+    if (options.idType !== undefined && !isIdentifierType(options.idType)) {
+      throw new Error('idType must be one of "id", "cio_id", or "email"');
+    }
+
+    const query = buildQueryString({
+      start: options.start,
+      limit: options.limit,
+      type: options.type,
+      name: options.name,
+      deleted: options.deleted,
+      customer_id: options.customerId,
+      id_type: options.idType,
+    });
+
+    return this.request.get(`${this.apiRoot}/activities${query}`);
   }
 }
 

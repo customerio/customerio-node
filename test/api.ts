@@ -863,3 +863,139 @@ test('constructor: cross-copy branded Region passes instanceof check', (t) => {
 
   t.notThrows(() => new APIClient('appKey', { region: fakeRegion as any }));
 });
+
+// --- Batch 1: Customers & objects (CDP-6265) ---
+
+const API = RegionUS.apiUrl;
+
+test('#getCustomerActivities: requires customerId', (t) => {
+  t.throws(() => (t.context.client.getCustomerActivities as any)(''), { message: 'customerId is required' });
+});
+
+test('#getCustomerActivities: validates idType', (t) => {
+  t.throws(() => t.context.client.getCustomerActivities('1', { idType: 'nope' as any }), {
+    message: 'idType must be one of "id", "cio_id", or "email"',
+  });
+});
+
+test('#getCustomerActivities: no options omits the query string', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getCustomerActivities('1');
+  t.true(get.calledWith(`${API}/customers/1/activities`));
+});
+
+test('#getCustomerActivities: forwards filters as query params', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getCustomerActivities('1', {
+    idType: IdentifierType.Email,
+    start: 'abc',
+    limit: 50,
+    type: 'event',
+    name: 'signup',
+  });
+  t.true(get.calledWith(`${API}/customers/1/activities?id_type=email&start=abc&limit=50&type=event&name=signup`));
+});
+
+test('#getCustomerMessages: forwards timestamp filters', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getCustomerMessages('1', { start_ts: 100, end_ts: 200, limit: 10 });
+  t.true(get.calledWith(`${API}/customers/1/messages?limit=10&start_ts=100&end_ts=200`));
+});
+
+test('#getCustomerMessages: requires customerId and validates idType', (t) => {
+  t.throws(() => (t.context.client.getCustomerMessages as any)(''), { message: 'customerId is required' });
+  t.throws(() => t.context.client.getCustomerMessages('1', { idType: 'nope' as any }), {
+    message: 'idType must be one of "id", "cio_id", or "email"',
+  });
+});
+
+test('#getCustomerRelationships: paginates and requires customerId', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => (t.context.client.getCustomerRelationships as any)(''), { message: 'customerId is required' });
+  t.context.client.getCustomerRelationships('1', { start: 'cur', limit: 5 });
+  t.true(get.calledWith(`${API}/customers/1/relationships?start=cur&limit=5`));
+});
+
+test('#getCustomerSegments: defaults id_type to id and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => (t.context.client.getCustomerSegments as any)(''), { message: 'customerId is required' });
+  t.throws(() => t.context.client.getCustomerSegments('1', 'nope' as any), {
+    message: 'idType must be one of "id", "cio_id", or "email"',
+  });
+  t.context.client.getCustomerSegments('1');
+  t.true(get.calledWith(`${API}/customers/1/segments?id_type=id`));
+});
+
+test('#getCustomerSubscriptionPreferences: forwards language and id_type', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => (t.context.client.getCustomerSubscriptionPreferences as any)(''), {
+    message: 'customerId is required',
+  });
+  t.throws(() => t.context.client.getCustomerSubscriptionPreferences('1', { idType: 'nope' as any }), {
+    message: 'idType must be one of "id", "cio_id", or "email"',
+  });
+  t.context.client.getCustomerSubscriptionPreferences('1', { idType: IdentifierType.CioId, language: 'es-ES' });
+  t.true(get.calledWith(`${API}/customers/1/subscription_preferences?id_type=cio_id&language=es-ES`));
+});
+
+test('#searchCustomers: posts filter with pagination query', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  const filter: Filter = { and: [{ segment: { id: 7 } }] };
+  t.throws(() => (t.context.client.searchCustomers as any)(null), { message: 'filter is required' });
+  t.context.client.searchCustomers(filter, { limit: 100 });
+  t.true(post.calledWith(`${API}/customers?limit=100`, { filter }));
+});
+
+test('#getCustomersAttributes: posts a non-empty ids array', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.getCustomersAttributes([]), { message: 'ids is required' });
+  t.throws(() => (t.context.client.getCustomersAttributes as any)('1'), { message: 'ids is required' });
+  t.context.client.getCustomersAttributes(['1', '2']);
+  t.true(post.calledWith(`${API}/customers/attributes`, { ids: ['1', '2'] }));
+});
+
+test('#getObjectAttributes: builds the object path and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getObjectAttributes('', 'acme'), { message: 'objectTypeId is required' });
+  t.throws(() => t.context.client.getObjectAttributes(1, ''), { message: 'objectId is required' });
+  t.context.client.getObjectAttributes(1, 'acme', 'cio_object_id');
+  t.true(get.calledWith(`${API}/objects/1/acme/attributes?id_type=cio_object_id`));
+});
+
+test('#getObjectRelationships: paginates the object relationships path', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getObjectRelationships('', 'acme'), { message: 'objectTypeId is required' });
+  t.throws(() => t.context.client.getObjectRelationships(1, ''), { message: 'objectId is required' });
+  t.context.client.getObjectRelationships(1, 'acme', { start: 'c', limit: 20 });
+  t.true(get.calledWith(`${API}/objects/1/acme/relationships?start=c&limit=20`));
+});
+
+test('#findObjects: posts object_type_id + filter with pagination', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  const filter: Filter = { or: [{ attribute: { field: 'plan', operator: 'eq' as any, value: 'pro' } }] };
+  t.throws(() => t.context.client.findObjects('', filter), { message: 'objectTypeId is required' });
+  t.throws(() => (t.context.client.findObjects as any)(1, null), { message: 'filter is required' });
+  t.context.client.findObjects(1, filter, { start: 'c' });
+  t.true(post.calledWith(`${API}/objects?start=c`, { object_type_id: 1, filter }));
+});
+
+test('#listObjectTypes: gets the object_types endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listObjectTypes();
+  t.true(get.calledWith(`${API}/object_types`));
+});
+
+test('#listActivities: forwards filters and validates idType', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.listActivities({ idType: 'nope' as any }), {
+    message: 'idType must be one of "id", "cio_id", or "email"',
+  });
+  t.context.client.listActivities({ type: 'event', deleted: true, customerId: '1', idType: IdentifierType.Id });
+  t.true(get.calledWith(`${API}/activities?type=event&deleted=true&customer_id=1&id_type=id`));
+});
+
+test('#listActivities: no options omits the query string', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listActivities();
+  t.true(get.calledWith(`${API}/activities`));
+});

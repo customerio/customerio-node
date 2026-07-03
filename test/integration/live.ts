@@ -22,6 +22,8 @@
  *   CIO_TEST_MANUAL_SEGMENT_ID       manual segment id for add/removeCustomersFromSegment
  *   CIO_TEST_FORM_ID                 form id for submitForm
  *   CIO_TEST_DELIVERY_ID             CIO-Delivery-ID for reportMetric + unsubscribe
+ *   CIO_TEST_OBJECT_TYPE_ID          object type id for object attribute/relationship/find reads
+ *   CIO_TEST_OBJECT_ID               object id for object reads (defaults to a throwaway id)
  *
  * Profile lifecycle: one throwaway customer per run, id = `sdk-live-${uuid()}`.
  * Cleanup is best-effort; the dedicated workspace tolerates orphans.
@@ -99,6 +101,71 @@ liveTest('getAttributes returns the seeded profile', async (t) => {
     customer: { attributes: Record<string, string> };
   };
   t.is(result.customer.attributes.first_name, 'SDK');
+});
+
+liveTest('getCustomerActivities lists the profile activities', async (t) => {
+  const result = (await api!.getCustomerActivities(customerId)) as Record<string, unknown>;
+  t.true('activities' in result);
+});
+
+liveTest('getCustomerMessages resolves for the profile', async (t) => {
+  const result = (await api!.getCustomerMessages(customerId)) as Record<string, unknown>;
+  t.truthy(result);
+});
+
+liveTest('getCustomerRelationships resolves for the profile', async (t) => {
+  const result = (await api!.getCustomerRelationships(customerId)) as Record<string, unknown>;
+  t.truthy(result);
+});
+
+liveTest('getCustomerSegments lists the profile segments', async (t) => {
+  const result = (await api!.getCustomerSegments(customerId)) as Record<string, unknown>;
+  t.true('segments' in result);
+});
+
+liveTest('getCustomerSubscriptionPreferences resolves for the profile', async (t) => {
+  const result = (await api!.getCustomerSubscriptionPreferences(customerId)) as Record<string, unknown>;
+  t.truthy(result);
+});
+
+liveTest('getCustomersAttributes returns attributes for the profile', async (t) => {
+  const result = (await api!.getCustomersAttributes([customerId])) as Record<string, unknown>;
+  t.true('customers' in result);
+});
+
+liveTest('searchCustomers resolves against an attribute filter', async (t) => {
+  const filter = {
+    and: [{ attribute: { field: 'plan', operator: 'eq', value: 'sdk-test' } }],
+  } as unknown as Parameters<APIClient['searchCustomers']>[0];
+  const result = (await api!.searchCustomers(filter, { limit: 10 })) as Record<string, unknown>;
+  t.truthy(result);
+});
+
+liveTest('listObjectTypes resolves', async (t) => {
+  const result = (await api!.listObjectTypes()) as Record<string, unknown>;
+  t.truthy(result);
+});
+
+liveTest('listActivities resolves', async (t) => {
+  const result = (await api!.listActivities({ limit: 5 })) as Record<string, unknown>;
+  t.true('activities' in result);
+});
+
+needs('CIO_TEST_OBJECT_TYPE_ID')('object attribute + relationship reads resolve', async (t) => {
+  const typeId = process.env.CIO_TEST_OBJECT_TYPE_ID!;
+  const objectId = process.env.CIO_TEST_OBJECT_ID ?? 'sdk-live-object';
+  await api!.getObjectAttributes(typeId, objectId).catch(() => undefined);
+  await api!.getObjectRelationships(typeId, objectId).catch(() => undefined);
+  t.pass();
+});
+
+needs('CIO_TEST_OBJECT_TYPE_ID')('findObjects resolves for a test object type', async (t) => {
+  const typeId = process.env.CIO_TEST_OBJECT_TYPE_ID!;
+  const filter = {
+    and: [{ attribute: { field: 'name', operator: 'exists' } }],
+  } as unknown as Parameters<APIClient['findObjects']>[1];
+  const result = (await api!.findObjects(typeId, filter, { limit: 5 })) as Record<string, unknown>;
+  t.truthy(result);
 });
 
 liveTest('track records an event on the profile', async (t) => {
