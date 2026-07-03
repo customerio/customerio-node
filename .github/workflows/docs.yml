@@ -1,0 +1,55 @@
+name: docs
+
+# Build the Typedoc API reference and publish it to GitHub Pages.
+# Runs on every push to main; can also be triggered manually.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Grant the token the permissions the Pages deploy needs. `id-token` is
+# required by actions/deploy-pages for OIDC.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent Pages deployment. Don't cancel an in-progress run,
+# so a deploy always finishes cleanly.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      - name: build typedoc
+        # Outputs to ./typedoc (see `out` in typedoc.json).
+        run: npm run docs
+
+      - name: upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: typedoc
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: deploy to github pages
+        id: deployment
+        uses: actions/deploy-pages@v4

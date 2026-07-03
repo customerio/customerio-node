@@ -1,13 +1,14 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["index.ts"],
-  "out": "docs",
+  "out": "typedoc",
   "name": "customerio-node",
   "readme": "README.md",
+  "projectDocuments": ["docs/track.md", "docs/app.md", "docs/pipelines.md", "docs/webhooks.md"],
   "excludePrivate": true,
   "excludeInternal": true,
   "excludeExternals": true,
-  "githubPages": false,
+  "githubPages": true,
   "categorizeByGroup": true,
   "sort": ["source-order"],
   "navigation": {
@@ -29,7 +30,6 @@
     "SendInAppRequestOptionalOptions",
     "PipelinesIdentifier",
     "RequestData",
-    "PushRequestData",
     "default"
   ]
 }
