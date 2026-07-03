@@ -162,8 +162,8 @@ needs('CIO_TEST_OBJECT_TYPE_ID')('object attribute + relationship reads resolve'
 needs('CIO_TEST_OBJECT_TYPE_ID')('findObjects resolves for a test object type', async (t) => {
   const typeId = process.env.CIO_TEST_OBJECT_TYPE_ID!;
   const filter = {
-    and: [{ attribute: { field: 'name', operator: 'exists' } }],
-  } as unknown as Parameters<APIClient['findObjects']>[1];
+    and: [{ object_attribute: { field: 'name', operator: 'exists', type_id: Number(typeId) } }],
+  };
   const result = (await api!.findObjects(typeId, filter, { limit: 5 })) as Record<string, unknown>;
   t.truthy(result);
 });

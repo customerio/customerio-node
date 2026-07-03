@@ -13,6 +13,15 @@ export const isIdentifierType = (value: unknown) => {
 };
 
 /**
+ * Returns `true` if `value` is a valid object identifier kind (`object_id` or
+ * `cio_object_id`). Objects use a different id vocabulary than people, so this
+ * is intentionally separate from {@link isIdentifierType}.
+ */
+export const isObjectIdType = (value: unknown) => {
+  return value === 'object_id' || value === 'cio_object_id';
+};
+
+/**
  * Build a URL query string from a map of parameters.
  *
  * `null` and `undefined` values are omitted (so optional params disappear

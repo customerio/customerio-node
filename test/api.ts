@@ -958,6 +958,9 @@ test('#getObjectAttributes: builds the object path and validates', (t) => {
   const get = sinon.stub(t.context.client.request, 'get');
   t.throws(() => t.context.client.getObjectAttributes('', 'acme'), { message: 'objectTypeId is required' });
   t.throws(() => t.context.client.getObjectAttributes(1, ''), { message: 'objectId is required' });
+  t.throws(() => t.context.client.getObjectAttributes(1, 'acme', 'id' as any), {
+    message: 'idType must be one of "object_id" or "cio_object_id"',
+  });
   t.context.client.getObjectAttributes(1, 'acme', 'cio_object_id');
   t.true(get.calledWith(`${API}/objects/1/acme/attributes?id_type=cio_object_id`));
 });
@@ -966,13 +969,16 @@ test('#getObjectRelationships: paginates the object relationships path', (t) => 
   const get = sinon.stub(t.context.client.request, 'get');
   t.throws(() => t.context.client.getObjectRelationships('', 'acme'), { message: 'objectTypeId is required' });
   t.throws(() => t.context.client.getObjectRelationships(1, ''), { message: 'objectId is required' });
-  t.context.client.getObjectRelationships(1, 'acme', { start: 'c', limit: 20 });
-  t.true(get.calledWith(`${API}/objects/1/acme/relationships?start=c&limit=20`));
+  t.throws(() => t.context.client.getObjectRelationships(1, 'acme', { idType: 'id' as any }), {
+    message: 'idType must be one of "object_id" or "cio_object_id"',
+  });
+  t.context.client.getObjectRelationships(1, 'acme', { idType: 'object_id', start: 'c', limit: 20 });
+  t.true(get.calledWith(`${API}/objects/1/acme/relationships?id_type=object_id&start=c&limit=20`));
 });
 
 test('#findObjects: posts object_type_id + filter with pagination', (t) => {
   const post = sinon.stub(t.context.client.request, 'post');
-  const filter: Filter = { or: [{ attribute: { field: 'plan', operator: 'eq' as any, value: 'pro' } }] };
+  const filter = { and: [{ object_attribute: { field: 'name', operator: 'eq', value: 'acme', type_id: 1 } }] };
   t.throws(() => t.context.client.findObjects('', filter), { message: 'objectTypeId is required' });
   t.throws(() => (t.context.client.findObjects as any)(1, null), { message: 'filter is required' });
   t.context.client.findObjects(1, filter, { start: 'c' });

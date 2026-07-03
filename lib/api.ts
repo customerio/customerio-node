@@ -8,7 +8,7 @@ import {
   SendInboxMessageRequest,
   SendInAppRequest,
 } from './api/requests';
-import { isEmpty, isIdentifierType, buildQueryString, MissingParamError } from './utils';
+import { isEmpty, isIdentifierType, isObjectIdType, buildQueryString, MissingParamError } from './utils';
 import type { Filter } from './types';
 import { IdentifierType } from './types';
 
@@ -585,6 +585,10 @@ export class APIClient {
       throw new MissingParamError('objectId');
     }
 
+    if (idType !== undefined && !isObjectIdType(idType)) {
+      throw new Error('idType must be one of "object_id" or "cio_object_id"');
+    }
+
     const query = buildQueryString({ id_type: idType });
 
     return this.request.get(
@@ -614,6 +618,10 @@ export class APIClient {
       throw new MissingParamError('objectId');
     }
 
+    if (options.idType !== undefined && !isObjectIdType(options.idType)) {
+      throw new Error('idType must be one of "object_id" or "cio_object_id"');
+    }
+
     const query = buildQueryString({ id_type: options.idType, start: options.start, limit: options.limit });
 
     return this.request.get(
@@ -625,12 +633,19 @@ export class APIClient {
    * Find objects of a given type matching a filter.
    *
    * @param objectTypeId The object type's numeric id.
-   * @param filter A filter expression (and/or/not). See {@link Filter}.
+   * @param filter A filter expression (and/or/not).
    * @param options Optional pagination. See {@link PaginationOptions}.
    * @returns The parsed JSON response body.
    * @throws {MissingParamError} If `objectTypeId` is empty or `filter` is `null`/`undefined`.
+   *
+   * @remarks
+   * The object filter schema differs from the audience {@link Filter} (it uses
+   * `object_attribute` conditions with a `type_id` and has no `segment`). A
+   * dedicated `ObjectFilter` type (plus top-level `not` support for both
+   * filters) is tracked as a follow-up; for now `filter` is typed loosely as
+   * `Record<string, any>` to avoid implying the audience shape is accepted.
    */
-  findObjects(objectTypeId: string | number, filter: Filter, options: PaginationOptions = {}) {
+  findObjects(objectTypeId: string | number, filter: Record<string, any>, options: PaginationOptions = {}) {
     if (isEmpty(objectTypeId)) {
       throw new MissingParamError('objectTypeId');
     }
