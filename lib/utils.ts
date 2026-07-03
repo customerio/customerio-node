@@ -33,7 +33,7 @@ export const buildQueryString = (params: Record<string, string | number | boolea
   const parts: string[] = [];
 
   for (const [key, value] of Object.entries(params)) {
-    if (value === null || value === undefined) {
+    if (value === null || value === undefined || value === '') {
       continue;
     }
 
