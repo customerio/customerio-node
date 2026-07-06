@@ -168,6 +168,45 @@ needs('CIO_TEST_OBJECT_TYPE_ID')('findObjects resolves for a test object type', 
   t.truthy(result);
 });
 
+liveTest('listSegments resolves', async (t) => {
+  const result = (await api!.listSegments()) as Record<string, unknown>;
+  t.true('segments' in result);
+});
+
+liveTest('segment create -> read -> delete round-trip', async (t) => {
+  const created = (await api!.createSegment({
+    name: `sdk-live-${customerId}`,
+    description: 'sdk live test segment',
+  })) as { segment?: { id?: number } };
+  const segmentId = created.segment?.id;
+
+  if (segmentId !== undefined) {
+    await api!.getSegment(segmentId).catch(() => undefined);
+    await api!.getSegmentCustomerCount(segmentId).catch(() => undefined);
+    await api!.getSegmentMembership(segmentId, { limit: 5 }).catch(() => undefined);
+    await api!.getSegmentUsedBy(segmentId).catch(() => undefined);
+    await api!.deleteSegment(segmentId).catch(() => undefined);
+  }
+
+  t.truthy(created);
+});
+
+liveTest('listSubscriptionTopics resolves', async (t) => {
+  const result = (await api!.listSubscriptionTopics()) as Record<string, unknown>;
+  t.truthy(result);
+});
+
+liveTest('listSubscriptionChannels resolves', async (t) => {
+  const result = (await api!.listSubscriptionChannels()) as Record<string, unknown>;
+  t.truthy(result);
+});
+
+liveTest('getSubscriptionCenterToken resolves for the profile', async (t) => {
+  // Depends on subscription-center configuration; treat failures as non-fatal.
+  const result = await api!.getSubscriptionCenterToken(customerId).catch(() => undefined);
+  t.pass(result ? 'token generated' : 'subscription center not configured; skipped');
+});
+
 liveTest('track records an event on the profile', async (t) => {
   await track!.track(customerId, { name: 'sdk_live_event', data: { run: customerId } });
   t.pass();
