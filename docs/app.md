@@ -150,6 +150,163 @@ api.getAttributes("1", IdentifierType.ID);
 - **id**: Customer identifier, String or number (required)
 - **id_type**: One of the ID types - "id" / "email" / "cio_id" (default is "id")
 
+### api.getCustomerActivities(customerId, options)
+
+Look up a person's activities (events, attribute changes, message activity, etc.).
+
+```javascript
+api.getCustomerActivities("1", { type: "event", name: "purchase", limit: 50 });
+```
+
+#### Options
+
+- **customerId**: Customer identifier, String or number (required)
+- **options**: Object (optional)
+  - _idType_: One of "id" / "email" / "cio_id" (defaults to "id")
+  - _start_: Pagination cursor from a previous page's `next`
+  - _limit_: Maximum number of results
+  - _type_: Filter to a single [activity type](https://docs.customer.io/api/app/#operation/listCustomerActivities)
+  - _name_: Filter to activities with this name
+
+### api.getCustomerMessages(customerId, options)
+
+Look up messages sent to a person.
+
+```javascript
+api.getCustomerMessages("1", { start_ts: 1719792000, end_ts: 1719878400 });
+```
+
+#### Options
+
+- **customerId**: Customer identifier, String or number (required)
+- **options**: Object (optional) — `idType`, `start`, `limit`, and `start_ts` / `end_ts` Unix timestamp bounds
+
+### api.getCustomerRelationships(customerId, options)
+
+Look up a person's relationships to objects.
+
+```javascript
+api.getCustomerRelationships("1", { limit: 20 });
+```
+
+#### Options
+
+- **customerId**: Customer identifier, String or number (required)
+- **options**: Object (optional) — `start`, `limit`
+
+### api.getCustomerSegments(customerId, idType)
+
+Look up the segments a person belongs to.
+
+```javascript
+api.getCustomerSegments("1", IdentifierType.Id);
+```
+
+#### Options
+
+- **customerId**: Customer identifier, String or number (required)
+- **idType**: One of "id" / "email" / "cio_id" (default is "id")
+
+### api.getCustomerSubscriptionPreferences(customerId, options)
+
+Look up a person's subscription (topic) preferences.
+
+```javascript
+api.getCustomerSubscriptionPreferences("1", { language: "es-ES" });
+```
+
+#### Options
+
+- **customerId**: Customer identifier, String or number (required)
+- **options**: Object (optional) — `idType`, and `language` (an IETF language tag used to localize topic names)
+
+### api.searchCustomers(filter, options)
+
+Search for people matching a filter expression.
+
+```javascript
+api.searchCustomers({ and: [{ segment: { id: 7 } }] }, { limit: 100 });
+```
+
+#### Options
+
+- **filter**: A segment/attribute filter expression (and/or/not) (required)
+- **options**: Object (optional) — `start`, `limit`
+
+### api.getCustomersAttributes(ids)
+
+Look up attributes and devices for a set of people in one request.
+
+```javascript
+api.getCustomersAttributes(["1", "2", "3"]);
+```
+
+#### Options
+
+- **ids**: A non-empty array of customer identifiers (required)
+
+### api.getObjectAttributes(objectTypeId, objectId, idType)
+
+Get an object's attributes.
+
+```javascript
+api.getObjectAttributes(1, "acme", "object_id");
+```
+
+#### Options
+
+- **objectTypeId**: The object type's numeric id (required)
+- **objectId**: The object's identifier value (required)
+- **idType**: One of "object_id" / "cio_object_id" (defaults to "object_id")
+
+### api.getObjectRelationships(objectTypeId, objectId, options)
+
+Get an object's relationships to people.
+
+```javascript
+api.getObjectRelationships(1, "acme", { limit: 20 });
+```
+
+#### Options
+
+- **objectTypeId**: The object type's numeric id (required)
+- **objectId**: The object's identifier value (required)
+- **options**: Object (optional) — `idType` ("object_id" / "cio_object_id"), `start`, `limit`
+
+### api.findObjects(objectTypeId, filter, options)
+
+Find objects of a given type matching a filter expression.
+
+```javascript
+api.findObjects(1, { and: [{ attribute: { field: "plan", operator: "eq", value: "pro" } }] });
+```
+
+#### Options
+
+- **objectTypeId**: The object type's numeric id (required)
+- **filter**: A filter expression (and/or/not) (required)
+- **options**: Object (optional) — `start`, `limit`
+
+### api.listObjectTypes()
+
+List the object types defined in your workspace.
+
+```javascript
+api.listObjectTypes();
+```
+
+### api.listActivities(options)
+
+List activities across your workspace.
+
+```javascript
+api.listActivities({ type: "event", customerId: "1", idType: IdentifierType.Id });
+```
+
+#### Options
+
+- **options**: Object (optional) — `start`, `limit`, `type`, `name`, `deleted`, `customerId`, `idType`
+
 ### api.listExports()
 
 Return a list of your exports. Exports are point-in-time people or campaign metrics.

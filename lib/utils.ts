@@ -13,6 +13,37 @@ export const isIdentifierType = (value: unknown) => {
 };
 
 /**
+ * Returns `true` if `value` is a valid object identifier kind (`object_id` or
+ * `cio_object_id`). Objects use a different id vocabulary than people, so this
+ * is intentionally separate from {@link isIdentifierType}.
+ */
+export const isObjectIdType = (value: unknown) => {
+  return value === 'object_id' || value === 'cio_object_id';
+};
+
+/**
+ * Build a URL query string from a map of parameters.
+ *
+ * `null` and `undefined` values are omitted (so optional params disappear
+ * rather than serializing as empty). Keys and values are URL-encoded. Returns
+ * a leading-`?` string (e.g. `?a=1&b=2`) when at least one param is present,
+ * or an empty string when none are.
+ */
+export const buildQueryString = (params: Record<string, string | number | boolean | null | undefined>): string => {
+  const parts: string[] = [];
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value === null || value === undefined || value === '') {
+      continue;
+    }
+
+    parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+  }
+
+  return parts.length > 0 ? `?${parts.join('&')}` : '';
+};
+
+/**
  * Minimal response shape attached to a {@link CustomerIORequestError}. Replaces
  * the previous `http.IncomingMessage` so the public error type stays portable
  * across runtimes that don't expose Node's stream-based response object.
