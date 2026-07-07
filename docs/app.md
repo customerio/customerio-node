@@ -604,3 +604,201 @@ api.createDeliveriesExport(1, {
 - **options**: Object
 
 You can read more about the available options on the [export deliveries data](https://customer.io/docs/api/#operation/exportDeliveriesData) docs.
+
+### api.listCampaigns()
+
+List the campaigns in your workspace.
+
+```javascript
+api.listCampaigns();
+```
+
+### api.getCampaign(campaignId)
+
+Get a single campaign's metadata.
+
+```javascript
+api.getCampaign(9);
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+
+### api.getCampaignActions(campaignId, options)
+
+List a campaign's actions.
+
+```javascript
+api.getCampaignActions(9, { start: "cursor" });
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+- **options**: Object (optional) — `start` (pagination cursor)
+
+### api.getCampaignAction(campaignId, actionId)
+
+Get a single action of a campaign.
+
+```javascript
+api.getCampaignAction(9, 2);
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+- **actionId**: The action's numeric id (required)
+
+### api.updateCampaignAction(campaignId, actionId, data)
+
+Update an action of a campaign.
+
+```javascript
+api.updateCampaignAction(9, 2, { body: "Updated body" });
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+- **actionId**: The action's numeric id (required)
+- **data**: The action fields to update
+
+### api.getCampaignActionLanguage(campaignId, actionId, language)
+
+Get a single-language translation of a campaign action.
+
+```javascript
+api.getCampaignActionLanguage(9, 2, "en-US");
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+- **actionId**: The action's numeric id (required)
+- **language**: The IETF language tag (required)
+
+### api.updateCampaignActionLanguage(campaignId, actionId, language, data)
+
+Update a single-language translation of a campaign action.
+
+```javascript
+api.updateCampaignActionLanguage(9, 2, "fr", { subject: "Bonjour" });
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+- **actionId**: The action's numeric id (required)
+- **language**: The IETF language tag (required)
+- **data**: The translation fields to update
+
+### api.getCampaignActionMetrics(campaignId, actionId, version, options)
+
+Get metrics for a single campaign action over time.
+
+```javascript
+api.getCampaignActionMetrics(9, 2, "2", { type: "email", period: "days", steps: 7 });
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+- **actionId**: The action's numeric id (required)
+- **version**: Metrics API version — "1" or "2" (required)
+- **options**: Object (optional) — `type`, `res`, `tz`, `start`, `end`, `period`, `steps`
+
+### api.getCampaignActionMetricsLinks(campaignId, actionId, options)
+
+Get link (click) metrics for a single campaign action over time.
+
+```javascript
+api.getCampaignActionMetricsLinks(9, 2, { period: "weeks", steps: 4, type: "email" });
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+- **actionId**: The action's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `type`
+
+### api.getCampaignMetrics(campaignId, version, options)
+
+Get delivery metrics for a campaign over time.
+
+```javascript
+api.getCampaignMetrics(9, "1", { res: "daily", start: 1719792000, end: 1719878400 });
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+- **version**: Metrics API version — "1" or "2" (required)
+- **options**: Object (optional) — `type`, `res`, `tz`, `start`, `end`, `period`, `steps`
+
+### api.getCampaignMetricsLinks(campaignId, options)
+
+Get link (click) metrics for a campaign over time.
+
+```javascript
+api.getCampaignMetricsLinks(9, { period: "days", steps: 30, unique: true });
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `unique`
+
+### api.getCampaignJourneyMetrics(campaignId, options)
+
+Get a campaign's journey metrics (per-step conversion funnel) over a window.
+
+```javascript
+api.getCampaignJourneyMetrics(9, { start: 1719792000, end: 1719878400, res: "daily" });
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+- **options**: Object (required) — `start`, `end`, and `res` are all required
+
+### api.getCampaignMessages(campaignId, options)
+
+Get the individual messages (deliveries) sent by a campaign.
+
+```javascript
+api.getCampaignMessages(9, { type: "email", metric: "delivered", limit: 50 });
+```
+
+#### Options
+
+- **campaignId**: The campaign's numeric id (required)
+- **options**: Object (optional) — `start`, `limit`, `type`, `metric`, `drafts`, `start_ts`, `end_ts`, `get_tracked_responses`
+
+### api.getBroadcastTriggerStatus(broadcastId, triggerId)
+
+Get the status of an API-triggered broadcast run. Pairs with `api.triggerBroadcast`.
+
+```javascript
+api.getBroadcastTriggerStatus(1, 5);
+```
+
+#### Options
+
+- **broadcastId**: The broadcast (campaign) id (required)
+- **triggerId**: The trigger id returned by `triggerBroadcast` (required)
+
+### api.getBroadcastTriggerErrors(broadcastId, triggerId, options)
+
+Get the per-recipient errors for an API-triggered broadcast run.
+
+```javascript
+api.getBroadcastTriggerErrors(1, 5, { limit: 100 });
+```
+
+#### Options
+
+- **broadcastId**: The broadcast (campaign) id (required)
+- **triggerId**: The trigger id (required)
+- **options**: Object (optional) — `start`, `limit`

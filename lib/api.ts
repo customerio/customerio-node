@@ -108,6 +108,75 @@ export type TransactionalDeliveriesOptions = PaginationOptions & {
   get_tracked_responses?: boolean;
 };
 
+/** Message channel a metric/message query can be scoped to. */
+export type MetricType = 'email' | 'webhook' | 'twilio' | 'whatsapp' | 'slack' | 'push' | 'in_app';
+
+/** Resolution (bucket size) for time-series metric reports. */
+export type MetricResolution = 'hours' | 'hourly' | 'days' | 'daily' | 'weeks' | 'weekly' | 'months' | 'monthly';
+
+/** Metrics API version for campaign metric reports. */
+export type CampaignMetricsVersion = '1' | '2';
+
+/** Options for channel-scoped metric reports (broadcast metrics, action metrics/links). */
+export type MetricsOptions = {
+  /** The time unit each step represents. */
+  period?: MetricsPeriod;
+  /** The number of periods to report over. */
+  steps?: number;
+  /** Scope the report to a single channel. */
+  type?: MetricType;
+};
+
+/** Options for resource-level link (click) metric reports. */
+export type LinkMetricsOptions = {
+  period?: MetricsPeriod;
+  steps?: number;
+  /** When `true`, count unique clicks per link rather than total clicks. */
+  unique?: boolean;
+};
+
+/** Options for campaign metric reports. Pass the required `version` separately. */
+export type CampaignMetricsOptions = {
+  /** Scope the report to a single channel. */
+  type?: MetricType;
+  /** Resolution (bucket size) of the report. */
+  res?: MetricResolution;
+  /** IANA timezone for bucket boundaries (e.g. `America/New_York`). */
+  tz?: string;
+  /** Inclusive start of the window, as a Unix timestamp (seconds). */
+  start?: number;
+  /** Inclusive end of the window, as a Unix timestamp (seconds). */
+  end?: number;
+  period?: MetricsPeriod;
+  steps?: number;
+};
+
+/** Required options for {@link APIClient.getCampaignJourneyMetrics}. */
+export type JourneyMetricsOptions = {
+  /** Inclusive start of the window, as a Unix timestamp (seconds). */
+  start: number;
+  /** Inclusive end of the window, as a Unix timestamp (seconds). */
+  end: number;
+  /** Resolution (bucket size) of the report. */
+  res: MetricResolution;
+};
+
+/** Options for {@link APIClient.getCampaignMessages}. */
+export type CampaignMessagesOptions = PaginationOptions & {
+  /** Scope to a single channel. */
+  type?: MetricType;
+  /** Filter to deliveries with this metric (e.g. `delivered`, `opened`, `bounced`). */
+  metric?: string;
+  /** Include drafted (unsent) messages. */
+  drafts?: boolean;
+  /** Only include deliveries after this Unix timestamp (seconds). */
+  start_ts?: number;
+  /** Only include deliveries before this Unix timestamp (seconds). */
+  end_ts?: number;
+  /** When `true`, include tracked responses on each delivery. */
+  get_tracked_responses?: boolean;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -1046,6 +1115,388 @@ export class APIClient {
     return this.request.put(
       `${this.apiRoot}/transactional/${encodeURIComponent(transactionalId)}/content/${encodeURIComponent(contentId)}`,
       data,
+    );
+  }
+
+  /**
+   * Build the base URL for a campaign/broadcast resource. Shared by the
+   * campaign and broadcast methods, which have identical sub-resource paths.
+   */
+  private resourceBase(resource: 'campaigns' | 'broadcasts', id: string | number) {
+    return `${this.apiRoot}/${resource}/${encodeURIComponent(id)}`;
+  }
+
+  /**
+   * List the campaigns in your workspace.
+   *
+   * @returns The parsed JSON response body (`{ campaigns: [...] }`).
+   */
+  listCampaigns() {
+    return this.request.get(`${this.apiRoot}/campaigns`);
+  }
+
+  /**
+   * Get a single campaign's metadata.
+   *
+   * @param campaignId The campaign's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `campaignId` is empty.
+   */
+  getCampaign(campaignId: string | number) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    return this.request.get(this.resourceBase('campaigns', campaignId));
+  }
+
+  /**
+   * List a campaign's actions.
+   *
+   * @param campaignId The campaign's numeric id.
+   * @param options Optional pagination cursor (`start`).
+   * @returns The parsed JSON response body (`{ actions: [...], next }`).
+   * @throws {MissingParamError} If `campaignId` is empty.
+   */
+  getCampaignActions(campaignId: string | number, options: { start?: string } = {}) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    const query = buildQueryString({ start: options.start });
+
+    return this.request.get(`${this.resourceBase('campaigns', campaignId)}/actions${query}`);
+  }
+
+  /**
+   * Get a single action of a campaign.
+   *
+   * @param campaignId The campaign's numeric id.
+   * @param actionId The action's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `campaignId` or `actionId` is empty.
+   */
+  getCampaignAction(campaignId: string | number, actionId: string | number) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    return this.request.get(`${this.resourceBase('campaigns', campaignId)}/actions/${encodeURIComponent(actionId)}`);
+  }
+
+  /**
+   * Update an action of a campaign (e.g. its message content).
+   *
+   * @param campaignId The campaign's numeric id.
+   * @param actionId The action's numeric id.
+   * @param data The action fields to update.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `campaignId` or `actionId` is empty.
+   */
+  updateCampaignAction(campaignId: string | number, actionId: string | number, data: RequestData = {}) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    return this.request.put(
+      `${this.resourceBase('campaigns', campaignId)}/actions/${encodeURIComponent(actionId)}`,
+      data,
+    );
+  }
+
+  /**
+   * Get a single-language translation of a campaign action.
+   *
+   * @param campaignId The campaign's numeric id.
+   * @param actionId The action's numeric id.
+   * @param language The IETF language tag.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `campaignId`, `actionId`, or `language` is empty.
+   */
+  getCampaignActionLanguage(campaignId: string | number, actionId: string | number, language: string) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.get(
+      `${this.resourceBase('campaigns', campaignId)}/actions/${encodeURIComponent(actionId)}/language/${encodeURIComponent(language)}`,
+    );
+  }
+
+  /**
+   * Update a single-language translation of a campaign action.
+   *
+   * @param campaignId The campaign's numeric id.
+   * @param actionId The action's numeric id.
+   * @param language The IETF language tag.
+   * @param data The translation fields to update.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `campaignId`, `actionId`, or `language` is empty.
+   */
+  updateCampaignActionLanguage(
+    campaignId: string | number,
+    actionId: string | number,
+    language: string,
+    data: RequestData = {},
+  ) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.put(
+      `${this.resourceBase('campaigns', campaignId)}/actions/${encodeURIComponent(actionId)}/language/${encodeURIComponent(language)}`,
+      data,
+    );
+  }
+
+  /**
+   * Get metrics for a single campaign action over time.
+   *
+   * @param campaignId The campaign's numeric id.
+   * @param actionId The action's numeric id.
+   * @param version The metrics API version (`"1"` or `"2"`) — required by the API.
+   * @param options Optional reporting window/filters. See {@link CampaignMetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `campaignId`, `actionId`, or `version` is empty.
+   */
+  getCampaignActionMetrics(
+    campaignId: string | number,
+    actionId: string | number,
+    version: CampaignMetricsVersion,
+    options: CampaignMetricsOptions = {},
+  ) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    if (isEmpty(version)) {
+      throw new MissingParamError('version');
+    }
+
+    const query = buildQueryString({
+      version,
+      type: options.type,
+      res: options.res,
+      tz: options.tz,
+      start: options.start,
+      end: options.end,
+      period: options.period,
+      steps: options.steps,
+    });
+
+    return this.request.get(
+      `${this.resourceBase('campaigns', campaignId)}/actions/${encodeURIComponent(actionId)}/metrics${query}`,
+    );
+  }
+
+  /**
+   * Get link (click) metrics for a single campaign action over time.
+   *
+   * @param campaignId The campaign's numeric id.
+   * @param actionId The action's numeric id.
+   * @param options Optional reporting window/filters. See {@link MetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `campaignId` or `actionId` is empty.
+   */
+  getCampaignActionMetricsLinks(campaignId: string | number, actionId: string | number, options: MetricsOptions = {}) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+
+    return this.request.get(
+      `${this.resourceBase('campaigns', campaignId)}/actions/${encodeURIComponent(actionId)}/metrics/links${query}`,
+    );
+  }
+
+  /**
+   * Get delivery metrics for a campaign over time.
+   *
+   * @param campaignId The campaign's numeric id.
+   * @param version The metrics API version (`"1"` or `"2"`) — required by the API.
+   * @param options Optional reporting window/filters. See {@link CampaignMetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `campaignId` or `version` is empty.
+   */
+  getCampaignMetrics(
+    campaignId: string | number,
+    version: CampaignMetricsVersion,
+    options: CampaignMetricsOptions = {},
+  ) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    if (isEmpty(version)) {
+      throw new MissingParamError('version');
+    }
+
+    const query = buildQueryString({
+      version,
+      type: options.type,
+      res: options.res,
+      tz: options.tz,
+      start: options.start,
+      end: options.end,
+      period: options.period,
+      steps: options.steps,
+    });
+
+    return this.request.get(`${this.resourceBase('campaigns', campaignId)}/metrics${query}`);
+  }
+
+  /**
+   * Get link (click) metrics for a campaign over time.
+   *
+   * @param campaignId The campaign's numeric id.
+   * @param options Optional reporting window. See {@link LinkMetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `campaignId` is empty.
+   */
+  getCampaignMetricsLinks(campaignId: string | number, options: LinkMetricsOptions = {}) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps, unique: options.unique });
+
+    return this.request.get(`${this.resourceBase('campaigns', campaignId)}/metrics/links${query}`);
+  }
+
+  /**
+   * Get a campaign's journey metrics (per-step conversion funnel) over a window.
+   *
+   * @param campaignId The campaign's numeric id.
+   * @param options Required window and resolution. See {@link JourneyMetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `campaignId`, `options.start`, `options.end`, or `options.res` is empty.
+   */
+  getCampaignJourneyMetrics(campaignId: string | number, options: JourneyMetricsOptions) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    if (options == null || isEmpty(options.start)) {
+      throw new MissingParamError('options.start');
+    }
+
+    if (isEmpty(options.end)) {
+      throw new MissingParamError('options.end');
+    }
+
+    if (isEmpty(options.res)) {
+      throw new MissingParamError('options.res');
+    }
+
+    const query = buildQueryString({ start: options.start, end: options.end, res: options.res });
+
+    return this.request.get(`${this.resourceBase('campaigns', campaignId)}/journey_metrics${query}`);
+  }
+
+  /**
+   * Get the individual messages (deliveries) sent by a campaign.
+   *
+   * @param campaignId The campaign's numeric id.
+   * @param options Optional filters/pagination. See {@link CampaignMessagesOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `campaignId` is empty.
+   */
+  getCampaignMessages(campaignId: string | number, options: CampaignMessagesOptions = {}) {
+    if (isEmpty(campaignId)) {
+      throw new MissingParamError('campaignId');
+    }
+
+    const query = buildQueryString({
+      start: options.start,
+      limit: options.limit,
+      type: options.type,
+      metric: options.metric,
+      drafts: options.drafts,
+      start_ts: options.start_ts,
+      end_ts: options.end_ts,
+      get_tracked_responses: options.get_tracked_responses,
+    });
+
+    return this.request.get(`${this.resourceBase('campaigns', campaignId)}/messages${query}`);
+  }
+
+  /**
+   * Get the status of an API-triggered broadcast run. Pairs with {@link APIClient.triggerBroadcast}.
+   *
+   * @param broadcastId The broadcast (campaign) id.
+   * @param triggerId The trigger id returned by `triggerBroadcast`.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId` or `triggerId` is empty.
+   */
+  getBroadcastTriggerStatus(broadcastId: string | number, triggerId: string | number) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    if (isEmpty(triggerId)) {
+      throw new MissingParamError('triggerId');
+    }
+
+    return this.request.get(
+      `${this.apiRoot}/campaigns/${encodeURIComponent(broadcastId)}/triggers/${encodeURIComponent(triggerId)}`,
+    );
+  }
+
+  /**
+   * Get the per-recipient errors for an API-triggered broadcast run.
+   *
+   * @param broadcastId The broadcast (campaign) id.
+   * @param triggerId The trigger id returned by `triggerBroadcast`.
+   * @param options Optional pagination. See {@link PaginationOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId` or `triggerId` is empty.
+   */
+  getBroadcastTriggerErrors(broadcastId: string | number, triggerId: string | number, options: PaginationOptions = {}) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    if (isEmpty(triggerId)) {
+      throw new MissingParamError('triggerId');
+    }
+
+    const query = buildQueryString({ start: options.start, limit: options.limit });
+
+    return this.request.get(
+      `${this.apiRoot}/campaigns/${encodeURIComponent(broadcastId)}/triggers/${encodeURIComponent(triggerId)}/errors${query}`,
     );
   }
 }
