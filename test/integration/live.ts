@@ -207,6 +207,24 @@ liveTest('getSubscriptionCenterToken resolves for the profile', async (t) => {
   t.pass(result ? 'token generated' : 'subscription center not configured; skipped');
 });
 
+liveTest('listTransactionalMessages resolves', async (t) => {
+  const result = (await api!.listTransactionalMessages()) as Record<string, unknown>;
+  t.truthy(result);
+});
+
+// Read-only transactional lookups for a known message id. Update methods
+// (content/language) are covered by unit tests only — they mutate real
+// templates, which we avoid in the dogfood suite.
+needs('CIO_TEST_TRANSACTIONAL_ID')('transactional message reads resolve for a known id', async (t) => {
+  const id = process.env.CIO_TEST_TRANSACTIONAL_ID!;
+  await api!.getTransactionalMessage(id).catch(() => undefined);
+  await api!.getTransactionalMessageContents(id).catch(() => undefined);
+  await api!.getTransactionalMessageDeliveries(id, { limit: 5 }).catch(() => undefined);
+  await api!.getTransactionalMessageMetrics(id, { period: 'days', steps: 7 }).catch(() => undefined);
+  await api!.getTransactionalMessageLinkMetrics(id, { period: 'days', steps: 7 }).catch(() => undefined);
+  t.pass();
+});
+
 liveTest('track records an event on the profile', async (t) => {
   await track!.track(customerId, { name: 'sdk_live_event', data: { run: customerId } });
   t.pass();

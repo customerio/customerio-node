@@ -416,6 +416,118 @@ api.getSubscriptionCenterToken("1");
 
 - **customerId**: The person's identifier value (required)
 
+### api.listTransactionalMessages()
+
+List the transactional messages in your workspace.
+
+```javascript
+api.listTransactionalMessages();
+```
+
+### api.getTransactionalMessage(transactionalId)
+
+Get a single transactional message's metadata.
+
+```javascript
+api.getTransactionalMessage(3);
+```
+
+#### Options
+
+- **transactionalId**: The transactional message's numeric id (required)
+
+### api.getTransactionalMessageContents(transactionalId)
+
+List all content variants of a transactional message.
+
+```javascript
+api.getTransactionalMessageContents(3);
+```
+
+#### Options
+
+- **transactionalId**: The transactional message's numeric id (required)
+
+### api.getTransactionalMessageLanguage(transactionalId, language)
+
+Get a single-language translation of a transactional message.
+
+```javascript
+api.getTransactionalMessageLanguage(3, "en-US");
+```
+
+#### Options
+
+- **transactionalId**: The transactional message's numeric id (required)
+- **language**: The IETF language tag of the translation (required)
+
+### api.updateTransactionalMessageLanguage(transactionalId, language, data)
+
+Update a single-language translation of a transactional message.
+
+```javascript
+api.updateTransactionalMessageLanguage(3, "en-US", { subject: "Welcome!" });
+```
+
+#### Options
+
+- **transactionalId**: The transactional message's numeric id (required)
+- **language**: The IETF language tag of the translation (required)
+- **data**: The translation fields to update
+
+### api.getTransactionalMessageDeliveries(transactionalId, options)
+
+Get the individual deliveries (sends) of a transactional message.
+
+```javascript
+api.getTransactionalMessageDeliveries(3, { metric: "delivered", limit: 50 });
+```
+
+#### Options
+
+- **transactionalId**: The transactional message's numeric id (required)
+- **options**: Object (optional) — `start`, `limit`, `metric`, `state`, `start_ts`, `end_ts`, `get_tracked_responses`
+
+### api.getTransactionalMessageMetrics(transactionalId, options)
+
+Get delivery metrics for a transactional message over time.
+
+```javascript
+api.getTransactionalMessageMetrics(3, { period: "days", steps: 14 });
+```
+
+#### Options
+
+- **transactionalId**: The transactional message's numeric id (required)
+- **options**: Object (optional) — `period` ("hours" / "days" / "weeks" / "months"), `steps`
+
+### api.getTransactionalMessageLinkMetrics(transactionalId, options)
+
+Get link (click) metrics for a transactional message over time.
+
+```javascript
+api.getTransactionalMessageLinkMetrics(3, { period: "weeks", steps: 4, unique: true });
+```
+
+#### Options
+
+- **transactionalId**: The transactional message's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `unique`
+
+### api.updateTransactionalMessageContent(transactionalId, contentId, data)
+
+Update a transactional message's content variant.
+
+```javascript
+api.updateTransactionalMessageContent(3, 5, { body: "Updated body" });
+```
+
+#### Options
+
+- **transactionalId**: The transactional message's numeric id (required)
+- **contentId**: The content variant's numeric id (required)
+- **data**: The content fields to update
+
 ### api.listExports()
 
 Return a list of your exports. Exports are point-in-time people or campaign metrics.

@@ -1082,3 +1082,99 @@ test('#getSubscriptionCenterToken: gets the token endpoint and validates', (t) =
   t.context.client.getSubscriptionCenterToken('1');
   t.true(get.calledWith(`${API}/subscription_center/1/token`));
 });
+
+// --- Batch 3: Transactional message management (CDP-6267) ---
+
+test('#listTransactionalMessages: gets the transactional endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listTransactionalMessages();
+  t.true(get.calledWith(`${API}/transactional`));
+});
+
+test('#getTransactionalMessage: gets one message and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getTransactionalMessage(''), { message: 'transactionalId is required' });
+  t.context.client.getTransactionalMessage(3);
+  t.true(get.calledWith(`${API}/transactional/3`));
+});
+
+test('#getTransactionalMessageContents: gets the contents endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getTransactionalMessageContents(''), { message: 'transactionalId is required' });
+  t.context.client.getTransactionalMessageContents(3);
+  t.true(get.calledWith(`${API}/transactional/3/contents`));
+});
+
+test('#getTransactionalMessageLanguage: gets a translation and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getTransactionalMessageLanguage('', 'en'), {
+    message: 'transactionalId is required',
+  });
+  t.throws(() => t.context.client.getTransactionalMessageLanguage(3, ''), { message: 'language is required' });
+  t.context.client.getTransactionalMessageLanguage(3, 'en-US');
+  t.true(get.calledWith(`${API}/transactional/3/language/en-US`));
+});
+
+test('#updateTransactionalMessageLanguage: puts the translation body and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateTransactionalMessageLanguage('', 'en', {}), {
+    message: 'transactionalId is required',
+  });
+  t.throws(() => t.context.client.updateTransactionalMessageLanguage(3, '', {}), { message: 'language is required' });
+  t.context.client.updateTransactionalMessageLanguage(3, 'en-US', { subject: 'Hi' });
+  t.true(put.calledWith(`${API}/transactional/3/language/en-US`, { subject: 'Hi' }));
+  t.context.client.updateTransactionalMessageLanguage(3, 'fr');
+  t.true(put.calledWith(`${API}/transactional/3/language/fr`, {}));
+});
+
+test('#getTransactionalMessageDeliveries: forwards filters and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getTransactionalMessageDeliveries(''), { message: 'transactionalId is required' });
+  t.context.client.getTransactionalMessageDeliveries(3, {
+    metric: 'delivered',
+    state: 'sent',
+    limit: 50,
+    start_ts: 100,
+    end_ts: 200,
+    get_tracked_responses: true,
+  });
+  t.true(
+    get.calledWith(
+      `${API}/transactional/3/messages?limit=50&metric=delivered&state=sent&start_ts=100&end_ts=200&get_tracked_responses=true`,
+    ),
+  );
+});
+
+test('#getTransactionalMessageDeliveries: omits the query string with no options', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getTransactionalMessageDeliveries(3);
+  t.true(get.calledWith(`${API}/transactional/3/messages`));
+});
+
+test('#getTransactionalMessageMetrics: forwards period/steps and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getTransactionalMessageMetrics(''), { message: 'transactionalId is required' });
+  t.context.client.getTransactionalMessageMetrics(3, { period: 'days', steps: 14 });
+  t.true(get.calledWith(`${API}/transactional/3/metrics?period=days&steps=14`));
+});
+
+test('#getTransactionalMessageLinkMetrics: forwards unique and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getTransactionalMessageLinkMetrics(''), {
+    message: 'transactionalId is required',
+  });
+  t.context.client.getTransactionalMessageLinkMetrics(3, { period: 'weeks', steps: 4, unique: true });
+  t.true(get.calledWith(`${API}/transactional/3/metrics/links?period=weeks&steps=4&unique=true`));
+});
+
+test('#updateTransactionalMessageContent: puts the content body and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateTransactionalMessageContent('', 5, {}), {
+    message: 'transactionalId is required',
+  });
+  t.throws(() => t.context.client.updateTransactionalMessageContent(3, '', {}), { message: 'contentId is required' });
+  t.context.client.updateTransactionalMessageContent(3, 5, { body: 'Updated' });
+  t.true(put.calledWith(`${API}/transactional/3/content/5`, { body: 'Updated' }));
+  t.context.client.updateTransactionalMessageContent(3, 6);
+  t.true(put.calledWith(`${API}/transactional/3/content/6`, {}));
+});
