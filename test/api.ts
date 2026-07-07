@@ -1005,3 +1005,80 @@ test('#listActivities: no options omits the query string', (t) => {
   t.context.client.listActivities();
   t.true(get.calledWith(`${API}/activities`));
 });
+
+// --- Batch 2: Segments & subscriptions (CDP-6266) ---
+
+test('#listSegments: gets the segments endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listSegments();
+  t.true(get.calledWith(`${API}/segments`));
+});
+
+test('#createSegment: posts a segment wrapped under `segment`', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createSegment as any)(null), { message: 'segment is required' });
+  t.throws(() => (t.context.client.createSegment as any)('nope'), { message: 'segment is required' });
+  t.throws(() => (t.context.client.createSegment as any)({}), { message: 'segment.name is required' });
+  t.context.client.createSegment({ name: 'VIPs', description: 'high value' });
+  t.true(post.calledWith(`${API}/segments`, { segment: { name: 'VIPs', description: 'high value' } }));
+});
+
+test('#getSegment: gets a single segment and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getSegment(''), { message: 'segmentId is required' });
+  t.context.client.getSegment(7);
+  t.true(get.calledWith(`${API}/segments/7`));
+});
+
+test('#deleteSegment: deletes a segment and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteSegment(''), { message: 'segmentId is required' });
+  t.context.client.deleteSegment(7);
+  t.true(destroy.calledWith(`${API}/segments/7`));
+});
+
+test('#getSegmentCustomerCount: gets the count endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getSegmentCustomerCount(''), { message: 'segmentId is required' });
+  t.context.client.getSegmentCustomerCount(7);
+  t.true(get.calledWith(`${API}/segments/7/customer_count`));
+});
+
+test('#getSegmentMembership: paginates the membership endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getSegmentMembership(''), { message: 'segmentId is required' });
+  t.context.client.getSegmentMembership(7, { start: 'cur', limit: 50 });
+  t.true(get.calledWith(`${API}/segments/7/membership?start=cur&limit=50`));
+});
+
+test('#getSegmentMembership: omits the query string with no options', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getSegmentMembership(7);
+  t.true(get.calledWith(`${API}/segments/7/membership`));
+});
+
+test('#getSegmentUsedBy: gets the used_by endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getSegmentUsedBy(''), { message: 'segmentId is required' });
+  t.context.client.getSegmentUsedBy(7);
+  t.true(get.calledWith(`${API}/segments/7/used_by`));
+});
+
+test('#listSubscriptionTopics: gets the subscription_topics endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listSubscriptionTopics();
+  t.true(get.calledWith(`${API}/subscription_topics`));
+});
+
+test('#listSubscriptionChannels: gets the subscription_channels endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listSubscriptionChannels();
+  t.true(get.calledWith(`${API}/subscription_channels`));
+});
+
+test('#getSubscriptionCenterToken: gets the token endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getSubscriptionCenterToken(''), { message: 'customerId is required' });
+  t.context.client.getSubscriptionCenterToken('1');
+  t.true(get.calledWith(`${API}/subscription_center/1/token`));
+});

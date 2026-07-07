@@ -69,6 +69,14 @@ export type ListActivitiesOptions = PaginationOptions & {
   idType?: IdentifierType;
 };
 
+/** The definition for a new manual segment created via {@link APIClient.createSegment}. */
+export type SegmentInput = {
+  /** The segment's display name. */
+  name: string;
+  /** An optional description. */
+  description?: string;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -691,6 +699,146 @@ export class APIClient {
     });
 
     return this.request.get(`${this.apiRoot}/activities${query}`);
+  }
+
+  /**
+   * List the segments in your workspace.
+   *
+   * @returns The parsed JSON response body (`{ segments: [...] }`).
+   */
+  listSegments() {
+    return this.request.get(`${this.apiRoot}/segments`);
+  }
+
+  /**
+   * Create a manual segment.
+   *
+   * @param segment The segment definition. `name` is required. See {@link SegmentInput}.
+   * @returns The parsed JSON response body (`{ segment: {...} }`).
+   * @throws {MissingParamError} If `segment` is missing/not an object, or `segment.name` is empty.
+   */
+  createSegment(segment: SegmentInput) {
+    if (segment == null || typeof segment !== 'object') {
+      throw new MissingParamError('segment');
+    }
+
+    if (isEmpty(segment.name)) {
+      throw new MissingParamError('segment.name');
+    }
+
+    return this.request.post(`${this.apiRoot}/segments`, { segment });
+  }
+
+  /**
+   * Get a single segment's metadata.
+   *
+   * @param segmentId The segment's numeric id.
+   * @returns The parsed JSON response body (`{ segment: {...} }`).
+   * @throws {MissingParamError} If `segmentId` is empty.
+   */
+  getSegment(segmentId: string | number) {
+    if (isEmpty(segmentId)) {
+      throw new MissingParamError('segmentId');
+    }
+
+    return this.request.get(`${this.apiRoot}/segments/${encodeURIComponent(segmentId)}`);
+  }
+
+  /**
+   * Delete a manual segment.
+   *
+   * @param segmentId The segment's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `segmentId` is empty.
+   */
+  deleteSegment(segmentId: string | number) {
+    if (isEmpty(segmentId)) {
+      throw new MissingParamError('segmentId');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/segments/${encodeURIComponent(segmentId)}`);
+  }
+
+  /**
+   * Get the number of people in a segment.
+   *
+   * @param segmentId The segment's numeric id.
+   * @returns The parsed JSON response body (`{ count, ... }`).
+   * @throws {MissingParamError} If `segmentId` is empty.
+   */
+  getSegmentCustomerCount(segmentId: string | number) {
+    if (isEmpty(segmentId)) {
+      throw new MissingParamError('segmentId');
+    }
+
+    return this.request.get(`${this.apiRoot}/segments/${encodeURIComponent(segmentId)}/customer_count`);
+  }
+
+  /**
+   * List the people who belong to a segment.
+   *
+   * @param segmentId The segment's numeric id.
+   * @param options Optional pagination. See {@link PaginationOptions}.
+   * @returns The parsed JSON response body (`{ ids: [...], identifiers: [...], next }`).
+   * @throws {MissingParamError} If `segmentId` is empty.
+   */
+  getSegmentMembership(segmentId: string | number, options: PaginationOptions = {}) {
+    if (isEmpty(segmentId)) {
+      throw new MissingParamError('segmentId');
+    }
+
+    const query = buildQueryString({ start: options.start, limit: options.limit });
+
+    return this.request.get(`${this.apiRoot}/segments/${encodeURIComponent(segmentId)}/membership${query}`);
+  }
+
+  /**
+   * Get the campaigns, newsletters, and other resources that use a segment.
+   *
+   * @param segmentId The segment's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `segmentId` is empty.
+   */
+  getSegmentUsedBy(segmentId: string | number) {
+    if (isEmpty(segmentId)) {
+      throw new MissingParamError('segmentId');
+    }
+
+    return this.request.get(`${this.apiRoot}/segments/${encodeURIComponent(segmentId)}/used_by`);
+  }
+
+  /**
+   * List the subscription topics defined in your workspace.
+   *
+   * @returns The parsed JSON response body (`{ topics: [...] }`).
+   */
+  listSubscriptionTopics() {
+    return this.request.get(`${this.apiRoot}/subscription_topics`);
+  }
+
+  /**
+   * List the subscription channels configured in your workspace.
+   *
+   * @returns The parsed JSON response body.
+   */
+  listSubscriptionChannels() {
+    return this.request.get(`${this.apiRoot}/subscription_channels`);
+  }
+
+  /**
+   * Generate a subscription center token for a person. The token authenticates
+   * a hosted subscription-center link so the person can manage their preferences.
+   *
+   * @param customerId The person's identifier value.
+   * @returns The parsed JSON response body (`{ token }`).
+   * @throws {MissingParamError} If `customerId` is empty.
+   */
+  getSubscriptionCenterToken(customerId: string | number) {
+    if (isEmpty(customerId)) {
+      throw new MissingParamError('customerId');
+    }
+
+    return this.request.get(`${this.apiRoot}/subscription_center/${encodeURIComponent(customerId)}/token`);
   }
 }
 

@@ -307,6 +307,115 @@ api.listActivities({ type: "event", customerId: "1", idType: IdentifierType.Id }
 
 - **options**: Object (optional) — `start`, `limit`, `type`, `name`, `deleted`, `customerId`, `idType`
 
+### api.listSegments()
+
+List the segments in your workspace.
+
+```javascript
+api.listSegments();
+```
+
+### api.createSegment(segment)
+
+Create a manual segment.
+
+```javascript
+api.createSegment({ name: "VIPs", description: "High-value customers" });
+```
+
+#### Options
+
+- **segment**: Object (required) — `name` (required) and optional `description`
+
+### api.getSegment(segmentId)
+
+Get a single segment's metadata.
+
+```javascript
+api.getSegment(7);
+```
+
+#### Options
+
+- **segmentId**: The segment's numeric id (required)
+
+### api.deleteSegment(segmentId)
+
+Delete a manual segment.
+
+```javascript
+api.deleteSegment(7);
+```
+
+#### Options
+
+- **segmentId**: The segment's numeric id (required)
+
+### api.getSegmentCustomerCount(segmentId)
+
+Get the number of people in a segment.
+
+```javascript
+api.getSegmentCustomerCount(7);
+```
+
+#### Options
+
+- **segmentId**: The segment's numeric id (required)
+
+### api.getSegmentMembership(segmentId, options)
+
+List the people who belong to a segment.
+
+```javascript
+api.getSegmentMembership(7, { limit: 100 });
+```
+
+#### Options
+
+- **segmentId**: The segment's numeric id (required)
+- **options**: Object (optional) — `start`, `limit`
+
+### api.getSegmentUsedBy(segmentId)
+
+Get the campaigns, newsletters, and other resources that use a segment.
+
+```javascript
+api.getSegmentUsedBy(7);
+```
+
+#### Options
+
+- **segmentId**: The segment's numeric id (required)
+
+### api.listSubscriptionTopics()
+
+List the subscription topics defined in your workspace.
+
+```javascript
+api.listSubscriptionTopics();
+```
+
+### api.listSubscriptionChannels()
+
+List the subscription channels configured in your workspace.
+
+```javascript
+api.listSubscriptionChannels();
+```
+
+### api.getSubscriptionCenterToken(customerId)
+
+Generate a subscription center token for a person, used to authenticate a hosted subscription-center link.
+
+```javascript
+api.getSubscriptionCenterToken("1");
+```
+
+#### Options
+
+- **customerId**: The person's identifier value (required)
+
 ### api.listExports()
 
 Return a list of your exports. Exports are point-in-time people or campaign metrics.
