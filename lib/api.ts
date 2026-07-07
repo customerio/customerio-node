@@ -99,7 +99,7 @@ export type TransactionalDeliveriesOptions = PaginationOptions & {
   /** Filter to deliveries with this metric (e.g. `delivered`, `opened`, `bounced`). */
   metric?: string;
   /** Filter to deliveries in this state. */
-  state?: 'failed' | 'sent' | 'drafted' | 'attempted';
+  state?: DeliveryState;
   /** Only include deliveries after this Unix timestamp (seconds). */
   start_ts?: number;
   /** Only include deliveries before this Unix timestamp (seconds). */
@@ -113,6 +113,9 @@ export type MetricType = 'email' | 'webhook' | 'twilio' | 'whatsapp' | 'slack' |
 
 /** Resolution (bucket size) for time-series metric reports. */
 export type MetricResolution = 'hours' | 'hourly' | 'days' | 'daily' | 'weeks' | 'weekly' | 'months' | 'monthly';
+
+/** Delivery state a message/delivery listing can be filtered by. */
+export type DeliveryState = 'failed' | 'sent' | 'drafted' | 'attempted';
 
 /** Metrics API version for campaign metric reports. */
 export type CampaignMetricsVersion = '1' | '2';
@@ -182,7 +185,7 @@ export type BroadcastMessagesOptions = PaginationOptions & {
   /** Filter to deliveries with this metric (e.g. `delivered`, `opened`, `bounced`). */
   metric?: string;
   /** Filter to deliveries in this state. */
-  state?: 'failed' | 'sent' | 'drafted' | 'attempted';
+  state?: DeliveryState;
   /** Scope to a single channel. */
   type?: MetricType;
   /** Only include deliveries after this Unix timestamp (seconds). */
