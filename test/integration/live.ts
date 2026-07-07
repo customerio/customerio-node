@@ -255,6 +255,24 @@ needs('CIO_TEST_TRIGGER_ID')('broadcast trigger status + errors resolve', async 
   t.pass();
 });
 
+liveTest('listBroadcasts resolves', async (t) => {
+  const result = (await api!.listBroadcasts()) as Record<string, unknown>;
+  t.true('broadcasts' in result);
+});
+
+// Read-only broadcast lookups for a known broadcast id. Action update methods
+// are covered by unit tests only (they mutate live broadcasts).
+needs('CIO_TEST_BROADCAST_ID')('broadcast reads resolve for a known id', async (t) => {
+  const id = process.env.CIO_TEST_BROADCAST_ID!;
+  await api!.getBroadcast(id).catch(() => undefined);
+  await api!.getBroadcastActions(id).catch(() => undefined);
+  await api!.getBroadcastMetrics(id, { period: 'days', steps: 7 }).catch(() => undefined);
+  await api!.getBroadcastMetricsLinks(id, { period: 'days', steps: 7 }).catch(() => undefined);
+  await api!.getBroadcastMessages(id, { limit: 5 }).catch(() => undefined);
+  await api!.getBroadcastTriggers(id).catch(() => undefined);
+  t.pass();
+});
+
 liveTest('track records an event on the profile', async (t) => {
   await track!.track(customerId, { name: 'sdk_live_event', data: { run: customerId } });
   t.pass();

@@ -177,6 +177,22 @@ export type CampaignMessagesOptions = PaginationOptions & {
   get_tracked_responses?: boolean;
 };
 
+/** Options for {@link APIClient.getBroadcastMessages}. */
+export type BroadcastMessagesOptions = PaginationOptions & {
+  /** Filter to deliveries with this metric (e.g. `delivered`, `opened`, `bounced`). */
+  metric?: string;
+  /** Filter to deliveries in this state. */
+  state?: 'failed' | 'sent' | 'drafted' | 'attempted';
+  /** Scope to a single channel. */
+  type?: MetricType;
+  /** Only include deliveries after this Unix timestamp (seconds). */
+  start_ts?: number;
+  /** Only include deliveries before this Unix timestamp (seconds). */
+  end_ts?: number;
+  /** When `true`, include tracked responses on each delivery. */
+  get_tracked_responses?: boolean;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -1498,6 +1514,282 @@ export class APIClient {
     return this.request.get(
       `${this.apiRoot}/campaigns/${encodeURIComponent(broadcastId)}/triggers/${encodeURIComponent(triggerId)}/errors${query}`,
     );
+  }
+
+  /**
+   * List the broadcasts in your workspace.
+   *
+   * @returns The parsed JSON response body (`{ broadcasts: [...] }`).
+   */
+  listBroadcasts() {
+    return this.request.get(`${this.apiRoot}/broadcasts`);
+  }
+
+  /**
+   * Get a single broadcast's metadata.
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId` is empty.
+   */
+  getBroadcast(broadcastId: string | number) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    return this.request.get(this.resourceBase('broadcasts', broadcastId));
+  }
+
+  /**
+   * List a broadcast's actions.
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @returns The parsed JSON response body (`{ actions: [...] }`).
+   * @throws {MissingParamError} If `broadcastId` is empty.
+   */
+  getBroadcastActions(broadcastId: string | number) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    return this.request.get(`${this.resourceBase('broadcasts', broadcastId)}/actions`);
+  }
+
+  /**
+   * Get a single action of a broadcast.
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @param actionId The action's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId` or `actionId` is empty.
+   */
+  getBroadcastAction(broadcastId: string | number, actionId: string | number) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    return this.request.get(`${this.resourceBase('broadcasts', broadcastId)}/actions/${encodeURIComponent(actionId)}`);
+  }
+
+  /**
+   * Update an action of a broadcast (e.g. its message content).
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @param actionId The action's numeric id.
+   * @param data The action fields to update.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId` or `actionId` is empty.
+   */
+  updateBroadcastAction(broadcastId: string | number, actionId: string | number, data: RequestData = {}) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    return this.request.put(
+      `${this.resourceBase('broadcasts', broadcastId)}/actions/${encodeURIComponent(actionId)}`,
+      data,
+    );
+  }
+
+  /**
+   * Get a single-language translation of a broadcast action.
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @param actionId The action's numeric id.
+   * @param language The IETF language tag.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId`, `actionId`, or `language` is empty.
+   */
+  getBroadcastActionLanguage(broadcastId: string | number, actionId: string | number, language: string) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.get(
+      `${this.resourceBase('broadcasts', broadcastId)}/actions/${encodeURIComponent(actionId)}/language/${encodeURIComponent(language)}`,
+    );
+  }
+
+  /**
+   * Update a single-language translation of a broadcast action.
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @param actionId The action's numeric id.
+   * @param language The IETF language tag.
+   * @param data The translation fields to update.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId`, `actionId`, or `language` is empty.
+   */
+  updateBroadcastActionLanguage(
+    broadcastId: string | number,
+    actionId: string | number,
+    language: string,
+    data: RequestData = {},
+  ) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.put(
+      `${this.resourceBase('broadcasts', broadcastId)}/actions/${encodeURIComponent(actionId)}/language/${encodeURIComponent(language)}`,
+      data,
+    );
+  }
+
+  /**
+   * Get metrics for a single broadcast action over time.
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @param actionId The action's numeric id.
+   * @param options Optional reporting window/filters. See {@link MetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId` or `actionId` is empty.
+   */
+  getBroadcastActionMetrics(broadcastId: string | number, actionId: string | number, options: MetricsOptions = {}) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+
+    return this.request.get(
+      `${this.resourceBase('broadcasts', broadcastId)}/actions/${encodeURIComponent(actionId)}/metrics${query}`,
+    );
+  }
+
+  /**
+   * Get link (click) metrics for a single broadcast action over time.
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @param actionId The action's numeric id.
+   * @param options Optional reporting window/filters. See {@link MetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId` or `actionId` is empty.
+   */
+  getBroadcastActionMetricsLinks(
+    broadcastId: string | number,
+    actionId: string | number,
+    options: MetricsOptions = {},
+  ) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    if (isEmpty(actionId)) {
+      throw new MissingParamError('actionId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+
+    return this.request.get(
+      `${this.resourceBase('broadcasts', broadcastId)}/actions/${encodeURIComponent(actionId)}/metrics/links${query}`,
+    );
+  }
+
+  /**
+   * Get delivery metrics for a broadcast over time.
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @param options Optional reporting window/filters. See {@link MetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId` is empty.
+   */
+  getBroadcastMetrics(broadcastId: string | number, options: MetricsOptions = {}) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+
+    return this.request.get(`${this.resourceBase('broadcasts', broadcastId)}/metrics${query}`);
+  }
+
+  /**
+   * Get link (click) metrics for a broadcast over time.
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @param options Optional reporting window. See {@link LinkMetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId` is empty.
+   */
+  getBroadcastMetricsLinks(broadcastId: string | number, options: LinkMetricsOptions = {}) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps, unique: options.unique });
+
+    return this.request.get(`${this.resourceBase('broadcasts', broadcastId)}/metrics/links${query}`);
+  }
+
+  /**
+   * Get the individual messages (deliveries) sent by a broadcast.
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @param options Optional filters/pagination. See {@link BroadcastMessagesOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId` is empty.
+   */
+  getBroadcastMessages(broadcastId: string | number, options: BroadcastMessagesOptions = {}) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    const query = buildQueryString({
+      start: options.start,
+      limit: options.limit,
+      metric: options.metric,
+      state: options.state,
+      type: options.type,
+      start_ts: options.start_ts,
+      end_ts: options.end_ts,
+      get_tracked_responses: options.get_tracked_responses,
+    });
+
+    return this.request.get(`${this.resourceBase('broadcasts', broadcastId)}/messages${query}`);
+  }
+
+  /**
+   * List the API triggers fired for a broadcast.
+   *
+   * @param broadcastId The broadcast's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `broadcastId` is empty.
+   */
+  getBroadcastTriggers(broadcastId: string | number) {
+    if (isEmpty(broadcastId)) {
+      throw new MissingParamError('broadcastId');
+    }
+
+    return this.request.get(`${this.resourceBase('broadcasts', broadcastId)}/triggers`);
   }
 }
 

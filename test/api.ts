@@ -1318,3 +1318,109 @@ test('#getBroadcastTriggerErrors: paginates and validates', (t) => {
   t.context.client.getBroadcastTriggerErrors(1, 5, { start: 'c', limit: 10 });
   t.true(get.calledWith(`${API}/campaigns/1/triggers/5/errors?start=c&limit=10`));
 });
+
+// --- Batch 5: Broadcasts (CDP-6269) ---
+
+test('#listBroadcasts: gets the broadcasts endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listBroadcasts();
+  t.true(get.calledWith(`${API}/broadcasts`));
+});
+
+test('#getBroadcast: gets one broadcast and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcast(''), { message: 'broadcastId is required' });
+  t.context.client.getBroadcast(4);
+  t.true(get.calledWith(`${API}/broadcasts/4`));
+});
+
+test('#getBroadcastActions: lists actions and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcastActions(''), { message: 'broadcastId is required' });
+  t.context.client.getBroadcastActions(4);
+  t.true(get.calledWith(`${API}/broadcasts/4/actions`));
+});
+
+test('#getBroadcastAction: gets one action and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcastAction('', 2), { message: 'broadcastId is required' });
+  t.throws(() => t.context.client.getBroadcastAction(4, ''), { message: 'actionId is required' });
+  t.context.client.getBroadcastAction(4, 2);
+  t.true(get.calledWith(`${API}/broadcasts/4/actions/2`));
+});
+
+test('#updateBroadcastAction: puts the body and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateBroadcastAction('', 2, {}), { message: 'broadcastId is required' });
+  t.throws(() => t.context.client.updateBroadcastAction(4, '', {}), { message: 'actionId is required' });
+  t.context.client.updateBroadcastAction(4, 2, { body: 'x' });
+  t.true(put.calledWith(`${API}/broadcasts/4/actions/2`, { body: 'x' }));
+  t.context.client.updateBroadcastAction(4, 2);
+  t.true(put.calledWith(`${API}/broadcasts/4/actions/2`, {}));
+});
+
+test('#getBroadcastActionLanguage: gets a translation and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcastActionLanguage('', 2, 'en'), { message: 'broadcastId is required' });
+  t.throws(() => t.context.client.getBroadcastActionLanguage(4, '', 'en'), { message: 'actionId is required' });
+  t.throws(() => t.context.client.getBroadcastActionLanguage(4, 2, ''), { message: 'language is required' });
+  t.context.client.getBroadcastActionLanguage(4, 2, 'en-US');
+  t.true(get.calledWith(`${API}/broadcasts/4/actions/2/language/en-US`));
+});
+
+test('#updateBroadcastActionLanguage: puts the translation and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateBroadcastActionLanguage('', 2, 'en', {}), {
+    message: 'broadcastId is required',
+  });
+  t.throws(() => t.context.client.updateBroadcastActionLanguage(4, '', 'en', {}), { message: 'actionId is required' });
+  t.throws(() => t.context.client.updateBroadcastActionLanguage(4, 2, '', {}), { message: 'language is required' });
+  t.context.client.updateBroadcastActionLanguage(4, 2, 'fr', { subject: 'Bonjour' });
+  t.true(put.calledWith(`${API}/broadcasts/4/actions/2/language/fr`, { subject: 'Bonjour' }));
+  t.context.client.updateBroadcastActionLanguage(4, 2, 'fr');
+  t.true(put.calledWith(`${API}/broadcasts/4/actions/2/language/fr`, {}));
+});
+
+test('#getBroadcastActionMetrics: forwards options and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcastActionMetrics('', 2), { message: 'broadcastId is required' });
+  t.throws(() => t.context.client.getBroadcastActionMetrics(4, ''), { message: 'actionId is required' });
+  t.context.client.getBroadcastActionMetrics(4, 2, { period: 'days', steps: 7, type: 'email' });
+  t.true(get.calledWith(`${API}/broadcasts/4/actions/2/metrics?period=days&steps=7&type=email`));
+});
+
+test('#getBroadcastActionMetricsLinks: forwards options and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcastActionMetricsLinks('', 2), { message: 'broadcastId is required' });
+  t.throws(() => t.context.client.getBroadcastActionMetricsLinks(4, ''), { message: 'actionId is required' });
+  t.context.client.getBroadcastActionMetricsLinks(4, 2, { period: 'weeks', steps: 4, type: 'push' });
+  t.true(get.calledWith(`${API}/broadcasts/4/actions/2/metrics/links?period=weeks&steps=4&type=push`));
+});
+
+test('#getBroadcastMetrics: forwards options and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcastMetrics(''), { message: 'broadcastId is required' });
+  t.context.client.getBroadcastMetrics(4, { period: 'days', steps: 30, type: 'email' });
+  t.true(get.calledWith(`${API}/broadcasts/4/metrics?period=days&steps=30&type=email`));
+});
+
+test('#getBroadcastMetricsLinks: forwards unique and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcastMetricsLinks(''), { message: 'broadcastId is required' });
+  t.context.client.getBroadcastMetricsLinks(4, { period: 'days', steps: 30, unique: true });
+  t.true(get.calledWith(`${API}/broadcasts/4/metrics/links?period=days&steps=30&unique=true`));
+});
+
+test('#getBroadcastMessages: forwards filters and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcastMessages(''), { message: 'broadcastId is required' });
+  t.context.client.getBroadcastMessages(4, { metric: 'delivered', state: 'sent', type: 'email', limit: 50 });
+  t.true(get.calledWith(`${API}/broadcasts/4/messages?limit=50&metric=delivered&state=sent&type=email`));
+});
+
+test('#getBroadcastTriggers: gets the triggers endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcastTriggers(''), { message: 'broadcastId is required' });
+  t.context.client.getBroadcastTriggers(4);
+  t.true(get.calledWith(`${API}/broadcasts/4/triggers`));
+});

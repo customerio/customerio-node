@@ -802,3 +802,170 @@ api.getBroadcastTriggerErrors(1, 5, { limit: 100 });
 - **broadcastId**: The broadcast (campaign) id (required)
 - **triggerId**: The trigger id (required)
 - **options**: Object (optional) — `start`, `limit`
+
+### api.listBroadcasts()
+
+List the broadcasts in your workspace.
+
+```javascript
+api.listBroadcasts();
+```
+
+### api.getBroadcast(broadcastId)
+
+Get a single broadcast's metadata.
+
+```javascript
+api.getBroadcast(4);
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
+
+### api.getBroadcastActions(broadcastId)
+
+List a broadcast's actions.
+
+```javascript
+api.getBroadcastActions(4);
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
+
+### api.getBroadcastAction(broadcastId, actionId)
+
+Get a single action of a broadcast.
+
+```javascript
+api.getBroadcastAction(4, 2);
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
+- **actionId**: The action's numeric id (required)
+
+### api.updateBroadcastAction(broadcastId, actionId, data)
+
+Update an action of a broadcast.
+
+```javascript
+api.updateBroadcastAction(4, 2, { body: "Updated body" });
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
+- **actionId**: The action's numeric id (required)
+- **data**: The action fields to update
+
+### api.getBroadcastActionLanguage(broadcastId, actionId, language)
+
+Get a single-language translation of a broadcast action.
+
+```javascript
+api.getBroadcastActionLanguage(4, 2, "en-US");
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
+- **actionId**: The action's numeric id (required)
+- **language**: The IETF language tag (required)
+
+### api.updateBroadcastActionLanguage(broadcastId, actionId, language, data)
+
+Update a single-language translation of a broadcast action.
+
+```javascript
+api.updateBroadcastActionLanguage(4, 2, "fr", { subject: "Bonjour" });
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
+- **actionId**: The action's numeric id (required)
+- **language**: The IETF language tag (required)
+- **data**: The translation fields to update
+
+### api.getBroadcastActionMetrics(broadcastId, actionId, options)
+
+Get metrics for a single broadcast action over time.
+
+```javascript
+api.getBroadcastActionMetrics(4, 2, { period: "days", steps: 7, type: "email" });
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
+- **actionId**: The action's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `type`
+
+### api.getBroadcastActionMetricsLinks(broadcastId, actionId, options)
+
+Get link (click) metrics for a single broadcast action over time.
+
+```javascript
+api.getBroadcastActionMetricsLinks(4, 2, { period: "weeks", steps: 4, type: "email" });
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
+- **actionId**: The action's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `type`
+
+### api.getBroadcastMetrics(broadcastId, options)
+
+Get delivery metrics for a broadcast over time.
+
+```javascript
+api.getBroadcastMetrics(4, { period: "days", steps: 30, type: "email" });
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `type`
+
+### api.getBroadcastMetricsLinks(broadcastId, options)
+
+Get link (click) metrics for a broadcast over time.
+
+```javascript
+api.getBroadcastMetricsLinks(4, { period: "days", steps: 30, unique: true });
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `unique`
+
+### api.getBroadcastMessages(broadcastId, options)
+
+Get the individual messages (deliveries) sent by a broadcast.
+
+```javascript
+api.getBroadcastMessages(4, { metric: "delivered", state: "sent", limit: 50 });
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
+- **options**: Object (optional) — `start`, `limit`, `metric`, `state`, `type`, `start_ts`, `end_ts`, `get_tracked_responses`
+
+### api.getBroadcastTriggers(broadcastId)
+
+List the API triggers fired for a broadcast.
+
+```javascript
+api.getBroadcastTriggers(4);
+```
+
+#### Options
+
+- **broadcastId**: The broadcast's numeric id (required)
