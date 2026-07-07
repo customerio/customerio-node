@@ -77,6 +77,37 @@ export type SegmentInput = {
   description?: string;
 };
 
+/** Time unit for metric reports. */
+export type MetricsPeriod = 'hours' | 'days' | 'weeks' | 'months';
+
+/** Options for {@link APIClient.getTransactionalMessageMetrics}. */
+export type TransactionalMetricsOptions = {
+  /** The time unit each step represents. */
+  period?: MetricsPeriod;
+  /** The number of periods to report over. */
+  steps?: number;
+};
+
+/** Options for {@link APIClient.getTransactionalMessageLinkMetrics}. */
+export type TransactionalLinkMetricsOptions = TransactionalMetricsOptions & {
+  /** When `true`, count unique clicks per link rather than total clicks. */
+  unique?: boolean;
+};
+
+/** Options for {@link APIClient.getTransactionalMessageDeliveries}. */
+export type TransactionalDeliveriesOptions = PaginationOptions & {
+  /** Filter to deliveries with this metric (e.g. `delivered`, `opened`, `bounced`). */
+  metric?: string;
+  /** Filter to deliveries in this state. */
+  state?: 'failed' | 'sent' | 'drafted' | 'attempted';
+  /** Only include deliveries after this Unix timestamp (seconds). */
+  start_ts?: number;
+  /** Only include deliveries before this Unix timestamp (seconds). */
+  end_ts?: number;
+  /** When `true`, include tracked responses (reply/click data) on each delivery. */
+  get_tracked_responses?: boolean;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -839,6 +870,183 @@ export class APIClient {
     }
 
     return this.request.get(`${this.apiRoot}/subscription_center/${encodeURIComponent(customerId)}/token`);
+  }
+
+  /**
+   * List the transactional messages in your workspace.
+   *
+   * @returns The parsed JSON response body.
+   */
+  listTransactionalMessages() {
+    return this.request.get(`${this.apiRoot}/transactional`);
+  }
+
+  /**
+   * Get a single transactional message's metadata.
+   *
+   * @param transactionalId The transactional message's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `transactionalId` is empty.
+   */
+  getTransactionalMessage(transactionalId: string | number) {
+    if (isEmpty(transactionalId)) {
+      throw new MissingParamError('transactionalId');
+    }
+
+    return this.request.get(`${this.apiRoot}/transactional/${encodeURIComponent(transactionalId)}`);
+  }
+
+  /**
+   * List all content variants of a transactional message.
+   *
+   * @param transactionalId The transactional message's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `transactionalId` is empty.
+   */
+  getTransactionalMessageContents(transactionalId: string | number) {
+    if (isEmpty(transactionalId)) {
+      throw new MissingParamError('transactionalId');
+    }
+
+    return this.request.get(`${this.apiRoot}/transactional/${encodeURIComponent(transactionalId)}/contents`);
+  }
+
+  /**
+   * Get a single-language translation of a transactional message.
+   *
+   * @param transactionalId The transactional message's numeric id.
+   * @param language The IETF language tag of the translation.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `transactionalId` or `language` is empty.
+   */
+  getTransactionalMessageLanguage(transactionalId: string | number, language: string) {
+    if (isEmpty(transactionalId)) {
+      throw new MissingParamError('transactionalId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.get(
+      `${this.apiRoot}/transactional/${encodeURIComponent(transactionalId)}/language/${encodeURIComponent(language)}`,
+    );
+  }
+
+  /**
+   * Update a single-language translation of a transactional message.
+   *
+   * @param transactionalId The transactional message's numeric id.
+   * @param language The IETF language tag of the translation.
+   * @param data The translation fields to update.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `transactionalId` or `language` is empty.
+   */
+  updateTransactionalMessageLanguage(transactionalId: string | number, language: string, data: RequestData = {}) {
+    if (isEmpty(transactionalId)) {
+      throw new MissingParamError('transactionalId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.put(
+      `${this.apiRoot}/transactional/${encodeURIComponent(transactionalId)}/language/${encodeURIComponent(language)}`,
+      data,
+    );
+  }
+
+  /**
+   * Get the individual deliveries (sends) of a transactional message.
+   *
+   * @param transactionalId The transactional message's numeric id.
+   * @param options Optional filters/pagination. See {@link TransactionalDeliveriesOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `transactionalId` is empty.
+   */
+  getTransactionalMessageDeliveries(transactionalId: string | number, options: TransactionalDeliveriesOptions = {}) {
+    if (isEmpty(transactionalId)) {
+      throw new MissingParamError('transactionalId');
+    }
+
+    const query = buildQueryString({
+      start: options.start,
+      limit: options.limit,
+      metric: options.metric,
+      state: options.state,
+      start_ts: options.start_ts,
+      end_ts: options.end_ts,
+      get_tracked_responses: options.get_tracked_responses,
+    });
+
+    return this.request.get(`${this.apiRoot}/transactional/${encodeURIComponent(transactionalId)}/messages${query}`);
+  }
+
+  /**
+   * Get delivery metrics for a transactional message over time.
+   *
+   * @param transactionalId The transactional message's numeric id.
+   * @param options Optional reporting window. See {@link TransactionalMetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `transactionalId` is empty.
+   */
+  getTransactionalMessageMetrics(transactionalId: string | number, options: TransactionalMetricsOptions = {}) {
+    if (isEmpty(transactionalId)) {
+      throw new MissingParamError('transactionalId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps });
+
+    return this.request.get(`${this.apiRoot}/transactional/${encodeURIComponent(transactionalId)}/metrics${query}`);
+  }
+
+  /**
+   * Get link (click) metrics for a transactional message over time.
+   *
+   * @param transactionalId The transactional message's numeric id.
+   * @param options Optional reporting window. See {@link TransactionalLinkMetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `transactionalId` is empty.
+   */
+  getTransactionalMessageLinkMetrics(transactionalId: string | number, options: TransactionalLinkMetricsOptions = {}) {
+    if (isEmpty(transactionalId)) {
+      throw new MissingParamError('transactionalId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps, unique: options.unique });
+
+    return this.request.get(
+      `${this.apiRoot}/transactional/${encodeURIComponent(transactionalId)}/metrics/links${query}`,
+    );
+  }
+
+  /**
+   * Update a transactional message's content variant.
+   *
+   * @param transactionalId The transactional message's numeric id.
+   * @param contentId The content variant's numeric id.
+   * @param data The content fields to update.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `transactionalId` or `contentId` is empty.
+   */
+  updateTransactionalMessageContent(
+    transactionalId: string | number,
+    contentId: string | number,
+    data: RequestData = {},
+  ) {
+    if (isEmpty(transactionalId)) {
+      throw new MissingParamError('transactionalId');
+    }
+
+    if (isEmpty(contentId)) {
+      throw new MissingParamError('contentId');
+    }
+
+    return this.request.put(
+      `${this.apiRoot}/transactional/${encodeURIComponent(transactionalId)}/content/${encodeURIComponent(contentId)}`,
+      data,
+    );
   }
 }
 
