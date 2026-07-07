@@ -715,10 +715,14 @@ export class APIClient {
    *
    * @param segment The segment definition. `name` is required. See {@link SegmentInput}.
    * @returns The parsed JSON response body (`{ segment: {...} }`).
-   * @throws {MissingParamError} If `segment` or `segment.name` is empty.
+   * @throws {MissingParamError} If `segment` is missing/not an object, or `segment.name` is empty.
    */
   createSegment(segment: SegmentInput) {
-    if (segment == null || typeof segment !== 'object' || isEmpty(segment.name)) {
+    if (segment == null || typeof segment !== 'object') {
+      throw new MissingParamError('segment');
+    }
+
+    if (isEmpty(segment.name)) {
       throw new MissingParamError('segment.name');
     }
 

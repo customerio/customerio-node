@@ -1016,9 +1016,9 @@ test('#listSegments: gets the segments endpoint', (t) => {
 
 test('#createSegment: posts a segment wrapped under `segment`', (t) => {
   const post = sinon.stub(t.context.client.request, 'post');
-  t.throws(() => (t.context.client.createSegment as any)(null), { message: 'segment.name is required' });
+  t.throws(() => (t.context.client.createSegment as any)(null), { message: 'segment is required' });
+  t.throws(() => (t.context.client.createSegment as any)('nope'), { message: 'segment is required' });
   t.throws(() => (t.context.client.createSegment as any)({}), { message: 'segment.name is required' });
-  t.throws(() => (t.context.client.createSegment as any)('nope'), { message: 'segment.name is required' });
   t.context.client.createSegment({ name: 'VIPs', description: 'high value' });
   t.true(post.calledWith(`${API}/segments`, { segment: { name: 'VIPs', description: 'high value' } }));
 });
