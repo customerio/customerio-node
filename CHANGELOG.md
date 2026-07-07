@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.1.0]
+
+#### Added
+
+- **Track API completeness.** Added the remaining Track API methods to `TrackClient`: `entity` (the single-request counterpart to `batch`), `addCustomersToSegment`, `removeCustomersFromSegment`, `submitForm`, `reportMetric`, `getAccountRegion`, and `unsubscribe`. ([#224](https://github.com/customerio/customerio-node/pull/224))
+- **`verifyRequestSignature`** helper for validating inbound Customer.io reporting webhooks. It recomputes the HMAC-SHA256 signature from your signing secret and compares it in constant time. ([#227](https://github.com/customerio/customerio-node/pull/227))
+- **App API customer & object methods** on `APIClient`: `getCustomerActivities`, `getCustomerMessages`, `getCustomerRelationships`, `getCustomerSegments`, `getCustomerSubscriptionPreferences`, `searchCustomers`, `getCustomersAttributes`, `getObjectAttributes`, `getObjectRelationships`, `findObjects`, `listObjectTypes`, and `listActivities`. ([#228](https://github.com/customerio/customerio-node/pull/228))
+- **App API segment & subscription methods** on `APIClient`: `listSegments`, `createSegment`, `getSegment`, `deleteSegment`, `getSegmentCustomerCount`, `getSegmentMembership`, `getSegmentUsedBy`, `listSubscriptionTopics`, `listSubscriptionChannels`, and `getSubscriptionCenterToken`. ([#229](https://github.com/customerio/customerio-node/pull/229))
+
+#### Fixed
+
+- **`addDevice` no longer drops a `last_used` timestamp of `0`.** A truthy guard previously discarded the Unix epoch; any valid timestamp is now sent. ([#224](https://github.com/customerio/customerio-node/pull/224))
+
+#### Changed
+
+- **API method documentation moved out of the README** into per-client guides under [`docs/`](https://github.com/customerio/customerio-node/tree/main/docs) (Track, App, Pipelines, and Webhooks); the README now links to them. ([#225](https://github.com/customerio/customerio-node/pull/225))
+
+#### Internal
+
+- Publish the generated Typedoc API reference to GitHub Pages via a CI workflow. ([#225](https://github.com/customerio/customerio-node/pull/225))
+- Bump `tar` dev dependency from 7.5.15 to 7.5.16. ([#223](https://github.com/customerio/customerio-node/pull/223))
+
 ## [5.0.1]
 
 #### Fixed
