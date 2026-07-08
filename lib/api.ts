@@ -9,7 +9,7 @@ import {
   SendInAppRequest,
 } from './api/requests';
 import { isEmpty, isIdentifierType, isObjectIdType, buildQueryString, MissingParamError } from './utils';
-import type { Filter } from './types';
+import type { Filter, ObjectFilter } from './types';
 import { IdentifierType } from './types';
 
 /** Which identifier kind the values in an object endpoint refer to. */
@@ -760,19 +760,13 @@ export class APIClient {
    * Find objects of a given type matching a filter.
    *
    * @param objectTypeId The object type's numeric id.
-   * @param filter A filter expression (and/or/not).
+   * @param filter An {@link ObjectFilter} expression — `object_attribute` leaf
+   *   conditions composed with `and` / `or` / `not`.
    * @param options Optional pagination. See {@link PaginationOptions}.
    * @returns The parsed JSON response body.
    * @throws {MissingParamError} If `objectTypeId` is empty or `filter` is `null`/`undefined`.
-   *
-   * @remarks
-   * The object filter schema differs from the audience {@link Filter} (it uses
-   * `object_attribute` conditions with a `type_id` and has no `segment`). A
-   * dedicated `ObjectFilter` type (plus top-level `not` support for both
-   * filters) is tracked as a follow-up; for now `filter` is typed loosely as
-   * `Record<string, any>` to avoid implying the audience shape is accepted.
    */
-  findObjects(objectTypeId: string | number, filter: Record<string, any>, options: PaginationOptions = {}) {
+  findObjects(objectTypeId: string | number, filter: ObjectFilter, options: PaginationOptions = {}) {
     if (isEmpty(objectTypeId)) {
       throw new MissingParamError('objectTypeId');
     }

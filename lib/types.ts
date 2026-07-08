@@ -11,45 +11,66 @@ export enum IdentifierType {
   CioId = 'cio_id',
 }
 
-/** Comparison operators supported in {@link AttributeFilter}. */
+/** Comparison operators supported in attribute and object conditions. */
 export enum FilterOperator {
   Eq = 'eq',
   Exists = 'exists',
 }
 
-/** Filter matching everyone in a given segment. */
-export type SegmentFilter = {
-  id: number;
+/** A leaf condition matching everyone in a given segment. */
+export type SegmentCondition = {
+  segment: { id: number };
 };
 
-/** Filter matching people whose attribute satisfies an operator/value. */
-export type AttributeFilter = {
-  field: string;
-  operator: FilterOperator;
-  value?: string;
-};
-
-/** Negation of either a segment or attribute filter. */
-export type NotFilter = {
-  segment?: SegmentFilter;
-  attribute?: AttributeFilter;
-};
-
-/** Union of the leaf filter shapes that compose larger boolean filters. */
-export type FilterObject = SegmentFilter | AttributeFilter | NotFilter;
-
-/** All sub-filters must match. */
-export type AndFilter = {
-  and: FilterObject[];
-};
-
-/** At least one sub-filter must match. */
-export type OrFilter = {
-  or: FilterObject[];
+/** A leaf condition matching people whose attribute satisfies an operator/value. */
+export type AttributeCondition = {
+  attribute: {
+    field: string;
+    operator: FilterOperator;
+    value?: string;
+  };
 };
 
 /**
- * Top-level filter expression. Compose with {@link AndFilter} / {@link OrFilter}
- * and nest {@link SegmentFilter}, {@link AttributeFilter}, or {@link NotFilter}.
+ * An audience (people) filter expression. Compose `segment` and `attribute`
+ * leaf conditions with `and` / `or` / `not` (each may nest arbitrarily).
+ *
+ * Used by {@link https://customer.io/docs/api/app/#operation/getCustomersByFilter searchCustomers}
+ * and delivery/customer exports.
  */
-export type Filter = AndFilter | OrFilter;
+export type AudienceFilter =
+  | SegmentCondition
+  | AttributeCondition
+  | { and: AudienceFilter[] }
+  | { or: AudienceFilter[] }
+  | { not: AudienceFilter };
+
+/**
+ * Backwards-compatible alias for {@link AudienceFilter}, the people-filter
+ * expression accepted by `searchCustomers` and `createCustomersExport`.
+ */
+export type Filter = AudienceFilter;
+
+/**
+ * A leaf condition matching objects whose attribute satisfies an operator/value.
+ * `type_id` (the object type) is required by the API.
+ */
+export type ObjectAttributeCondition = {
+  object_attribute: {
+    field: string;
+    operator: FilterOperator;
+    value?: string;
+    type_id: number;
+  };
+};
+
+/**
+ * An object filter expression. Compose `object_attribute` leaf conditions with
+ * `and` / `or` / `not`. Unlike {@link AudienceFilter}, it has no `segment`
+ * conditions. Used by `findObjects`.
+ */
+export type ObjectFilter =
+  | ObjectAttributeCondition
+  | { and: ObjectFilter[] }
+  | { or: ObjectFilter[] }
+  | { not: ObjectFilter };

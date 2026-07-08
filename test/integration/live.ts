@@ -165,7 +165,7 @@ needs('CIO_TEST_OBJECT_TYPE_ID')('findObjects resolves for a test object type', 
   const typeId = process.env.CIO_TEST_OBJECT_TYPE_ID!;
   const filter = {
     and: [{ object_attribute: { field: 'name', operator: 'exists', type_id: Number(typeId) } }],
-  };
+  } as unknown as Parameters<APIClient['findObjects']>[1];
   const result = (await api!.findObjects(typeId, filter, { limit: 5 })) as Record<string, unknown>;
   t.truthy(result);
 });
