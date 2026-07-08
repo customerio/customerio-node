@@ -1158,3 +1158,139 @@ api.scheduleNewsletter(8, { scheduled_at: 1719792000, timezone: "America/New_Yor
   - _scheduled_at_: Unix timestamp (seconds) when the newsletter should send (required, must be in the future)
   - _timezone_: IANA timezone the scheduled time is expressed in (required)
   - Optional: `tz_match_enabled`, `rate_limit_email_rate`, `rate_limit_time_period`, `rate_limit_spread`
+
+### api.createNewsletterLanguage(newsletterId, data)
+
+Add a language (translation) to a newsletter. `language` is required, and the required content fields depend on the newsletter's channel (e.g. an email newsletter requires `subject` and `body`).
+
+```javascript
+api.createNewsletterLanguage(8, { language: "fr", subject: "Bonjour", body: "<p>Bonjour&nbsp;!</p>" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **data**: The translation content
+  - _language_: The IETF language tag (required)
+  - _subject_ / _body_: Required for email; other channels require their own fields (e.g. `body_json` for in-app/inbox, `body` for SMS/webhook)
+
+### api.getNewsletterLanguage(newsletterId, language)
+
+Get a single-language translation of a newsletter.
+
+```javascript
+api.getNewsletterLanguage(8, "en-US");
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **language**: The IETF language tag (required)
+
+### api.updateNewsletterLanguage(newsletterId, language, data)
+
+Update a single-language translation of a newsletter.
+
+```javascript
+api.updateNewsletterLanguage(8, "fr", { subject: "Salut" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **language**: The IETF language tag (required)
+- **data**: The translation fields to update
+
+### api.deleteNewsletterLanguage(newsletterId, language)
+
+Delete a single-language translation of a newsletter.
+
+```javascript
+api.deleteNewsletterLanguage(8, "fr");
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **language**: The IETF language tag (required)
+
+### api.getNewsletterTestGroups(newsletterId)
+
+List a newsletter's A/B test groups.
+
+```javascript
+api.getNewsletterTestGroups(8);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+
+### api.createNewsletterTestGroup(newsletterId)
+
+Create an A/B test group on a newsletter. The API takes no request body — a new empty test group is created.
+
+```javascript
+api.createNewsletterTestGroup(8);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+
+### api.createNewsletterTestGroupLanguage(newsletterId, testGroupId, data)
+
+Add a language (translation) to a newsletter test group. Same content requirements as `createNewsletterLanguage` (`language` required, plus channel-specific fields such as `subject`/`body` for email).
+
+```javascript
+api.createNewsletterTestGroupLanguage(8, 2, { language: "fr", subject: "Bonjour", body: "<p>Bonjour&nbsp;!</p>" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **testGroupId**: The test group's id (required)
+- **data**: The translation content (`language` required; channel-specific content fields required)
+
+### api.getNewsletterTestGroupLanguage(newsletterId, testGroupId, language)
+
+Get a single-language translation of a newsletter test group.
+
+```javascript
+api.getNewsletterTestGroupLanguage(8, 2, "en-US");
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **testGroupId**: The test group's id (required)
+- **language**: The IETF language tag (required)
+
+### api.updateNewsletterTestGroupLanguage(newsletterId, testGroupId, language, data)
+
+Update a single-language translation of a newsletter test group.
+
+```javascript
+api.updateNewsletterTestGroupLanguage(8, 2, "fr", { subject: "Salut" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **testGroupId**: The test group's id (required)
+- **language**: The IETF language tag (required)
+- **data**: The translation fields to update
+
+### api.deleteNewsletterTestGroupLanguage(newsletterId, testGroupId, language)
+
+Delete a single-language translation of a newsletter test group.
+
+```javascript
+api.deleteNewsletterTestGroupLanguage(8, 2, "fr");
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **testGroupId**: The test group's id (required)
+- **language**: The IETF language tag (required)
