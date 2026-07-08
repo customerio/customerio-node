@@ -13,8 +13,8 @@ import {
   SendInAppRequest,
 } from '../lib/api';
 import { RegionUS, RegionEU } from '../lib/regions';
-import type { Filter } from '../lib/types';
-import { IdentifierType } from '../lib/types';
+import type { Filter, ObjectFilter } from '../lib/types';
+import { IdentifierType, FilterOperator } from '../lib/types';
 
 type TestContext = { client: APIClient };
 
@@ -978,11 +978,29 @@ test('#getObjectRelationships: paginates the object relationships path', (t) => 
 
 test('#findObjects: posts object_type_id + filter with pagination', (t) => {
   const post = sinon.stub(t.context.client.request, 'post');
-  const filter = { and: [{ object_attribute: { field: 'name', operator: 'eq', value: 'acme', type_id: 1 } }] };
+  const filter: ObjectFilter = {
+    and: [{ object_attribute: { field: 'name', operator: FilterOperator.Eq, value: 'acme', type_id: 1 } }],
+  };
   t.throws(() => t.context.client.findObjects('', filter), { message: 'objectTypeId is required' });
   t.throws(() => (t.context.client.findObjects as any)(1, null), { message: 'filter is required' });
   t.context.client.findObjects(1, filter, { start: 'c' });
   t.true(post.calledWith(`${API}/objects?start=c`, { object_type_id: 1, filter }));
+});
+
+test('#findObjects: accepts a top-level not object filter', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  const filter: ObjectFilter = {
+    not: { object_attribute: { field: 'archived', operator: FilterOperator.Exists, type_id: 1 } },
+  };
+  t.context.client.findObjects(1, filter);
+  t.true(post.calledWith(`${API}/objects`, { object_type_id: 1, filter }));
+});
+
+test('#searchCustomers: accepts a top-level not audience filter', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  const filter: Filter = { not: { segment: { id: 7 } } };
+  t.context.client.searchCustomers(filter);
+  t.true(post.calledWith(`${API}/customers`, { filter }));
 });
 
 test('#listObjectTypes: gets the object_types endpoint', (t) => {
