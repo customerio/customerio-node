@@ -1178,3 +1178,143 @@ test('#updateTransactionalMessageContent: puts the content body and validates', 
   t.context.client.updateTransactionalMessageContent(3, 6);
   t.true(put.calledWith(`${API}/transactional/3/content/6`, {}));
 });
+
+// --- Batch 4: Campaigns (CDP-6268) ---
+
+test('#listCampaigns: gets the campaigns endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listCampaigns();
+  t.true(get.calledWith(`${API}/campaigns`));
+});
+
+test('#getCampaign: gets one campaign and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCampaign(''), { message: 'campaignId is required' });
+  t.context.client.getCampaign(9);
+  t.true(get.calledWith(`${API}/campaigns/9`));
+});
+
+test('#getCampaignActions: lists actions with optional start', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCampaignActions(''), { message: 'campaignId is required' });
+  t.context.client.getCampaignActions(9);
+  t.true(get.calledWith(`${API}/campaigns/9/actions`));
+  t.context.client.getCampaignActions(9, { start: 'cur' });
+  t.true(get.calledWith(`${API}/campaigns/9/actions?start=cur`));
+});
+
+test('#getCampaignAction: gets one action and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCampaignAction('', 2), { message: 'campaignId is required' });
+  t.throws(() => t.context.client.getCampaignAction(9, ''), { message: 'actionId is required' });
+  t.context.client.getCampaignAction(9, 2);
+  t.true(get.calledWith(`${API}/campaigns/9/actions/2`));
+});
+
+test('#updateCampaignAction: puts the body and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateCampaignAction('', 2, {}), { message: 'campaignId is required' });
+  t.throws(() => t.context.client.updateCampaignAction(9, '', {}), { message: 'actionId is required' });
+  t.context.client.updateCampaignAction(9, 2, { body: 'x' });
+  t.true(put.calledWith(`${API}/campaigns/9/actions/2`, { body: 'x' }));
+  t.context.client.updateCampaignAction(9, 2);
+  t.true(put.calledWith(`${API}/campaigns/9/actions/2`, {}));
+});
+
+test('#getCampaignActionLanguage: gets a translation and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCampaignActionLanguage('', 2, 'en'), { message: 'campaignId is required' });
+  t.throws(() => t.context.client.getCampaignActionLanguage(9, '', 'en'), { message: 'actionId is required' });
+  t.throws(() => t.context.client.getCampaignActionLanguage(9, 2, ''), { message: 'language is required' });
+  t.context.client.getCampaignActionLanguage(9, 2, 'en-US');
+  t.true(get.calledWith(`${API}/campaigns/9/actions/2/language/en-US`));
+});
+
+test('#updateCampaignActionLanguage: puts the translation and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateCampaignActionLanguage('', 2, 'en', {}), {
+    message: 'campaignId is required',
+  });
+  t.throws(() => t.context.client.updateCampaignActionLanguage(9, '', 'en', {}), { message: 'actionId is required' });
+  t.throws(() => t.context.client.updateCampaignActionLanguage(9, 2, '', {}), { message: 'language is required' });
+  t.context.client.updateCampaignActionLanguage(9, 2, 'fr', { subject: 'Bonjour' });
+  t.true(put.calledWith(`${API}/campaigns/9/actions/2/language/fr`, { subject: 'Bonjour' }));
+  t.context.client.updateCampaignActionLanguage(9, 2, 'fr');
+  t.true(put.calledWith(`${API}/campaigns/9/actions/2/language/fr`, {}));
+});
+
+test('#getCampaignActionMetrics: forwards version + options and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCampaignActionMetrics('', 2, '1'), { message: 'campaignId is required' });
+  t.throws(() => t.context.client.getCampaignActionMetrics(9, '', '1'), { message: 'actionId is required' });
+  t.throws(() => t.context.client.getCampaignActionMetrics(9, 2, '' as any), { message: 'version is required' });
+  t.context.client.getCampaignActionMetrics(9, 2, '2', { type: 'email', period: 'days', steps: 7 });
+  t.true(get.calledWith(`${API}/campaigns/9/actions/2/metrics?version=2&type=email&period=days&steps=7`));
+});
+
+test('#getCampaignActionMetricsLinks: forwards type and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCampaignActionMetricsLinks('', 2), { message: 'campaignId is required' });
+  t.throws(() => t.context.client.getCampaignActionMetricsLinks(9, ''), { message: 'actionId is required' });
+  t.context.client.getCampaignActionMetricsLinks(9, 2, { period: 'weeks', steps: 4, type: 'push' });
+  t.true(get.calledWith(`${API}/campaigns/9/actions/2/metrics/links?period=weeks&steps=4&type=push`));
+});
+
+test('#getCampaignMetrics: forwards version + options and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCampaignMetrics('', '1'), { message: 'campaignId is required' });
+  t.throws(() => t.context.client.getCampaignMetrics(9, '' as any), { message: 'version is required' });
+  t.context.client.getCampaignMetrics(9, '1', { res: 'daily', tz: 'America/New_York', start: 100, end: 200 });
+  t.true(get.calledWith(`${API}/campaigns/9/metrics?version=1&res=daily&tz=America%2FNew_York&start=100&end=200`));
+});
+
+test('#getCampaignMetricsLinks: forwards unique and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCampaignMetricsLinks(''), { message: 'campaignId is required' });
+  t.context.client.getCampaignMetricsLinks(9, { period: 'days', steps: 30, unique: true });
+  t.true(get.calledWith(`${API}/campaigns/9/metrics/links?period=days&steps=30&unique=true`));
+});
+
+test('#getCampaignJourneyMetrics: requires window + resolution', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCampaignJourneyMetrics('', { start: 1, end: 2, res: 'days' }), {
+    message: 'campaignId is required',
+  });
+  t.throws(() => (t.context.client.getCampaignJourneyMetrics as any)(9, null), {
+    message: 'options.start is required',
+  });
+  t.throws(() => (t.context.client.getCampaignJourneyMetrics as any)(9, { end: 2, res: 'days' }), {
+    message: 'options.start is required',
+  });
+  t.throws(() => (t.context.client.getCampaignJourneyMetrics as any)(9, { start: 1, res: 'days' }), {
+    message: 'options.end is required',
+  });
+  t.throws(() => (t.context.client.getCampaignJourneyMetrics as any)(9, { start: 1, end: 2 }), {
+    message: 'options.res is required',
+  });
+  t.context.client.getCampaignJourneyMetrics(9, { start: 100, end: 200, res: 'daily' });
+  t.true(get.calledWith(`${API}/campaigns/9/journey_metrics?start=100&end=200&res=daily`));
+});
+
+test('#getCampaignMessages: forwards filters and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCampaignMessages(''), { message: 'campaignId is required' });
+  t.context.client.getCampaignMessages(9, { type: 'email', metric: 'delivered', drafts: true, limit: 50 });
+  t.true(get.calledWith(`${API}/campaigns/9/messages?limit=50&type=email&metric=delivered&drafts=true`));
+});
+
+test('#getBroadcastTriggerStatus: gets the trigger status and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcastTriggerStatus('', 5), { message: 'broadcastId is required' });
+  t.throws(() => t.context.client.getBroadcastTriggerStatus(1, ''), { message: 'triggerId is required' });
+  t.context.client.getBroadcastTriggerStatus(1, 5);
+  t.true(get.calledWith(`${API}/campaigns/1/triggers/5`));
+});
+
+test('#getBroadcastTriggerErrors: paginates and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getBroadcastTriggerErrors('', 5), { message: 'broadcastId is required' });
+  t.throws(() => t.context.client.getBroadcastTriggerErrors(1, ''), { message: 'triggerId is required' });
+  t.context.client.getBroadcastTriggerErrors(1, 5, { start: 'c', limit: 10 });
+  t.true(get.calledWith(`${API}/campaigns/1/triggers/5/errors?start=c&limit=10`));
+});

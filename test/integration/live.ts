@@ -24,6 +24,8 @@
  *   CIO_TEST_DELIVERY_ID             CIO-Delivery-ID for reportMetric + unsubscribe
  *   CIO_TEST_OBJECT_TYPE_ID          object type id for object attribute/relationship/find reads
  *   CIO_TEST_OBJECT_ID               object id for object reads (defaults to a throwaway id)
+ *   CIO_TEST_CAMPAIGN_ID             campaign id for campaign read methods
+ *   CIO_TEST_TRIGGER_ID              trigger id (with CIO_TEST_BROADCAST_ID) for trigger status/errors
  *
  * Profile lifecycle: one throwaway customer per run, id = `sdk-live-${uuid()}`.
  * Cleanup is best-effort; the dedicated workspace tolerates orphans.
@@ -222,6 +224,34 @@ needs('CIO_TEST_TRANSACTIONAL_ID')('transactional message reads resolve for a kn
   await api!.getTransactionalMessageDeliveries(id, { limit: 5 }).catch(() => undefined);
   await api!.getTransactionalMessageMetrics(id, { period: 'days', steps: 7 }).catch(() => undefined);
   await api!.getTransactionalMessageLinkMetrics(id, { period: 'days', steps: 7 }).catch(() => undefined);
+  t.pass();
+});
+
+liveTest('listCampaigns resolves', async (t) => {
+  const result = (await api!.listCampaigns()) as Record<string, unknown>;
+  t.true('campaigns' in result);
+});
+
+// Read-only campaign lookups for a known campaign id. Action update methods
+// are covered by unit tests only (they mutate live campaigns).
+needs('CIO_TEST_CAMPAIGN_ID')('campaign reads resolve for a known id', async (t) => {
+  const id = process.env.CIO_TEST_CAMPAIGN_ID!;
+  const end = Math.floor(Date.now() / 1000);
+  const start = end - 7 * 24 * 60 * 60;
+  await api!.getCampaign(id).catch(() => undefined);
+  await api!.getCampaignActions(id).catch(() => undefined);
+  await api!.getCampaignMetrics(id, '1', { period: 'days', steps: 7 }).catch(() => undefined);
+  await api!.getCampaignMetricsLinks(id, { period: 'days', steps: 7 }).catch(() => undefined);
+  await api!.getCampaignJourneyMetrics(id, { start, end, res: 'days' }).catch(() => undefined);
+  await api!.getCampaignMessages(id, { limit: 5 }).catch(() => undefined);
+  t.pass();
+});
+
+needs('CIO_TEST_TRIGGER_ID')('broadcast trigger status + errors resolve', async (t) => {
+  const broadcastId = process.env.CIO_TEST_BROADCAST_ID ?? '';
+  const triggerId = process.env.CIO_TEST_TRIGGER_ID!;
+  await api!.getBroadcastTriggerStatus(broadcastId, triggerId).catch(() => undefined);
+  await api!.getBroadcastTriggerErrors(broadcastId, triggerId, { limit: 5 }).catch(() => undefined);
   t.pass();
 });
 
