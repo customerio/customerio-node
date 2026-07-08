@@ -984,15 +984,21 @@ api.listNewsletters({ limit: 25, sort: "desc" });
 
 ### api.createNewsletter(data)
 
-Create a newsletter.
+Create a newsletter. Both `name` and `recipients` (an audience filter) are required.
 
 ```javascript
-api.createNewsletter({ name: "Weekly digest" });
+api.createNewsletter({
+  name: "Weekly digest",
+  recipients: { segment: { id: 7 } },
+});
 ```
 
 #### Options
 
 - **data**: The newsletter definition
+  - _name_: The newsletter's name, ≤190 characters (required)
+  - _recipients_: An audience filter selecting who receives the newsletter (required)
+  - Additional fields may be required depending on configuration (e.g. channel-specific `subject`/`body`, or `subscription_topic_id` when the subscription center is enabled)
 
 ### api.getNewsletter(newsletterId)
 
@@ -1062,41 +1068,41 @@ api.updateNewsletterContent(8, 3, { subject: "Updated subject" });
 Get metrics for a single newsletter content variant over time.
 
 ```javascript
-api.getNewsletterContentMetrics(8, 3, { period: "days", steps: 7, type: "email" });
+api.getNewsletterContentMetrics(8, 3, { period: "days", steps: 7 });
 ```
 
 #### Options
 
 - **newsletterId**: The newsletter's numeric id (required)
 - **contentId**: The content variant's numeric id (required)
-- **options**: Object (optional) — `period`, `steps`, `type` ("email" / "webhook" / "twilio" / "push" / "in_app" / "inbox")
+- **options**: Object (optional) — `period`, `steps` (newsletter metrics are always aggregated across all channels)
 
 ### api.getNewsletterContentMetricsLinks(newsletterId, contentId, options)
 
 Get link (click) metrics for a single newsletter content variant over time.
 
 ```javascript
-api.getNewsletterContentMetricsLinks(8, 3, { period: "weeks", steps: 4, type: "email" });
+api.getNewsletterContentMetricsLinks(8, 3, { period: "weeks", steps: 4, unique: true });
 ```
 
 #### Options
 
 - **newsletterId**: The newsletter's numeric id (required)
 - **contentId**: The content variant's numeric id (required)
-- **options**: Object (optional) — `period`, `steps`, `type`
+- **options**: Object (optional) — `period`, `steps`, `unique`
 
 ### api.getNewsletterMetrics(newsletterId, options)
 
 Get delivery metrics for a newsletter over time.
 
 ```javascript
-api.getNewsletterMetrics(8, { period: "days", steps: 30, type: "email" });
+api.getNewsletterMetrics(8, { period: "days", steps: 30 });
 ```
 
 #### Options
 
 - **newsletterId**: The newsletter's numeric id (required)
-- **options**: Object (optional) — `period`, `steps`, `type`
+- **options**: Object (optional) — `period`, `steps` (newsletter metrics are always aggregated across all channels)
 
 ### api.getNewsletterMetricsLinks(newsletterId, options)
 
@@ -1122,7 +1128,7 @@ api.getNewsletterMessages(8, { metric: "delivered", limit: 50 });
 #### Options
 
 - **newsletterId**: The newsletter's numeric id (required)
-- **options**: Object (optional) — `start`, `limit`, `metric`, `start_ts`, `end_ts`, `get_tracked_responses`
+- **options**: Object (optional) — `start`, `limit`, `metric`, `type` ("email" / "webhook" / "twilio" / "push" / "in_app" / "inbox"), `start_ts`, `end_ts`, `get_tracked_responses`
 
 ### api.sendNewsletter(newsletterId, data)
 
@@ -1139,13 +1145,16 @@ api.sendNewsletter(8, { rate_limit_email_rate: 100, rate_limit_time_period: 60 }
 
 ### api.scheduleNewsletter(newsletterId, data)
 
-Schedule a newsletter to send later.
+Schedule a newsletter to send later. `scheduled_at` (a Unix timestamp) and `timezone` are both required.
 
 ```javascript
-api.scheduleNewsletter(8, { timestamp: 1719792000 });
+api.scheduleNewsletter(8, { scheduled_at: 1719792000, timezone: "America/New_York" });
 ```
 
 #### Options
 
 - **newsletterId**: The newsletter's numeric id (required)
 - **data**: The schedule settings
+  - _scheduled_at_: Unix timestamp (seconds) when the newsletter should send (required, must be in the future)
+  - _timezone_: IANA timezone the scheduled time is expressed in (required)
+  - Optional: `tz_match_enabled`, `rate_limit_email_rate`, `rate_limit_time_period`, `rate_limit_spread`

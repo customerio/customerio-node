@@ -1437,8 +1437,9 @@ test('#listNewsletters: forwards pagination + sort', (t) => {
 
 test('#createNewsletter: posts the body', (t) => {
   const post = sinon.stub(t.context.client.request, 'post');
-  t.context.client.createNewsletter({ name: 'Weekly' });
-  t.true(post.calledWith(`${API}/newsletters`, { name: 'Weekly' }));
+  const newsletter = { name: 'Weekly', recipients: { segment: { id: 7 } } };
+  t.context.client.createNewsletter(newsletter);
+  t.true(post.calledWith(`${API}/newsletters`, newsletter));
   t.context.client.createNewsletter();
   t.true(post.calledWith(`${API}/newsletters`, {}));
 });
@@ -1486,23 +1487,23 @@ test('#getNewsletterContentMetrics: forwards options and validates', (t) => {
   const get = sinon.stub(t.context.client.request, 'get');
   t.throws(() => t.context.client.getNewsletterContentMetrics('', 3), { message: 'newsletterId is required' });
   t.throws(() => t.context.client.getNewsletterContentMetrics(8, ''), { message: 'contentId is required' });
-  t.context.client.getNewsletterContentMetrics(8, 3, { period: 'days', steps: 7, type: 'inbox' });
-  t.true(get.calledWith(`${API}/newsletters/8/contents/3/metrics?period=days&steps=7&type=inbox`));
+  t.context.client.getNewsletterContentMetrics(8, 3, { period: 'days', steps: 7 });
+  t.true(get.calledWith(`${API}/newsletters/8/contents/3/metrics?period=days&steps=7`));
 });
 
 test('#getNewsletterContentMetricsLinks: forwards options and validates', (t) => {
   const get = sinon.stub(t.context.client.request, 'get');
   t.throws(() => t.context.client.getNewsletterContentMetricsLinks('', 3), { message: 'newsletterId is required' });
   t.throws(() => t.context.client.getNewsletterContentMetricsLinks(8, ''), { message: 'contentId is required' });
-  t.context.client.getNewsletterContentMetricsLinks(8, 3, { period: 'weeks', steps: 4, type: 'email' });
-  t.true(get.calledWith(`${API}/newsletters/8/contents/3/metrics/links?period=weeks&steps=4&type=email`));
+  t.context.client.getNewsletterContentMetricsLinks(8, 3, { period: 'weeks', steps: 4, unique: true });
+  t.true(get.calledWith(`${API}/newsletters/8/contents/3/metrics/links?period=weeks&steps=4&unique=true`));
 });
 
 test('#getNewsletterMetrics: forwards options and validates', (t) => {
   const get = sinon.stub(t.context.client.request, 'get');
   t.throws(() => t.context.client.getNewsletterMetrics(''), { message: 'newsletterId is required' });
-  t.context.client.getNewsletterMetrics(8, { period: 'days', steps: 30, type: 'email' });
-  t.true(get.calledWith(`${API}/newsletters/8/metrics?period=days&steps=30&type=email`));
+  t.context.client.getNewsletterMetrics(8, { period: 'days', steps: 30 });
+  t.true(get.calledWith(`${API}/newsletters/8/metrics?period=days&steps=30`));
 });
 
 test('#getNewsletterMetricsLinks: forwards unique and validates', (t) => {
@@ -1515,8 +1516,15 @@ test('#getNewsletterMetricsLinks: forwards unique and validates', (t) => {
 test('#getNewsletterMessages: forwards filters and validates', (t) => {
   const get = sinon.stub(t.context.client.request, 'get');
   t.throws(() => t.context.client.getNewsletterMessages(''), { message: 'newsletterId is required' });
-  t.context.client.getNewsletterMessages(8, { metric: 'delivered', limit: 50, get_tracked_responses: true });
-  t.true(get.calledWith(`${API}/newsletters/8/messages?limit=50&metric=delivered&get_tracked_responses=true`));
+  t.context.client.getNewsletterMessages(8, {
+    metric: 'delivered',
+    type: 'email',
+    limit: 50,
+    get_tracked_responses: true,
+  });
+  t.true(
+    get.calledWith(`${API}/newsletters/8/messages?limit=50&metric=delivered&type=email&get_tracked_responses=true`),
+  );
 });
 
 test('#sendNewsletter: posts send settings and validates', (t) => {
@@ -1531,8 +1539,9 @@ test('#sendNewsletter: posts send settings and validates', (t) => {
 test('#scheduleNewsletter: posts schedule settings and validates', (t) => {
   const post = sinon.stub(t.context.client.request, 'post');
   t.throws(() => t.context.client.scheduleNewsletter(''), { message: 'newsletterId is required' });
-  t.context.client.scheduleNewsletter(8, { timestamp: 1719792000 });
-  t.true(post.calledWith(`${API}/newsletters/8/schedule`, { timestamp: 1719792000 }));
+  const schedule = { scheduled_at: 1719792000, timezone: 'America/New_York' };
+  t.context.client.scheduleNewsletter(8, schedule);
+  t.true(post.calledWith(`${API}/newsletters/8/schedule`, schedule));
   t.context.client.scheduleNewsletter(8);
   t.true(post.calledWith(`${API}/newsletters/8/schedule`, {}));
 });

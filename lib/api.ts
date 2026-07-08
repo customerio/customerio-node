@@ -206,24 +206,29 @@ export type ListNewslettersOptions = PaginationOptions & {
 };
 
 /**
- * Message channel a newsletter metric query can be scoped to. Newsletters
- * support a slightly different channel set than campaigns/broadcasts (notably
- * `inbox`, and no `whatsapp`/`slack`).
+ * Message channel a newsletter can be scoped to. Newsletters support a slightly
+ * different channel set than campaigns/broadcasts (notably `inbox`, and no
+ * `whatsapp`/`slack`).
  */
-export type NewsletterMetricType = 'email' | 'webhook' | 'twilio' | 'push' | 'in_app' | 'inbox';
+export type NewsletterChannelType = 'email' | 'webhook' | 'twilio' | 'push' | 'in_app' | 'inbox';
 
-/** Options for newsletter metric reports (newsletter + content level). */
+/**
+ * Options for newsletter metric reports (newsletter + content level).
+ *
+ * Note: newsletter metrics are always aggregated across all channels — the API
+ * does not accept a channel `type` filter here (unlike campaigns/broadcasts).
+ */
 export type NewsletterMetricsOptions = {
   period?: MetricsPeriod;
   steps?: number;
-  /** Scope the report to a single channel. */
-  type?: NewsletterMetricType;
 };
 
 /** Options for {@link APIClient.getNewsletterMessages}. */
 export type NewsletterMessagesOptions = PaginationOptions & {
   /** Filter to deliveries with this metric (e.g. `delivered`, `opened`, `bounced`). */
   metric?: string;
+  /** Scope to a single channel. */
+  type?: NewsletterChannelType;
   /** Only include deliveries after this Unix timestamp (seconds). */
   start_ts?: number;
   /** Only include deliveries before this Unix timestamp (seconds). */
@@ -1966,7 +1971,7 @@ export class APIClient {
       throw new MissingParamError('contentId');
     }
 
-    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+    const query = buildQueryString({ period: options.period, steps: options.steps });
 
     return this.request.get(
       `${this.resourceBase('newsletters', newsletterId)}/contents/${encodeURIComponent(contentId)}/metrics${query}`,
@@ -1978,14 +1983,14 @@ export class APIClient {
    *
    * @param newsletterId The newsletter's numeric id.
    * @param contentId The content variant's numeric id.
-   * @param options Optional reporting window/filters. See {@link NewsletterMetricsOptions}.
+   * @param options Optional reporting window. See {@link LinkMetricsOptions}.
    * @returns The parsed JSON response body.
    * @throws {MissingParamError} If `newsletterId` or `contentId` is empty.
    */
   getNewsletterContentMetricsLinks(
     newsletterId: string | number,
     contentId: string | number,
-    options: NewsletterMetricsOptions = {},
+    options: LinkMetricsOptions = {},
   ) {
     if (isEmpty(newsletterId)) {
       throw new MissingParamError('newsletterId');
@@ -1995,7 +2000,7 @@ export class APIClient {
       throw new MissingParamError('contentId');
     }
 
-    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+    const query = buildQueryString({ period: options.period, steps: options.steps, unique: options.unique });
 
     return this.request.get(
       `${this.resourceBase('newsletters', newsletterId)}/contents/${encodeURIComponent(contentId)}/metrics/links${query}`,
@@ -2015,7 +2020,7 @@ export class APIClient {
       throw new MissingParamError('newsletterId');
     }
 
-    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+    const query = buildQueryString({ period: options.period, steps: options.steps });
 
     return this.request.get(`${this.resourceBase('newsletters', newsletterId)}/metrics${query}`);
   }
@@ -2055,6 +2060,7 @@ export class APIClient {
       start: options.start,
       limit: options.limit,
       metric: options.metric,
+      type: options.type,
       start_ts: options.start_ts,
       end_ts: options.end_ts,
       get_tracked_responses: options.get_tracked_responses,
