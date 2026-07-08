@@ -196,6 +196,42 @@ export type BroadcastMessagesOptions = PaginationOptions & {
   get_tracked_responses?: boolean;
 };
 
+/** Sort direction for list endpoints that support it. */
+export type SortDirection = 'asc' | 'desc';
+
+/** Options for {@link APIClient.listNewsletters}. */
+export type ListNewslettersOptions = PaginationOptions & {
+  /** Sort order by creation time. */
+  sort?: SortDirection;
+};
+
+/**
+ * Message channel a newsletter metric query can be scoped to. Newsletters
+ * support a slightly different channel set than campaigns/broadcasts (notably
+ * `inbox`, and no `whatsapp`/`slack`).
+ */
+export type NewsletterMetricType = 'email' | 'webhook' | 'twilio' | 'push' | 'in_app' | 'inbox';
+
+/** Options for newsletter metric reports (newsletter + content level). */
+export type NewsletterMetricsOptions = {
+  period?: MetricsPeriod;
+  steps?: number;
+  /** Scope the report to a single channel. */
+  type?: NewsletterMetricType;
+};
+
+/** Options for {@link APIClient.getNewsletterMessages}. */
+export type NewsletterMessagesOptions = PaginationOptions & {
+  /** Filter to deliveries with this metric (e.g. `delivered`, `opened`, `bounced`). */
+  metric?: string;
+  /** Only include deliveries after this Unix timestamp (seconds). */
+  start_ts?: number;
+  /** Only include deliveries before this Unix timestamp (seconds). */
+  end_ts?: number;
+  /** When `true`, include tracked responses on each delivery. */
+  get_tracked_responses?: boolean;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -1141,7 +1177,7 @@ export class APIClient {
    * Build the base URL for a campaign/broadcast resource. Shared by the
    * campaign and broadcast methods, which have identical sub-resource paths.
    */
-  private resourceBase(resource: 'campaigns' | 'broadcasts', id: string | number) {
+  private resourceBase(resource: 'campaigns' | 'broadcasts' | 'newsletters', id: string | number) {
     return `${this.apiRoot}/${resource}/${encodeURIComponent(id)}`;
   }
 
@@ -1793,6 +1829,271 @@ export class APIClient {
     }
 
     return this.request.get(`${this.resourceBase('broadcasts', broadcastId)}/triggers`);
+  }
+
+  /**
+   * List the newsletters in your workspace.
+   *
+   * @param options Optional pagination and sort. See {@link ListNewslettersOptions}.
+   * @returns The parsed JSON response body (`{ newsletters: [...], next }`).
+   */
+  listNewsletters(options: ListNewslettersOptions = {}) {
+    const query = buildQueryString({ start: options.start, limit: options.limit, sort: options.sort });
+
+    return this.request.get(`${this.apiRoot}/newsletters${query}`);
+  }
+
+  /**
+   * Create a newsletter.
+   *
+   * @param data The newsletter definition.
+   * @returns The parsed JSON response body.
+   */
+  createNewsletter(data: RequestData = {}) {
+    return this.request.post(`${this.apiRoot}/newsletters`, data);
+  }
+
+  /**
+   * Get a single newsletter's metadata.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` is empty.
+   */
+  getNewsletter(newsletterId: string | number) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    return this.request.get(this.resourceBase('newsletters', newsletterId));
+  }
+
+  /**
+   * Delete a newsletter.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` is empty.
+   */
+  deleteNewsletter(newsletterId: string | number) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    return this.request.destroy(this.resourceBase('newsletters', newsletterId));
+  }
+
+  /**
+   * List all content variants of a newsletter.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` is empty.
+   */
+  getNewsletterContents(newsletterId: string | number) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    return this.request.get(`${this.resourceBase('newsletters', newsletterId)}/contents`);
+  }
+
+  /**
+   * Get a single content variant of a newsletter.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param contentId The content variant's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` or `contentId` is empty.
+   */
+  getNewsletterContent(newsletterId: string | number, contentId: string | number) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    if (isEmpty(contentId)) {
+      throw new MissingParamError('contentId');
+    }
+
+    return this.request.get(
+      `${this.resourceBase('newsletters', newsletterId)}/contents/${encodeURIComponent(contentId)}`,
+    );
+  }
+
+  /**
+   * Update a content variant of a newsletter.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param contentId The content variant's numeric id.
+   * @param data The content fields to update.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` or `contentId` is empty.
+   */
+  updateNewsletterContent(newsletterId: string | number, contentId: string | number, data: RequestData = {}) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    if (isEmpty(contentId)) {
+      throw new MissingParamError('contentId');
+    }
+
+    return this.request.put(
+      `${this.resourceBase('newsletters', newsletterId)}/contents/${encodeURIComponent(contentId)}`,
+      data,
+    );
+  }
+
+  /**
+   * Get metrics for a single newsletter content variant over time.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param contentId The content variant's numeric id.
+   * @param options Optional reporting window/filters. See {@link NewsletterMetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` or `contentId` is empty.
+   */
+  getNewsletterContentMetrics(
+    newsletterId: string | number,
+    contentId: string | number,
+    options: NewsletterMetricsOptions = {},
+  ) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    if (isEmpty(contentId)) {
+      throw new MissingParamError('contentId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+
+    return this.request.get(
+      `${this.resourceBase('newsletters', newsletterId)}/contents/${encodeURIComponent(contentId)}/metrics${query}`,
+    );
+  }
+
+  /**
+   * Get link (click) metrics for a single newsletter content variant over time.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param contentId The content variant's numeric id.
+   * @param options Optional reporting window/filters. See {@link NewsletterMetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` or `contentId` is empty.
+   */
+  getNewsletterContentMetricsLinks(
+    newsletterId: string | number,
+    contentId: string | number,
+    options: NewsletterMetricsOptions = {},
+  ) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    if (isEmpty(contentId)) {
+      throw new MissingParamError('contentId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+
+    return this.request.get(
+      `${this.resourceBase('newsletters', newsletterId)}/contents/${encodeURIComponent(contentId)}/metrics/links${query}`,
+    );
+  }
+
+  /**
+   * Get delivery metrics for a newsletter over time.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param options Optional reporting window/filters. See {@link NewsletterMetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` is empty.
+   */
+  getNewsletterMetrics(newsletterId: string | number, options: NewsletterMetricsOptions = {}) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+
+    return this.request.get(`${this.resourceBase('newsletters', newsletterId)}/metrics${query}`);
+  }
+
+  /**
+   * Get link (click) metrics for a newsletter over time.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param options Optional reporting window. See {@link LinkMetricsOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` is empty.
+   */
+  getNewsletterMetricsLinks(newsletterId: string | number, options: LinkMetricsOptions = {}) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    const query = buildQueryString({ period: options.period, steps: options.steps, unique: options.unique });
+
+    return this.request.get(`${this.resourceBase('newsletters', newsletterId)}/metrics/links${query}`);
+  }
+
+  /**
+   * Get the individual messages (deliveries) sent by a newsletter.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param options Optional filters/pagination. See {@link NewsletterMessagesOptions}.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` is empty.
+   */
+  getNewsletterMessages(newsletterId: string | number, options: NewsletterMessagesOptions = {}) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    const query = buildQueryString({
+      start: options.start,
+      limit: options.limit,
+      metric: options.metric,
+      start_ts: options.start_ts,
+      end_ts: options.end_ts,
+      get_tracked_responses: options.get_tracked_responses,
+    });
+
+    return this.request.get(`${this.resourceBase('newsletters', newsletterId)}/messages${query}`);
+  }
+
+  /**
+   * Send a newsletter.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param data Optional send settings — e.g. `rate_limit_email_rate`,
+   *   `rate_limit_time_period`, `rate_limit_spread`.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` is empty.
+   */
+  sendNewsletter(newsletterId: string | number, data: RequestData = {}) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    return this.request.post(`${this.resourceBase('newsletters', newsletterId)}/send`, data);
+  }
+
+  /**
+   * Schedule a newsletter to send later.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param data The schedule settings.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` is empty.
+   */
+  scheduleNewsletter(newsletterId: string | number, data: RequestData = {}) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    return this.request.post(`${this.resourceBase('newsletters', newsletterId)}/schedule`, data);
   }
 }
 

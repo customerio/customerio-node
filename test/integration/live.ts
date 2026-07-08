@@ -273,6 +273,24 @@ needs('CIO_TEST_BROADCAST_ID')('broadcast reads resolve for a known id', async (
   t.pass();
 });
 
+liveTest('listNewsletters resolves', async (t) => {
+  const result = (await api!.listNewsletters({ limit: 5 })) as Record<string, unknown>;
+  t.true('newsletters' in result);
+});
+
+// Read-only newsletter lookups for a known id. Create/update/send/schedule are
+// covered by unit tests only (send/schedule actually dispatch; create/delete
+// mutate the workspace).
+needs('CIO_TEST_NEWSLETTER_ID')('newsletter reads resolve for a known id', async (t) => {
+  const id = process.env.CIO_TEST_NEWSLETTER_ID!;
+  await api!.getNewsletter(id).catch(() => undefined);
+  await api!.getNewsletterContents(id).catch(() => undefined);
+  await api!.getNewsletterMetrics(id, { period: 'days', steps: 7 }).catch(() => undefined);
+  await api!.getNewsletterMetricsLinks(id, { period: 'days', steps: 7 }).catch(() => undefined);
+  await api!.getNewsletterMessages(id, { limit: 5 }).catch(() => undefined);
+  t.pass();
+});
+
 liveTest('track records an event on the profile', async (t) => {
   await track!.track(customerId, { name: 'sdk_live_event', data: { run: customerId } });
   t.pass();

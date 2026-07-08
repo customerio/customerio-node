@@ -969,3 +969,183 @@ api.getBroadcastTriggers(4);
 #### Options
 
 - **broadcastId**: The broadcast's numeric id (required)
+
+### api.listNewsletters(options)
+
+List the newsletters in your workspace.
+
+```javascript
+api.listNewsletters({ limit: 25, sort: "desc" });
+```
+
+#### Options
+
+- **options**: Object (optional) — `start`, `limit`, `sort` ("asc" / "desc")
+
+### api.createNewsletter(data)
+
+Create a newsletter.
+
+```javascript
+api.createNewsletter({ name: "Weekly digest" });
+```
+
+#### Options
+
+- **data**: The newsletter definition
+
+### api.getNewsletter(newsletterId)
+
+Get a single newsletter's metadata.
+
+```javascript
+api.getNewsletter(8);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+
+### api.deleteNewsletter(newsletterId)
+
+Delete a newsletter.
+
+```javascript
+api.deleteNewsletter(8);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+
+### api.getNewsletterContents(newsletterId)
+
+List all content variants of a newsletter.
+
+```javascript
+api.getNewsletterContents(8);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+
+### api.getNewsletterContent(newsletterId, contentId)
+
+Get a single content variant of a newsletter.
+
+```javascript
+api.getNewsletterContent(8, 3);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **contentId**: The content variant's numeric id (required)
+
+### api.updateNewsletterContent(newsletterId, contentId, data)
+
+Update a content variant of a newsletter.
+
+```javascript
+api.updateNewsletterContent(8, 3, { subject: "Updated subject" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **contentId**: The content variant's numeric id (required)
+- **data**: The content fields to update
+
+### api.getNewsletterContentMetrics(newsletterId, contentId, options)
+
+Get metrics for a single newsletter content variant over time.
+
+```javascript
+api.getNewsletterContentMetrics(8, 3, { period: "days", steps: 7, type: "email" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **contentId**: The content variant's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `type` ("email" / "webhook" / "twilio" / "push" / "in_app" / "inbox")
+
+### api.getNewsletterContentMetricsLinks(newsletterId, contentId, options)
+
+Get link (click) metrics for a single newsletter content variant over time.
+
+```javascript
+api.getNewsletterContentMetricsLinks(8, 3, { period: "weeks", steps: 4, type: "email" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **contentId**: The content variant's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `type`
+
+### api.getNewsletterMetrics(newsletterId, options)
+
+Get delivery metrics for a newsletter over time.
+
+```javascript
+api.getNewsletterMetrics(8, { period: "days", steps: 30, type: "email" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `type`
+
+### api.getNewsletterMetricsLinks(newsletterId, options)
+
+Get link (click) metrics for a newsletter over time.
+
+```javascript
+api.getNewsletterMetricsLinks(8, { period: "days", steps: 30, unique: true });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `unique`
+
+### api.getNewsletterMessages(newsletterId, options)
+
+Get the individual messages (deliveries) sent by a newsletter.
+
+```javascript
+api.getNewsletterMessages(8, { metric: "delivered", limit: 50 });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **options**: Object (optional) — `start`, `limit`, `metric`, `start_ts`, `end_ts`, `get_tracked_responses`
+
+### api.sendNewsletter(newsletterId, data)
+
+Send a newsletter.
+
+```javascript
+api.sendNewsletter(8, { rate_limit_email_rate: 100, rate_limit_time_period: 60 });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **data**: Optional send settings — `rate_limit_email_rate`, `rate_limit_time_period`, `rate_limit_spread`
+
+### api.scheduleNewsletter(newsletterId, data)
+
+Schedule a newsletter to send later.
+
+```javascript
+api.scheduleNewsletter(8, { timestamp: 1719792000 });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **data**: The schedule settings
