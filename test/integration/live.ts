@@ -42,7 +42,7 @@ import {
   SendInboxMessageRequest,
 } from '../../lib/api/requests';
 import { RegionUS, RegionEU } from '../../lib/regions';
-import { IdentifierType } from '../../lib/types';
+import { FilterOperator, IdentifierType } from '../../lib/types';
 
 const isLive = process.env.CIO_LIVE === '1';
 const siteId = process.env.CIO_SITE_ID ?? '';
@@ -137,8 +137,8 @@ liveTest('getCustomersAttributes returns attributes for the profile', async (t) 
 
 liveTest('searchCustomers resolves against an attribute filter', async (t) => {
   const filter = {
-    and: [{ attribute: { field: 'plan', operator: 'eq', value: 'sdk-test' } }],
-  } as unknown as Parameters<APIClient['searchCustomers']>[0];
+    and: [{ attribute: { field: 'plan', operator: FilterOperator.Eq, value: 'sdk-test' } }],
+  };
   const result = (await api!.searchCustomers(filter, { limit: 10 })) as Record<string, unknown>;
   t.truthy(result);
 });
@@ -164,8 +164,8 @@ needs('CIO_TEST_OBJECT_TYPE_ID')('object attribute + relationship reads resolve'
 needs('CIO_TEST_OBJECT_TYPE_ID')('findObjects resolves for a test object type', async (t) => {
   const typeId = process.env.CIO_TEST_OBJECT_TYPE_ID!;
   const filter = {
-    and: [{ object_attribute: { field: 'name', operator: 'exists', type_id: Number(typeId) } }],
-  } as unknown as Parameters<APIClient['findObjects']>[1];
+    and: [{ object_attribute: { field: 'name', operator: FilterOperator.Exists, type_id: Number(typeId) } }],
+  };
   const result = (await api!.findObjects(typeId, filter, { limit: 5 })) as Record<string, unknown>;
   t.truthy(result);
 });
@@ -393,7 +393,7 @@ needs('CIO_TEST_BROADCAST_ID')('triggerBroadcast resolves against a test broadca
 });
 
 liveTest('createCustomersExport queues an export', async (t) => {
-  const filters = { or: [{ segment: { id: 0 } }] } as unknown as Parameters<APIClient['createCustomersExport']>[0];
+  const filters = { or: [{ segment: { id: 0 } }] };
   const result = (await api!.createCustomersExport(filters)) as { export?: { id: number } };
   t.truthy(result.export);
 });
