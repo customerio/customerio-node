@@ -2101,6 +2101,237 @@ export class APIClient {
 
     return this.request.post(`${this.resourceBase('newsletters', newsletterId)}/schedule`, data);
   }
+
+  /**
+   * Add a language (translation) to a newsletter.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param data The translation content, including its `language` tag.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` is empty.
+   */
+  createNewsletterLanguage(newsletterId: string | number, data: RequestData = {}) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    return this.request.post(`${this.resourceBase('newsletters', newsletterId)}/language`, data);
+  }
+
+  /**
+   * Get a single-language translation of a newsletter.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param language The IETF language tag.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` or `language` is empty.
+   */
+  getNewsletterLanguage(newsletterId: string | number, language: string) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.get(
+      `${this.resourceBase('newsletters', newsletterId)}/language/${encodeURIComponent(language)}`,
+    );
+  }
+
+  /**
+   * Update a single-language translation of a newsletter.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param language The IETF language tag.
+   * @param data The translation fields to update.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` or `language` is empty.
+   */
+  updateNewsletterLanguage(newsletterId: string | number, language: string, data: RequestData = {}) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.put(
+      `${this.resourceBase('newsletters', newsletterId)}/language/${encodeURIComponent(language)}`,
+      data,
+    );
+  }
+
+  /**
+   * Delete a single-language translation of a newsletter.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param language The IETF language tag.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` or `language` is empty.
+   */
+  deleteNewsletterLanguage(newsletterId: string | number, language: string) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.destroy(
+      `${this.resourceBase('newsletters', newsletterId)}/language/${encodeURIComponent(language)}`,
+    );
+  }
+
+  /**
+   * List a newsletter's A/B test groups.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` is empty.
+   */
+  getNewsletterTestGroups(newsletterId: string | number) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    return this.request.get(`${this.resourceBase('newsletters', newsletterId)}/test_groups`);
+  }
+
+  /**
+   * Create an A/B test group on a newsletter. The API takes no request body —
+   * a new empty test group is created and returned.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @returns The parsed JSON response body (the updated newsletter).
+   * @throws {MissingParamError} If `newsletterId` is empty.
+   */
+  createNewsletterTestGroup(newsletterId: string | number) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    return this.request.post(`${this.resourceBase('newsletters', newsletterId)}/test_groups`);
+  }
+
+  /**
+   * Add a language (translation) to a newsletter test group.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param testGroupId The test group's id.
+   * @param data The translation content, including its `language` tag.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId` or `testGroupId` is empty.
+   */
+  createNewsletterTestGroupLanguage(
+    newsletterId: string | number,
+    testGroupId: string | number,
+    data: RequestData = {},
+  ) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    if (isEmpty(testGroupId)) {
+      throw new MissingParamError('testGroupId');
+    }
+
+    return this.request.post(
+      `${this.resourceBase('newsletters', newsletterId)}/test_group/${encodeURIComponent(testGroupId)}/language`,
+      data,
+    );
+  }
+
+  /**
+   * Get a single-language translation of a newsletter test group.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param testGroupId The test group's id.
+   * @param language The IETF language tag.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId`, `testGroupId`, or `language` is empty.
+   */
+  getNewsletterTestGroupLanguage(newsletterId: string | number, testGroupId: string | number, language: string) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    if (isEmpty(testGroupId)) {
+      throw new MissingParamError('testGroupId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.get(
+      `${this.resourceBase('newsletters', newsletterId)}/test_group/${encodeURIComponent(testGroupId)}/language/${encodeURIComponent(language)}`,
+    );
+  }
+
+  /**
+   * Update a single-language translation of a newsletter test group.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param testGroupId The test group's id.
+   * @param language The IETF language tag.
+   * @param data The translation fields to update.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId`, `testGroupId`, or `language` is empty.
+   */
+  updateNewsletterTestGroupLanguage(
+    newsletterId: string | number,
+    testGroupId: string | number,
+    language: string,
+    data: RequestData = {},
+  ) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    if (isEmpty(testGroupId)) {
+      throw new MissingParamError('testGroupId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.put(
+      `${this.resourceBase('newsletters', newsletterId)}/test_group/${encodeURIComponent(testGroupId)}/language/${encodeURIComponent(language)}`,
+      data,
+    );
+  }
+
+  /**
+   * Delete a single-language translation of a newsletter test group.
+   *
+   * @param newsletterId The newsletter's numeric id.
+   * @param testGroupId The test group's id.
+   * @param language The IETF language tag.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `newsletterId`, `testGroupId`, or `language` is empty.
+   */
+  deleteNewsletterTestGroupLanguage(newsletterId: string | number, testGroupId: string | number, language: string) {
+    if (isEmpty(newsletterId)) {
+      throw new MissingParamError('newsletterId');
+    }
+
+    if (isEmpty(testGroupId)) {
+      throw new MissingParamError('testGroupId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.destroy(
+      `${this.resourceBase('newsletters', newsletterId)}/test_group/${encodeURIComponent(testGroupId)}/language/${encodeURIComponent(language)}`,
+    );
+  }
 }
 
 export {

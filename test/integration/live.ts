@@ -291,6 +291,15 @@ needs('CIO_TEST_NEWSLETTER_ID')('newsletter reads resolve for a known id', async
   t.pass();
 });
 
+// Newsletter localization reads. The create/update/delete language + test-group
+// methods mutate the workspace, so they're covered by unit tests only.
+needs('CIO_TEST_NEWSLETTER_ID')('newsletter test-group + language reads resolve', async (t) => {
+  const id = process.env.CIO_TEST_NEWSLETTER_ID!;
+  await api!.getNewsletterTestGroups(id).catch(() => undefined);
+  await api!.getNewsletterLanguage(id, 'en').catch(() => undefined);
+  t.pass();
+});
+
 liveTest('track records an event on the profile', async (t) => {
   await track!.track(customerId, { name: 'sdk_live_event', data: { run: customerId } });
   t.pass();

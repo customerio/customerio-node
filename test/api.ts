@@ -1545,3 +1545,103 @@ test('#scheduleNewsletter: posts schedule settings and validates', (t) => {
   t.context.client.scheduleNewsletter(8);
   t.true(post.calledWith(`${API}/newsletters/8/schedule`, {}));
 });
+
+// --- Batch 7: Newsletters — localization & test groups (CDP-6271) ---
+
+test('#createNewsletterLanguage: posts the body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.createNewsletterLanguage(''), { message: 'newsletterId is required' });
+  const variation = { language: 'fr', subject: 'Bonjour', body: '<p>Bonjour</p>' };
+  t.context.client.createNewsletterLanguage(8, variation);
+  t.true(post.calledWith(`${API}/newsletters/8/language`, variation));
+  t.context.client.createNewsletterLanguage(8);
+  t.true(post.calledWith(`${API}/newsletters/8/language`, {}));
+});
+
+test('#getNewsletterLanguage: gets a translation and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterLanguage('', 'en'), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.getNewsletterLanguage(8, ''), { message: 'language is required' });
+  t.context.client.getNewsletterLanguage(8, 'en-US');
+  t.true(get.calledWith(`${API}/newsletters/8/language/en-US`));
+});
+
+test('#updateNewsletterLanguage: puts the translation and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateNewsletterLanguage('', 'en', {}), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.updateNewsletterLanguage(8, '', {}), { message: 'language is required' });
+  t.context.client.updateNewsletterLanguage(8, 'fr', { subject: 'Salut' });
+  t.true(put.calledWith(`${API}/newsletters/8/language/fr`, { subject: 'Salut' }));
+  t.context.client.updateNewsletterLanguage(8, 'fr');
+  t.true(put.calledWith(`${API}/newsletters/8/language/fr`, {}));
+});
+
+test('#deleteNewsletterLanguage: deletes a translation and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteNewsletterLanguage('', 'en'), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.deleteNewsletterLanguage(8, ''), { message: 'language is required' });
+  t.context.client.deleteNewsletterLanguage(8, 'fr');
+  t.true(destroy.calledWith(`${API}/newsletters/8/language/fr`));
+});
+
+test('#getNewsletterTestGroups: lists test groups and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterTestGroups(''), { message: 'newsletterId is required' });
+  t.context.client.getNewsletterTestGroups(8);
+  t.true(get.calledWith(`${API}/newsletters/8/test_groups`));
+});
+
+test('#createNewsletterTestGroup: posts to test_groups (no body) and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.createNewsletterTestGroup(''), { message: 'newsletterId is required' });
+  t.context.client.createNewsletterTestGroup(8);
+  t.true(post.calledWith(`${API}/newsletters/8/test_groups`));
+});
+
+test('#createNewsletterTestGroupLanguage: posts to test_group/{id}/language and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.createNewsletterTestGroupLanguage('', 2), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.createNewsletterTestGroupLanguage(8, ''), { message: 'testGroupId is required' });
+  const variation = { language: 'fr', subject: 'Bonjour', body: '<p>Bonjour</p>' };
+  t.context.client.createNewsletterTestGroupLanguage(8, 2, variation);
+  t.true(post.calledWith(`${API}/newsletters/8/test_group/2/language`, variation));
+  t.context.client.createNewsletterTestGroupLanguage(8, 2);
+  t.true(post.calledWith(`${API}/newsletters/8/test_group/2/language`, {}));
+});
+
+test('#getNewsletterTestGroupLanguage: gets a translation and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterTestGroupLanguage('', 2, 'en'), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.getNewsletterTestGroupLanguage(8, '', 'en'), { message: 'testGroupId is required' });
+  t.throws(() => t.context.client.getNewsletterTestGroupLanguage(8, 2, ''), { message: 'language is required' });
+  t.context.client.getNewsletterTestGroupLanguage(8, 2, 'en-US');
+  t.true(get.calledWith(`${API}/newsletters/8/test_group/2/language/en-US`));
+});
+
+test('#updateNewsletterTestGroupLanguage: puts the translation and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateNewsletterTestGroupLanguage('', 2, 'en', {}), {
+    message: 'newsletterId is required',
+  });
+  t.throws(() => t.context.client.updateNewsletterTestGroupLanguage(8, '', 'en', {}), {
+    message: 'testGroupId is required',
+  });
+  t.throws(() => t.context.client.updateNewsletterTestGroupLanguage(8, 2, '', {}), { message: 'language is required' });
+  t.context.client.updateNewsletterTestGroupLanguage(8, 2, 'fr', { subject: 'Salut' });
+  t.true(put.calledWith(`${API}/newsletters/8/test_group/2/language/fr`, { subject: 'Salut' }));
+  t.context.client.updateNewsletterTestGroupLanguage(8, 2, 'fr');
+  t.true(put.calledWith(`${API}/newsletters/8/test_group/2/language/fr`, {}));
+});
+
+test('#deleteNewsletterTestGroupLanguage: deletes a translation and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteNewsletterTestGroupLanguage('', 2, 'en'), {
+    message: 'newsletterId is required',
+  });
+  t.throws(() => t.context.client.deleteNewsletterTestGroupLanguage(8, '', 'en'), {
+    message: 'testGroupId is required',
+  });
+  t.throws(() => t.context.client.deleteNewsletterTestGroupLanguage(8, 2, ''), { message: 'language is required' });
+  t.context.client.deleteNewsletterTestGroupLanguage(8, 2, 'fr');
+  t.true(destroy.calledWith(`${API}/newsletters/8/test_group/2/language/fr`));
+});
