@@ -98,8 +98,6 @@ export type TransactionalLinkMetricsOptions = TransactionalMetricsOptions & {
 export type TransactionalDeliveriesOptions = PaginationOptions & {
   /** Filter to deliveries with this metric (e.g. `delivered`, `opened`, `bounced`). */
   metric?: string;
-  /** Filter to deliveries in this state. */
-  state?: DeliveryState;
   /** Only include deliveries after this Unix timestamp (seconds). */
   start_ts?: number;
   /** Only include deliveries before this Unix timestamp (seconds). */
@@ -114,32 +112,33 @@ export type MetricType = 'email' | 'webhook' | 'twilio' | 'whatsapp' | 'slack' |
 /** Resolution (bucket size) for time-series metric reports. */
 export type MetricResolution = 'hours' | 'hourly' | 'days' | 'daily' | 'weeks' | 'weekly' | 'months' | 'monthly';
 
-/** Delivery state a message/delivery listing can be filtered by. */
-export type DeliveryState = 'failed' | 'sent' | 'drafted' | 'attempted';
-
 /** Metrics API version for campaign metric reports. */
 export type CampaignMetricsVersion = '1' | '2';
 
-/** Options for channel-scoped metric reports (broadcast metrics, action metrics/links). */
-export type MetricsOptions = {
+/** Reporting window shared by all metric reports. */
+export type MetricsWindowOptions = {
   /** The time unit each step represents. */
   period?: MetricsPeriod;
   /** The number of periods to report over. */
   steps?: number;
+};
+
+/** Options for channel-scoped metric reports (e.g. broadcast/campaign resource metrics). */
+export type MetricsOptions = MetricsWindowOptions & {
   /** Scope the report to a single channel. */
   type?: MetricType;
 };
 
-/** Options for resource-level link (click) metric reports. */
-export type LinkMetricsOptions = {
-  period?: MetricsPeriod;
-  steps?: number;
+/** Options for link (click) metric reports. */
+export type LinkMetricsOptions = MetricsWindowOptions & {
   /** When `true`, count unique clicks per link rather than total clicks. */
   unique?: boolean;
 };
 
-/** Options for campaign metric reports. Pass the required `version` separately. */
-export type CampaignMetricsOptions = {
+/** Options for campaign resource metric reports. */
+export type CampaignMetricsOptions = MetricsWindowOptions & {
+  /** Metrics API version (`"1"` or `"2"`). Optional; the API defaults it. */
+  version?: CampaignMetricsVersion;
   /** Scope the report to a single channel. */
   type?: MetricType;
   /** Resolution (bucket size) of the report. */
@@ -150,8 +149,23 @@ export type CampaignMetricsOptions = {
   start?: number;
   /** Inclusive end of the window, as a Unix timestamp (seconds). */
   end?: number;
-  period?: MetricsPeriod;
-  steps?: number;
+};
+
+/**
+ * Options for campaign action metric reports. Like {@link CampaignMetricsOptions}
+ * but without `type` — action metrics are always aggregated across all channels.
+ */
+export type CampaignActionMetricsOptions = MetricsWindowOptions & {
+  /** Metrics API version (`"1"` or `"2"`). Optional; the API defaults it. */
+  version?: CampaignMetricsVersion;
+  /** Resolution (bucket size) of the report. */
+  res?: MetricResolution;
+  /** IANA timezone for bucket boundaries (e.g. `America/New_York`). */
+  tz?: string;
+  /** Inclusive start of the window, as a Unix timestamp (seconds). */
+  start?: number;
+  /** Inclusive end of the window, as a Unix timestamp (seconds). */
+  end?: number;
 };
 
 /** Required options for {@link APIClient.getCampaignJourneyMetrics}. */
@@ -184,8 +198,6 @@ export type CampaignMessagesOptions = PaginationOptions & {
 export type BroadcastMessagesOptions = PaginationOptions & {
   /** Filter to deliveries with this metric (e.g. `delivered`, `opened`, `bounced`). */
   metric?: string;
-  /** Filter to deliveries in this state. */
-  state?: DeliveryState;
   /** Scope to a single channel. */
   type?: MetricType;
   /** Only include deliveries after this Unix timestamp (seconds). */
@@ -512,7 +524,7 @@ export class APIClient {
    * Only meaningful once {@link APIClient.getExport} reports the export as ready.
    *
    * @param id The export id.
-   * @returns The parsed JSON response body (`{ link: "..." }`).
+   * @returns The parsed JSON response body (`{ url: "..." }`).
    * @throws {MissingParamError} If `id` is empty.
    */
   downloadExport(id: string | number) {
@@ -1097,7 +1109,6 @@ export class APIClient {
       start: options.start,
       limit: options.limit,
       metric: options.metric,
-      state: options.state,
       start_ts: options.start_ts,
       end_ts: options.end_ts,
       get_tracked_responses: options.get_tracked_responses,
@@ -1328,20 +1339,19 @@ export class APIClient {
   }
 
   /**
-   * Get metrics for a single campaign action over time.
+   * Get metrics for a single campaign action over time. Aggregated across all
+   * channels (the API does not accept a `type` filter here).
    *
    * @param campaignId The campaign's numeric id.
    * @param actionId The action's numeric id.
-   * @param version The metrics API version (`"1"` or `"2"`) — required by the API.
-   * @param options Optional reporting window/filters. See {@link CampaignMetricsOptions}.
+   * @param options Optional reporting window/version. See {@link CampaignActionMetricsOptions}.
    * @returns The parsed JSON response body.
-   * @throws {MissingParamError} If `campaignId`, `actionId`, or `version` is empty.
+   * @throws {MissingParamError} If `campaignId` or `actionId` is empty.
    */
   getCampaignActionMetrics(
     campaignId: string | number,
     actionId: string | number,
-    version: CampaignMetricsVersion,
-    options: CampaignMetricsOptions = {},
+    options: CampaignActionMetricsOptions = {},
   ) {
     if (isEmpty(campaignId)) {
       throw new MissingParamError('campaignId');
@@ -1351,13 +1361,8 @@ export class APIClient {
       throw new MissingParamError('actionId');
     }
 
-    if (isEmpty(version)) {
-      throw new MissingParamError('version');
-    }
-
     const query = buildQueryString({
-      version,
-      type: options.type,
+      version: options.version,
       res: options.res,
       tz: options.tz,
       start: options.start,
@@ -1376,11 +1381,15 @@ export class APIClient {
    *
    * @param campaignId The campaign's numeric id.
    * @param actionId The action's numeric id.
-   * @param options Optional reporting window/filters. See {@link MetricsOptions}.
+   * @param options Optional reporting window. See {@link LinkMetricsOptions}.
    * @returns The parsed JSON response body.
    * @throws {MissingParamError} If `campaignId` or `actionId` is empty.
    */
-  getCampaignActionMetricsLinks(campaignId: string | number, actionId: string | number, options: MetricsOptions = {}) {
+  getCampaignActionMetricsLinks(
+    campaignId: string | number,
+    actionId: string | number,
+    options: LinkMetricsOptions = {},
+  ) {
     if (isEmpty(campaignId)) {
       throw new MissingParamError('campaignId');
     }
@@ -1389,7 +1398,7 @@ export class APIClient {
       throw new MissingParamError('actionId');
     }
 
-    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+    const query = buildQueryString({ period: options.period, steps: options.steps, unique: options.unique });
 
     return this.request.get(
       `${this.resourceBase('campaigns', campaignId)}/actions/${encodeURIComponent(actionId)}/metrics/links${query}`,
@@ -1400,26 +1409,17 @@ export class APIClient {
    * Get delivery metrics for a campaign over time.
    *
    * @param campaignId The campaign's numeric id.
-   * @param version The metrics API version (`"1"` or `"2"`) — required by the API.
    * @param options Optional reporting window/filters. See {@link CampaignMetricsOptions}.
    * @returns The parsed JSON response body.
-   * @throws {MissingParamError} If `campaignId` or `version` is empty.
+   * @throws {MissingParamError} If `campaignId` is empty.
    */
-  getCampaignMetrics(
-    campaignId: string | number,
-    version: CampaignMetricsVersion,
-    options: CampaignMetricsOptions = {},
-  ) {
+  getCampaignMetrics(campaignId: string | number, options: CampaignMetricsOptions = {}) {
     if (isEmpty(campaignId)) {
       throw new MissingParamError('campaignId');
     }
 
-    if (isEmpty(version)) {
-      throw new MissingParamError('version');
-    }
-
     const query = buildQueryString({
-      version,
+      version: options.version,
       type: options.type,
       res: options.res,
       tz: options.tz,
@@ -1475,7 +1475,7 @@ export class APIClient {
       throw new MissingParamError('options.res');
     }
 
-    const query = buildQueryString({ start: options.start, end: options.end, res: options.res });
+    const query = buildQueryString({ start: options.start, end: options.end, resolution: options.res });
 
     return this.request.get(`${this.resourceBase('campaigns', campaignId)}/journey_metrics${query}`);
   }
@@ -1699,15 +1699,20 @@ export class APIClient {
   }
 
   /**
-   * Get metrics for a single broadcast action over time.
+   * Get metrics for a single broadcast action over time. Aggregated across all
+   * channels (the API does not accept a `type` filter here).
    *
    * @param broadcastId The broadcast's numeric id.
    * @param actionId The action's numeric id.
-   * @param options Optional reporting window/filters. See {@link MetricsOptions}.
+   * @param options Optional reporting window. See {@link MetricsWindowOptions}.
    * @returns The parsed JSON response body.
    * @throws {MissingParamError} If `broadcastId` or `actionId` is empty.
    */
-  getBroadcastActionMetrics(broadcastId: string | number, actionId: string | number, options: MetricsOptions = {}) {
+  getBroadcastActionMetrics(
+    broadcastId: string | number,
+    actionId: string | number,
+    options: MetricsWindowOptions = {},
+  ) {
     if (isEmpty(broadcastId)) {
       throw new MissingParamError('broadcastId');
     }
@@ -1716,7 +1721,7 @@ export class APIClient {
       throw new MissingParamError('actionId');
     }
 
-    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+    const query = buildQueryString({ period: options.period, steps: options.steps });
 
     return this.request.get(
       `${this.resourceBase('broadcasts', broadcastId)}/actions/${encodeURIComponent(actionId)}/metrics${query}`,
@@ -1728,14 +1733,14 @@ export class APIClient {
    *
    * @param broadcastId The broadcast's numeric id.
    * @param actionId The action's numeric id.
-   * @param options Optional reporting window/filters. See {@link MetricsOptions}.
+   * @param options Optional reporting window. See {@link LinkMetricsOptions}.
    * @returns The parsed JSON response body.
    * @throws {MissingParamError} If `broadcastId` or `actionId` is empty.
    */
   getBroadcastActionMetricsLinks(
     broadcastId: string | number,
     actionId: string | number,
-    options: MetricsOptions = {},
+    options: LinkMetricsOptions = {},
   ) {
     if (isEmpty(broadcastId)) {
       throw new MissingParamError('broadcastId');
@@ -1745,7 +1750,7 @@ export class APIClient {
       throw new MissingParamError('actionId');
     }
 
-    const query = buildQueryString({ period: options.period, steps: options.steps, type: options.type });
+    const query = buildQueryString({ period: options.period, steps: options.steps, unique: options.unique });
 
     return this.request.get(
       `${this.resourceBase('broadcasts', broadcastId)}/actions/${encodeURIComponent(actionId)}/metrics/links${query}`,
@@ -1805,7 +1810,6 @@ export class APIClient {
       start: options.start,
       limit: options.limit,
       metric: options.metric,
-      state: options.state,
       type: options.type,
       start_ts: options.start_ts,
       end_ts: options.end_ts,
