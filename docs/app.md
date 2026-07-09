@@ -969,3 +969,328 @@ api.getBroadcastTriggers(4);
 #### Options
 
 - **broadcastId**: The broadcast's numeric id (required)
+
+### api.listNewsletters(options)
+
+List the newsletters in your workspace.
+
+```javascript
+api.listNewsletters({ limit: 25, sort: "desc" });
+```
+
+#### Options
+
+- **options**: Object (optional) — `start`, `limit`, `sort` ("asc" / "desc")
+
+### api.createNewsletter(data)
+
+Create a newsletter. Both `name` and `recipients` (an audience filter) are required.
+
+```javascript
+api.createNewsletter({
+  name: "Weekly digest",
+  recipients: { segment: { id: 7 } },
+});
+```
+
+#### Options
+
+- **data**: The newsletter definition
+  - _name_: The newsletter's name, ≤190 characters (required)
+  - _recipients_: An audience filter selecting who receives the newsletter (required)
+  - Additional fields may be required depending on configuration (e.g. channel-specific `subject`/`body`, or `subscription_topic_id` when the subscription center is enabled)
+
+### api.getNewsletter(newsletterId)
+
+Get a single newsletter's metadata.
+
+```javascript
+api.getNewsletter(8);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+
+### api.deleteNewsletter(newsletterId)
+
+Delete a newsletter.
+
+```javascript
+api.deleteNewsletter(8);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+
+### api.getNewsletterContents(newsletterId)
+
+List all content variants of a newsletter.
+
+```javascript
+api.getNewsletterContents(8);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+
+### api.getNewsletterContent(newsletterId, contentId)
+
+Get a single content variant of a newsletter.
+
+```javascript
+api.getNewsletterContent(8, 3);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **contentId**: The content variant's numeric id (required)
+
+### api.updateNewsletterContent(newsletterId, contentId, data)
+
+Update a content variant of a newsletter.
+
+```javascript
+api.updateNewsletterContent(8, 3, { subject: "Updated subject" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **contentId**: The content variant's numeric id (required)
+- **data**: The content fields to update
+
+### api.getNewsletterContentMetrics(newsletterId, contentId, options)
+
+Get metrics for a single newsletter content variant over time.
+
+```javascript
+api.getNewsletterContentMetrics(8, 3, { period: "days", steps: 7 });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **contentId**: The content variant's numeric id (required)
+- **options**: Object (optional) — `period`, `steps` (newsletter metrics are always aggregated across all channels)
+
+### api.getNewsletterContentMetricsLinks(newsletterId, contentId, options)
+
+Get link (click) metrics for a single newsletter content variant over time.
+
+```javascript
+api.getNewsletterContentMetricsLinks(8, 3, { period: "weeks", steps: 4, unique: true });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **contentId**: The content variant's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `unique`
+
+### api.getNewsletterMetrics(newsletterId, options)
+
+Get delivery metrics for a newsletter over time.
+
+```javascript
+api.getNewsletterMetrics(8, { period: "days", steps: 30 });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **options**: Object (optional) — `period`, `steps` (newsletter metrics are always aggregated across all channels)
+
+### api.getNewsletterMetricsLinks(newsletterId, options)
+
+Get link (click) metrics for a newsletter over time.
+
+```javascript
+api.getNewsletterMetricsLinks(8, { period: "days", steps: 30, unique: true });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **options**: Object (optional) — `period`, `steps`, `unique`
+
+### api.getNewsletterMessages(newsletterId, options)
+
+Get the individual messages (deliveries) sent by a newsletter.
+
+```javascript
+api.getNewsletterMessages(8, { metric: "delivered", limit: 50 });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **options**: Object (optional) — `start`, `limit`, `metric`, `type` ("email" / "webhook" / "twilio" / "push" / "in_app" / "inbox"), `start_ts`, `end_ts`, `get_tracked_responses`
+
+### api.sendNewsletter(newsletterId, data)
+
+Send a newsletter.
+
+```javascript
+api.sendNewsletter(8, { rate_limit_email_rate: 100, rate_limit_time_period: 60 });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **data**: Optional send settings — `rate_limit_email_rate`, `rate_limit_time_period`, `rate_limit_spread`
+
+### api.scheduleNewsletter(newsletterId, data)
+
+Schedule a newsletter to send later. `scheduled_at` (a Unix timestamp) and `timezone` are both required.
+
+```javascript
+api.scheduleNewsletter(8, { scheduled_at: 1719792000, timezone: "America/New_York" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **data**: The schedule settings
+  - _scheduled_at_: Unix timestamp (seconds) when the newsletter should send (required, must be in the future)
+  - _timezone_: IANA timezone the scheduled time is expressed in (required)
+  - Optional: `tz_match_enabled`, `rate_limit_email_rate`, `rate_limit_time_period`, `rate_limit_spread`
+
+### api.createNewsletterLanguage(newsletterId, data)
+
+Add a language (translation) to a newsletter. `language` is required, and the required content fields depend on the newsletter's channel (e.g. an email newsletter requires `subject` and `body`).
+
+```javascript
+api.createNewsletterLanguage(8, { language: "fr", subject: "Bonjour", body: "<p>Bonjour&nbsp;!</p>" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **data**: The translation content
+  - _language_: The IETF language tag (required)
+  - _subject_ / _body_: Required for email; other channels require their own fields (e.g. `body_json` for in-app/inbox, `body` for SMS/webhook)
+
+### api.getNewsletterLanguage(newsletterId, language)
+
+Get a single-language translation of a newsletter.
+
+```javascript
+api.getNewsletterLanguage(8, "en-US");
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **language**: The IETF language tag (required)
+
+### api.updateNewsletterLanguage(newsletterId, language, data)
+
+Update a single-language translation of a newsletter.
+
+```javascript
+api.updateNewsletterLanguage(8, "fr", { subject: "Salut" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **language**: The IETF language tag (required)
+- **data**: The translation fields to update
+
+### api.deleteNewsletterLanguage(newsletterId, language)
+
+Delete a single-language translation of a newsletter.
+
+```javascript
+api.deleteNewsletterLanguage(8, "fr");
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **language**: The IETF language tag (required)
+
+### api.getNewsletterTestGroups(newsletterId)
+
+List a newsletter's A/B test groups.
+
+```javascript
+api.getNewsletterTestGroups(8);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+
+### api.createNewsletterTestGroup(newsletterId)
+
+Create an A/B test group on a newsletter. The API takes no request body — a new empty test group is created.
+
+```javascript
+api.createNewsletterTestGroup(8);
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+
+### api.createNewsletterTestGroupLanguage(newsletterId, testGroupId, data)
+
+Add a language (translation) to a newsletter test group. Same content requirements as `createNewsletterLanguage` (`language` required, plus channel-specific fields such as `subject`/`body` for email).
+
+```javascript
+api.createNewsletterTestGroupLanguage(8, 2, { language: "fr", subject: "Bonjour", body: "<p>Bonjour&nbsp;!</p>" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **testGroupId**: The test group's id (required)
+- **data**: The translation content (`language` required; channel-specific content fields required)
+
+### api.getNewsletterTestGroupLanguage(newsletterId, testGroupId, language)
+
+Get a single-language translation of a newsletter test group.
+
+```javascript
+api.getNewsletterTestGroupLanguage(8, 2, "en-US");
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **testGroupId**: The test group's id (required)
+- **language**: The IETF language tag (required)
+
+### api.updateNewsletterTestGroupLanguage(newsletterId, testGroupId, language, data)
+
+Update a single-language translation of a newsletter test group.
+
+```javascript
+api.updateNewsletterTestGroupLanguage(8, 2, "fr", { subject: "Salut" });
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **testGroupId**: The test group's id (required)
+- **language**: The IETF language tag (required)
+- **data**: The translation fields to update
+
+### api.deleteNewsletterTestGroupLanguage(newsletterId, testGroupId, language)
+
+Delete a single-language translation of a newsletter test group.
+
+```javascript
+api.deleteNewsletterTestGroupLanguage(8, 2, "fr");
+```
+
+#### Options
+
+- **newsletterId**: The newsletter's numeric id (required)
+- **testGroupId**: The test group's id (required)
+- **language**: The IETF language tag (required)

@@ -1442,3 +1442,224 @@ test('#getBroadcastTriggers: gets the triggers endpoint and validates', (t) => {
   t.context.client.getBroadcastTriggers(4);
   t.true(get.calledWith(`${API}/broadcasts/4/triggers`));
 });
+
+// --- Batch 6: Newsletters — core (CDP-6270) ---
+
+test('#listNewsletters: forwards pagination + sort', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listNewsletters();
+  t.true(get.calledWith(`${API}/newsletters`));
+  t.context.client.listNewsletters({ start: 'c', limit: 25, sort: 'desc' });
+  t.true(get.calledWith(`${API}/newsletters?start=c&limit=25&sort=desc`));
+});
+
+test('#createNewsletter: posts the body', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  const newsletter = { name: 'Weekly', recipients: { segment: { id: 7 } } };
+  t.context.client.createNewsletter(newsletter);
+  t.true(post.calledWith(`${API}/newsletters`, newsletter));
+  t.context.client.createNewsletter();
+  t.true(post.calledWith(`${API}/newsletters`, {}));
+});
+
+test('#getNewsletter: gets one and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletter(''), { message: 'newsletterId is required' });
+  t.context.client.getNewsletter(8);
+  t.true(get.calledWith(`${API}/newsletters/8`));
+});
+
+test('#deleteNewsletter: deletes and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteNewsletter(''), { message: 'newsletterId is required' });
+  t.context.client.deleteNewsletter(8);
+  t.true(destroy.calledWith(`${API}/newsletters/8`));
+});
+
+test('#getNewsletterContents: lists contents and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterContents(''), { message: 'newsletterId is required' });
+  t.context.client.getNewsletterContents(8);
+  t.true(get.calledWith(`${API}/newsletters/8/contents`));
+});
+
+test('#getNewsletterContent: gets one content and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterContent('', 3), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.getNewsletterContent(8, ''), { message: 'contentId is required' });
+  t.context.client.getNewsletterContent(8, 3);
+  t.true(get.calledWith(`${API}/newsletters/8/contents/3`));
+});
+
+test('#updateNewsletterContent: puts the body and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateNewsletterContent('', 3, {}), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.updateNewsletterContent(8, '', {}), { message: 'contentId is required' });
+  t.context.client.updateNewsletterContent(8, 3, { subject: 'Hi' });
+  t.true(put.calledWith(`${API}/newsletters/8/contents/3`, { subject: 'Hi' }));
+  t.context.client.updateNewsletterContent(8, 3);
+  t.true(put.calledWith(`${API}/newsletters/8/contents/3`, {}));
+});
+
+test('#getNewsletterContentMetrics: forwards options and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterContentMetrics('', 3), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.getNewsletterContentMetrics(8, ''), { message: 'contentId is required' });
+  t.context.client.getNewsletterContentMetrics(8, 3, { period: 'days', steps: 7 });
+  t.true(get.calledWith(`${API}/newsletters/8/contents/3/metrics?period=days&steps=7`));
+});
+
+test('#getNewsletterContentMetricsLinks: forwards options and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterContentMetricsLinks('', 3), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.getNewsletterContentMetricsLinks(8, ''), { message: 'contentId is required' });
+  t.context.client.getNewsletterContentMetricsLinks(8, 3, { period: 'weeks', steps: 4, unique: true });
+  t.true(get.calledWith(`${API}/newsletters/8/contents/3/metrics/links?period=weeks&steps=4&unique=true`));
+});
+
+test('#getNewsletterMetrics: forwards options and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterMetrics(''), { message: 'newsletterId is required' });
+  t.context.client.getNewsletterMetrics(8, { period: 'days', steps: 30 });
+  t.true(get.calledWith(`${API}/newsletters/8/metrics?period=days&steps=30`));
+});
+
+test('#getNewsletterMetricsLinks: forwards unique and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterMetricsLinks(''), { message: 'newsletterId is required' });
+  t.context.client.getNewsletterMetricsLinks(8, { period: 'days', steps: 30, unique: true });
+  t.true(get.calledWith(`${API}/newsletters/8/metrics/links?period=days&steps=30&unique=true`));
+});
+
+test('#getNewsletterMessages: forwards filters and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterMessages(''), { message: 'newsletterId is required' });
+  t.context.client.getNewsletterMessages(8, {
+    metric: 'delivered',
+    type: 'email',
+    limit: 50,
+    get_tracked_responses: true,
+  });
+  t.true(
+    get.calledWith(`${API}/newsletters/8/messages?limit=50&metric=delivered&type=email&get_tracked_responses=true`),
+  );
+});
+
+test('#sendNewsletter: posts send settings and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.sendNewsletter(''), { message: 'newsletterId is required' });
+  t.context.client.sendNewsletter(8, { rate_limit_email_rate: 100 });
+  t.true(post.calledWith(`${API}/newsletters/8/send`, { rate_limit_email_rate: 100 }));
+  t.context.client.sendNewsletter(8);
+  t.true(post.calledWith(`${API}/newsletters/8/send`, {}));
+});
+
+test('#scheduleNewsletter: posts schedule settings and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.scheduleNewsletter(''), { message: 'newsletterId is required' });
+  const schedule = { scheduled_at: 1719792000, timezone: 'America/New_York' };
+  t.context.client.scheduleNewsletter(8, schedule);
+  t.true(post.calledWith(`${API}/newsletters/8/schedule`, schedule));
+  t.context.client.scheduleNewsletter(8);
+  t.true(post.calledWith(`${API}/newsletters/8/schedule`, {}));
+});
+
+// --- Batch 7: Newsletters — localization & test groups (CDP-6271) ---
+
+test('#createNewsletterLanguage: posts the body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.createNewsletterLanguage(''), { message: 'newsletterId is required' });
+  const variation = { language: 'fr', subject: 'Bonjour', body: '<p>Bonjour</p>' };
+  t.context.client.createNewsletterLanguage(8, variation);
+  t.true(post.calledWith(`${API}/newsletters/8/language`, variation));
+  t.context.client.createNewsletterLanguage(8);
+  t.true(post.calledWith(`${API}/newsletters/8/language`, {}));
+});
+
+test('#getNewsletterLanguage: gets a translation and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterLanguage('', 'en'), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.getNewsletterLanguage(8, ''), { message: 'language is required' });
+  t.context.client.getNewsletterLanguage(8, 'en-US');
+  t.true(get.calledWith(`${API}/newsletters/8/language/en-US`));
+});
+
+test('#updateNewsletterLanguage: puts the translation and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateNewsletterLanguage('', 'en', {}), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.updateNewsletterLanguage(8, '', {}), { message: 'language is required' });
+  t.context.client.updateNewsletterLanguage(8, 'fr', { subject: 'Salut' });
+  t.true(put.calledWith(`${API}/newsletters/8/language/fr`, { subject: 'Salut' }));
+  t.context.client.updateNewsletterLanguage(8, 'fr');
+  t.true(put.calledWith(`${API}/newsletters/8/language/fr`, {}));
+});
+
+test('#deleteNewsletterLanguage: deletes a translation and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteNewsletterLanguage('', 'en'), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.deleteNewsletterLanguage(8, ''), { message: 'language is required' });
+  t.context.client.deleteNewsletterLanguage(8, 'fr');
+  t.true(destroy.calledWith(`${API}/newsletters/8/language/fr`));
+});
+
+test('#getNewsletterTestGroups: lists test groups and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterTestGroups(''), { message: 'newsletterId is required' });
+  t.context.client.getNewsletterTestGroups(8);
+  t.true(get.calledWith(`${API}/newsletters/8/test_groups`));
+});
+
+test('#createNewsletterTestGroup: posts to test_groups (no body) and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.createNewsletterTestGroup(''), { message: 'newsletterId is required' });
+  t.context.client.createNewsletterTestGroup(8);
+  t.true(post.calledWith(`${API}/newsletters/8/test_groups`));
+});
+
+test('#createNewsletterTestGroupLanguage: posts to test_group/{id}/language and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => t.context.client.createNewsletterTestGroupLanguage('', 2), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.createNewsletterTestGroupLanguage(8, ''), { message: 'testGroupId is required' });
+  const variation = { language: 'fr', subject: 'Bonjour', body: '<p>Bonjour</p>' };
+  t.context.client.createNewsletterTestGroupLanguage(8, 2, variation);
+  t.true(post.calledWith(`${API}/newsletters/8/test_group/2/language`, variation));
+  t.context.client.createNewsletterTestGroupLanguage(8, 2);
+  t.true(post.calledWith(`${API}/newsletters/8/test_group/2/language`, {}));
+});
+
+test('#getNewsletterTestGroupLanguage: gets a translation and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getNewsletterTestGroupLanguage('', 2, 'en'), { message: 'newsletterId is required' });
+  t.throws(() => t.context.client.getNewsletterTestGroupLanguage(8, '', 'en'), { message: 'testGroupId is required' });
+  t.throws(() => t.context.client.getNewsletterTestGroupLanguage(8, 2, ''), { message: 'language is required' });
+  t.context.client.getNewsletterTestGroupLanguage(8, 2, 'en-US');
+  t.true(get.calledWith(`${API}/newsletters/8/test_group/2/language/en-US`));
+});
+
+test('#updateNewsletterTestGroupLanguage: puts the translation and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateNewsletterTestGroupLanguage('', 2, 'en', {}), {
+    message: 'newsletterId is required',
+  });
+  t.throws(() => t.context.client.updateNewsletterTestGroupLanguage(8, '', 'en', {}), {
+    message: 'testGroupId is required',
+  });
+  t.throws(() => t.context.client.updateNewsletterTestGroupLanguage(8, 2, '', {}), { message: 'language is required' });
+  t.context.client.updateNewsletterTestGroupLanguage(8, 2, 'fr', { subject: 'Salut' });
+  t.true(put.calledWith(`${API}/newsletters/8/test_group/2/language/fr`, { subject: 'Salut' }));
+  t.context.client.updateNewsletterTestGroupLanguage(8, 2, 'fr');
+  t.true(put.calledWith(`${API}/newsletters/8/test_group/2/language/fr`, {}));
+});
+
+test('#deleteNewsletterTestGroupLanguage: deletes a translation and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteNewsletterTestGroupLanguage('', 2, 'en'), {
+    message: 'newsletterId is required',
+  });
+  t.throws(() => t.context.client.deleteNewsletterTestGroupLanguage(8, '', 'en'), {
+    message: 'testGroupId is required',
+  });
+  t.throws(() => t.context.client.deleteNewsletterTestGroupLanguage(8, 2, ''), { message: 'language is required' });
+  t.context.client.deleteNewsletterTestGroupLanguage(8, 2, 'fr');
+  t.true(destroy.calledWith(`${API}/newsletters/8/test_group/2/language/fr`));
+});
