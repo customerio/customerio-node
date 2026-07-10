@@ -9,6 +9,7 @@ import {
   SendEmailRequest,
   SendPushRequest,
   SendSMSRequest,
+  SendWhatsAppRequest,
   SendInboxMessageRequest,
   SendInAppRequest,
 } from '../lib/api';
@@ -647,6 +648,75 @@ test('#sendSMS: error', async (t) => {
   });
 
   t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/sms`, req.message));
+});
+
+test('sendWhatsApp: passing in a plain object throws an error', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+
+  let req = { identifiers: { id: '2' }, transactional_message_id: 1 };
+
+  t.throws(() => t.context.client.sendWhatsApp(req as any), {
+    message: /"request" must be an instance of SendWhatsAppRequest/,
+  });
+  t.falsy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/whatsapp`));
+});
+
+test('#sendWhatsApp: with template: success', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  let req = new SendWhatsAppRequest({
+    to: '+1234567890',
+    identifiers: { id: '2' },
+    transactional_message_id: 1,
+  });
+  t.context.client.sendWhatsApp(req);
+  t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/whatsapp`, req.message));
+  t.is(req.message.transactional_message_id, 1);
+  t.is(req.message.to, '+1234567890');
+});
+
+test('#sendWhatsApp: with optional parameters: success', (t) => {
+  sinon.stub(t.context.client.request, 'post');
+  let req = new SendWhatsAppRequest({
+    to: '+1234567890',
+    from: '+1987654321',
+    identifiers: { id: '2' },
+    transactional_message_id: 1,
+    message_data: { key: 'value' },
+    tracked: true,
+    disable_message_retention: true,
+    send_to_unsubscribed: true,
+    queue_draft: true,
+    send_at: 1234567890,
+    language: 'en',
+  });
+  t.context.client.sendWhatsApp(req);
+  t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/whatsapp`, req.message));
+  t.is(req.message.transactional_message_id, 1);
+  t.is(req.message.to, '+1234567890');
+  t.is(req.message.from, '+1987654321');
+  t.deepEqual(req.message.message_data, { key: 'value' });
+  t.true(req.message.tracked);
+  t.true(req.message.disable_message_retention);
+  t.true(req.message.send_to_unsubscribed);
+  t.true(req.message.queue_draft);
+  t.is(req.message.send_at, 1234567890);
+  t.is(req.message.language, 'en');
+});
+
+test('#sendWhatsApp: error', async (t) => {
+  sinon.stub(t.context.client.request, 'post').rejects({ message: 'sample error', statusCode: 400 });
+
+  let req = new SendWhatsAppRequest({
+    to: '+1234567890',
+    identifiers: { id: '2' },
+    transactional_message_id: 1,
+  });
+  t.context.client.sendWhatsApp(req).catch((err) => {
+    t.is(err.message, 'sample error');
+    t.is(err.statusCode, 400);
+  });
+
+  t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/whatsapp`, req.message));
 });
 
 test('sendInboxMessage: passing in a plain object throws an error', (t) => {

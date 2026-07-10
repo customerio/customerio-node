@@ -12,11 +12,13 @@ export type {
   SendEmailRequestOptions,
   SendPushRequestOptions,
   SendSMSRequestOptions,
+  SendWhatsAppRequestOptions,
   SendInboxMessageRequestOptions,
   SendInAppRequestOptions,
   EmailMessage,
   PushMessage,
   SMSMessage,
+  WhatsAppMessage,
   InboxMessage,
   InAppMessage,
 } from './lib/api/requests';
