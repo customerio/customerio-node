@@ -3,6 +3,7 @@ import { pickDefined } from '../utils';
 const SEND_EMAIL_BRAND = Symbol.for('customerio-node.SendEmailRequest');
 const SEND_PUSH_BRAND = Symbol.for('customerio-node.SendPushRequest');
 const SEND_SMS_BRAND = Symbol.for('customerio-node.SendSMSRequest');
+const SEND_WHATSAPP_BRAND = Symbol.for('customerio-node.SendWhatsAppRequest');
 const SEND_INBOX_MESSAGE_BRAND = Symbol.for('customerio-node.SendInboxMessageRequest');
 const SEND_IN_APP_BRAND = Symbol.for('customerio-node.SendInAppRequest');
 
@@ -281,6 +282,62 @@ export class SendSMSRequest {
       identifiers: opts.identifiers,
       transactional_message_id: opts.transactional_message_id,
       ...pickDefined(opts, SMS_OPTIONAL_KEYS),
+    };
+  }
+}
+
+export type WhatsAppMessage = Partial<SendWhatsAppRequestOptions>;
+
+export type SendWhatsAppRequestRequiredOptions = {
+  identifiers: Identifiers;
+  transactional_message_id: string | number;
+};
+
+export type SendWhatsAppRequestOptionalOptions = Partial<{
+  to: string;
+  from: string;
+  tracked: boolean;
+  disable_message_retention: boolean;
+  send_to_unsubscribed: boolean;
+  queue_draft: boolean;
+  message_data: Record<string, any>;
+  send_at: number;
+  language: string;
+}>;
+
+export type SendWhatsAppRequestOptions = SendWhatsAppRequestRequiredOptions & SendWhatsAppRequestOptionalOptions & {};
+
+const WHATSAPP_OPTIONAL_KEYS = [
+  'to',
+  'from',
+  'tracked',
+  'disable_message_retention',
+  'send_to_unsubscribed',
+  'queue_draft',
+  'message_data',
+  'send_at',
+  'language',
+] as const satisfies ReadonlyArray<keyof SendWhatsAppRequestOptionalOptions>;
+
+/**
+ * Builder for a transactional WhatsApp request. Pass an instance to {@link APIClient.sendWhatsApp}.
+ *
+ * `to` and `from` are phone numbers in E.164 format. Both are optional here only
+ * when the referenced `transactional_message_id` already defines them.
+ */
+export class SendWhatsAppRequest {
+  message: WhatsAppMessage;
+
+  static [Symbol.hasInstance](instance: unknown): instance is SendWhatsAppRequest {
+    return typeof instance === 'object' && instance !== null && (instance as any)[SEND_WHATSAPP_BRAND] === true;
+  }
+
+  constructor(opts: SendWhatsAppRequestOptions) {
+    Object.defineProperty(this, SEND_WHATSAPP_BRAND, { value: true });
+    this.message = {
+      identifiers: opts.identifiers,
+      transactional_message_id: opts.transactional_message_id,
+      ...pickDefined(opts, WHATSAPP_OPTIONAL_KEYS),
     };
   }
 }

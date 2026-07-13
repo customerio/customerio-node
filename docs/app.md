@@ -84,6 +84,38 @@ api
   .catch((err) => console.log(err.statusCode, err.message));
 ```
 
+#### WhatsApp
+
+Create a new `SendWhatsAppRequest` object containing:
+
+- `transactional_message_id`: the ID or trigger name of the transactional message you want to send.
+- an `identifiers` object containing the `id` or `email` of your recipient. If the profile does not exist, Customer.io will create it.
+- `to` and `from`: E.164-formatted phone numbers. Both are optional only when the referenced `transactional_message_id` already defines them.
+
+Use `sendWhatsApp` referencing your request to send a transactional message. [Learn more about transactional messages](https://customer.io/docs/transactional-api).
+
+```javascript
+const { APIClient, SendWhatsAppRequest, RegionUS, RegionEU } = require("customerio-node");
+const api = new APIClient("app-key", { region: RegionUS });
+
+const request = new SendWhatsAppRequest({
+  to: "+15558675309",
+  from: "+15551234567",
+  transactional_message_id: "3",
+  message_data: {
+    name: "Person",
+  },
+  identifiers: {
+    id: "2",
+  },
+});
+
+api
+  .sendWhatsApp(request)
+  .then((res) => console.log(res))
+  .catch((err) => console.log(err.statusCode, err.message));
+```
+
 ### api.triggerBroadcast(campaign_id, data, recipients)
 
 Trigger an email broadcast using the broadcast ID. You can also optionally pass along custom data that will be merged with the liquid template, and additional conditions to filter recipients.

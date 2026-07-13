@@ -5,6 +5,7 @@ import {
   SendEmailRequest,
   SendPushRequest,
   SendSMSRequest,
+  SendWhatsAppRequest,
   SendInboxMessageRequest,
   SendInAppRequest,
 } from './api/requests';
@@ -389,6 +390,21 @@ export class APIClient {
     }
 
     return this.request.post(`${this.apiRoot}/send/sms`, req.message);
+  }
+
+  /**
+   * Send a transactional WhatsApp message.
+   *
+   * @param req A constructed {@link SendWhatsAppRequest} instance.
+   * @returns The parsed JSON response body.
+   * @throws {Error} If `req` is not a {@link SendWhatsAppRequest} instance.
+   */
+  sendWhatsApp(req: SendWhatsAppRequest) {
+    if (!(req instanceof SendWhatsAppRequest)) {
+      throw new Error('"request" must be an instance of SendWhatsAppRequest');
+    }
+
+    return this.request.post(`${this.apiRoot}/send/whatsapp`, req.message);
   }
 
   /**
@@ -2332,6 +2348,7 @@ export {
   SendEmailRequest,
   SendPushRequest,
   SendSMSRequest,
+  SendWhatsAppRequest,
   SendInboxMessageRequest,
   SendInAppRequest,
 } from './api/requests';

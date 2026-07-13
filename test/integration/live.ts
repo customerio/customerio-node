@@ -17,6 +17,8 @@
  *   CIO_TEST_NEWSLETTER_ID           newsletter id for createDeliveriesExport
  *   CIO_TEST_SMS_TRANSACTIONAL_ID    transactional_message_id for sendSMS
  *   CIO_TEST_SMS_RECIPIENT           E.164 phone number for sendSMS
+ *   CIO_TEST_WHATSAPP_TRANSACTIONAL_ID  transactional_message_id for sendWhatsApp
+ *   CIO_TEST_WHATSAPP_RECIPIENT      E.164 phone number for sendWhatsApp
  *   CIO_TEST_PUSH_TRANSACTIONAL_ID   transactional_message_id for sendPush
  *   CIO_TEST_PUSH_DEVICE_ID          device id for sendPush + addDevice
  *   CIO_TEST_MANUAL_SEGMENT_ID       manual segment id for add/removeCustomersFromSegment
@@ -37,6 +39,7 @@ import { APIClient } from '../../lib/api';
 import {
   SendEmailRequest,
   SendSMSRequest,
+  SendWhatsAppRequest,
   SendPushRequest,
   SendInAppRequest,
   SendInboxMessageRequest,
@@ -378,6 +381,21 @@ needs('CIO_TEST_SMS_TRANSACTIONAL_ID')('sendSMS delivers a transactional SMS', a
     transactional_message_id: process.env.CIO_TEST_SMS_TRANSACTIONAL_ID!,
   });
   const result = (await api!.sendSMS(req)) as { delivery_id?: string };
+  t.truthy(result.delivery_id);
+});
+
+needs('CIO_TEST_WHATSAPP_TRANSACTIONAL_ID')('sendWhatsApp delivers a transactional WhatsApp message', async (t) => {
+  const recipient = process.env.CIO_TEST_WHATSAPP_RECIPIENT;
+  if (!recipient) {
+    t.pass('CIO_TEST_WHATSAPP_RECIPIENT not set; skipping send');
+    return;
+  }
+  const req = new SendWhatsAppRequest({
+    to: recipient,
+    identifiers: { id: customerId },
+    transactional_message_id: process.env.CIO_TEST_WHATSAPP_TRANSACTIONAL_ID!,
+  });
+  const result = (await api!.sendWhatsApp(req)) as { delivery_id?: string };
   t.truthy(result.delivery_id);
 });
 
