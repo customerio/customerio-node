@@ -518,7 +518,7 @@ api.getTransactionalMessageDeliveries(3, { metric: "delivered", limit: 50 });
 #### Options
 
 - **transactionalId**: The transactional message's numeric id (required)
-- **options**: Object (optional) — `start`, `limit`, `metric`, `state`, `start_ts`, `end_ts`, `get_tracked_responses`
+- **options**: Object (optional) — `start`, `limit`, `metric`, `start_ts`, `end_ts`, `get_tracked_responses`
 
 ### api.getTransactionalMessageMetrics(transactionalId, options)
 
@@ -726,48 +726,46 @@ api.updateCampaignActionLanguage(9, 2, "fr", { subject: "Bonjour" });
 - **language**: The IETF language tag (required)
 - **data**: The translation fields to update
 
-### api.getCampaignActionMetrics(campaignId, actionId, version, options)
+### api.getCampaignActionMetrics(campaignId, actionId, options)
 
-Get metrics for a single campaign action over time.
+Get metrics for a single campaign action over time. Aggregated across all channels (no `type` filter).
 
 ```javascript
-api.getCampaignActionMetrics(9, 2, "2", { type: "email", period: "days", steps: 7 });
+api.getCampaignActionMetrics(9, 2, { version: "2", period: "days", steps: 7 });
 ```
 
 #### Options
 
 - **campaignId**: The campaign's numeric id (required)
 - **actionId**: The action's numeric id (required)
-- **version**: Metrics API version — "1" or "2" (required)
-- **options**: Object (optional) — `type`, `res`, `tz`, `start`, `end`, `period`, `steps`
+- **options**: Object (optional) — `version` ("1" / "2"), `res`, `tz`, `start`, `end`, `period`, `steps`
 
 ### api.getCampaignActionMetricsLinks(campaignId, actionId, options)
 
 Get link (click) metrics for a single campaign action over time.
 
 ```javascript
-api.getCampaignActionMetricsLinks(9, 2, { period: "weeks", steps: 4, type: "email" });
+api.getCampaignActionMetricsLinks(9, 2, { period: "weeks", steps: 4, unique: true });
 ```
 
 #### Options
 
 - **campaignId**: The campaign's numeric id (required)
 - **actionId**: The action's numeric id (required)
-- **options**: Object (optional) — `period`, `steps`, `type`
+- **options**: Object (optional) — `period`, `steps`, `unique`
 
-### api.getCampaignMetrics(campaignId, version, options)
+### api.getCampaignMetrics(campaignId, options)
 
 Get delivery metrics for a campaign over time.
 
 ```javascript
-api.getCampaignMetrics(9, "1", { res: "daily", start: 1719792000, end: 1719878400 });
+api.getCampaignMetrics(9, { version: "1", res: "daily", start: 1719792000, end: 1719878400 });
 ```
 
 #### Options
 
 - **campaignId**: The campaign's numeric id (required)
-- **version**: Metrics API version — "1" or "2" (required)
-- **options**: Object (optional) — `type`, `res`, `tz`, `start`, `end`, `period`, `steps`
+- **options**: Object (optional) — `version` ("1" / "2"), `type`, `res`, `tz`, `start`, `end`, `period`, `steps`
 
 ### api.getCampaignMetricsLinks(campaignId, options)
 
@@ -925,31 +923,31 @@ api.updateBroadcastActionLanguage(4, 2, "fr", { subject: "Bonjour" });
 
 ### api.getBroadcastActionMetrics(broadcastId, actionId, options)
 
-Get metrics for a single broadcast action over time.
+Get metrics for a single broadcast action over time. Aggregated across all channels (no `type` filter).
 
 ```javascript
-api.getBroadcastActionMetrics(4, 2, { period: "days", steps: 7, type: "email" });
+api.getBroadcastActionMetrics(4, 2, { period: "days", steps: 7 });
 ```
 
 #### Options
 
 - **broadcastId**: The broadcast's numeric id (required)
 - **actionId**: The action's numeric id (required)
-- **options**: Object (optional) — `period`, `steps`, `type`
+- **options**: Object (optional) — `period`, `steps`
 
 ### api.getBroadcastActionMetricsLinks(broadcastId, actionId, options)
 
 Get link (click) metrics for a single broadcast action over time.
 
 ```javascript
-api.getBroadcastActionMetricsLinks(4, 2, { period: "weeks", steps: 4, type: "email" });
+api.getBroadcastActionMetricsLinks(4, 2, { period: "weeks", steps: 4, unique: true });
 ```
 
 #### Options
 
 - **broadcastId**: The broadcast's numeric id (required)
 - **actionId**: The action's numeric id (required)
-- **options**: Object (optional) — `period`, `steps`, `type`
+- **options**: Object (optional) — `period`, `steps`, `unique`
 
 ### api.getBroadcastMetrics(broadcastId, options)
 
@@ -982,13 +980,13 @@ api.getBroadcastMetricsLinks(4, { period: "days", steps: 30, unique: true });
 Get the individual messages (deliveries) sent by a broadcast.
 
 ```javascript
-api.getBroadcastMessages(4, { metric: "delivered", state: "sent", limit: 50 });
+api.getBroadcastMessages(4, { metric: "delivered", type: "email", limit: 50 });
 ```
 
 #### Options
 
 - **broadcastId**: The broadcast's numeric id (required)
-- **options**: Object (optional) — `start`, `limit`, `metric`, `state`, `type`, `start_ts`, `end_ts`, `get_tracked_responses`
+- **options**: Object (optional) — `start`, `limit`, `metric`, `type`, `start_ts`, `end_ts`, `get_tracked_responses`
 
 ### api.getBroadcastTriggers(broadcastId)
 

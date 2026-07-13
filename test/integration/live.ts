@@ -243,7 +243,7 @@ needs('CIO_TEST_CAMPAIGN_ID')('campaign reads resolve for a known id', async (t)
   const start = end - 7 * 24 * 60 * 60;
   await api!.getCampaign(id).catch(() => undefined);
   await api!.getCampaignActions(id).catch(() => undefined);
-  await api!.getCampaignMetrics(id, '1', { period: 'days', steps: 7 }).catch(() => undefined);
+  await api!.getCampaignMetrics(id, { version: '1', period: 'days', steps: 7 }).catch(() => undefined);
   await api!.getCampaignMetricsLinks(id, { period: 'days', steps: 7 }).catch(() => undefined);
   await api!.getCampaignJourneyMetrics(id, { start, end, res: 'days' }).catch(() => undefined);
   await api!.getCampaignMessages(id, { limit: 5 }).catch(() => undefined);
