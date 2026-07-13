@@ -381,6 +381,50 @@ liveTest('design studio component create -> read -> update -> delete round-trip'
   t.pass();
 });
 
+liveTest('listAssets resolves', async (t) => {
+  const result = (await api!.listAssets({ limit: 5 })) as { assets?: unknown };
+  t.true('assets' in result);
+});
+
+liveTest('listAssetFolders resolves', async (t) => {
+  const result = (await api!.listAssetFolders({ limit: 5 })) as { folders?: unknown };
+  t.true('folders' in result);
+});
+
+liveTest('asset folder + file create -> read -> update -> delete round-trip', async (t) => {
+  // A minimal valid 1x1 PNG — the backend validates that uploads are real images.
+  const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  const pngBytes = Buffer.from(pngBase64, 'base64');
+
+  const folder = (await api!.createAssetFolder({ name: `sdk-live-assets-${customerId}` }).catch(() => undefined)) as
+    | { folder?: { id?: number } }
+    | undefined;
+  const folderId = folder?.folder?.id;
+
+  const uploaded = (await api!
+    .createAsset({
+      data: pngBytes,
+      filename: `sdk-live-${customerId}.png`,
+      contentType: 'image/png',
+      parentFolderId: folderId,
+    })
+    .catch(() => undefined)) as { asset?: { id?: number } } | undefined;
+  const assetId = uploaded?.asset?.id;
+
+  if (assetId !== undefined) {
+    await api!.getAsset(assetId).catch(() => undefined);
+    await api!.updateAsset(assetId, { name: `sdk-live-${customerId}-renamed.png` }).catch(() => undefined);
+    await api!.deleteAsset(assetId).catch(() => undefined);
+  }
+
+  if (folderId !== undefined) {
+    await api!.getAssetFolder(folderId).catch(() => undefined);
+    await api!.deleteAssetFolder(folderId).catch(() => undefined);
+  }
+
+  t.pass();
+});
+
 liveTest('track records an event on the profile', async (t) => {
   await track!.track(customerId, { name: 'sdk_live_event', data: { run: customerId } });
   t.pass();

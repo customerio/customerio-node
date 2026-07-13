@@ -406,6 +406,65 @@ export type DesignStudioComponentUpdate = {
   content?: string;
 };
 
+/** Filters and pagination shared by the asset list endpoints (page-based). */
+export type AssetListOptions = {
+  /** Only list assets directly within this folder id (omit for all/root). */
+  parentFolderId?: number;
+  /** When `true`, return only direct children rather than the whole subtree. */
+  directDescendantsOnly?: boolean;
+  /** 1-based page number. Defaults to 1. */
+  page?: number;
+  /** Page size, 1–10000. Defaults to 1000. */
+  limit?: number;
+};
+
+/**
+ * Definition for uploading a file via {@link APIClient.createAsset}.
+ *
+ * The API accepts images (`image/bmp`, `image/jpeg`, `image/jpg`, `image/png`,
+ * `image/gif`) and `application/pdf`, up to 2 MB (images max 4096px per side).
+ */
+export type CreateAssetInput = {
+  /** File contents. Any `Buffer.from`/`Blob`-compatible value (Buffer, Uint8Array, ArrayBuffer, string). */
+  data: any;
+  /** Filename — also the multipart filename, the default asset `name`, and the source for the derived content type. */
+  filename: string;
+  /** MIME type of the upload. When omitted, the API derives it from `filename`. */
+  contentType?: string;
+  /** Asset name. Defaults to `filename`. */
+  name?: string;
+  /** Parent folder id. Omit for the root. */
+  parentFolderId?: number;
+};
+
+/**
+ * Fields for updating an asset via {@link APIClient.updateAsset}. At least one must be provided;
+ * file bytes cannot be changed. `parent_folder_id` is tri-state: omit to keep the current parent,
+ * `null` to move to the root, or a folder id to move it into that folder.
+ */
+export type AssetUpdate = {
+  name?: string;
+  parent_folder_id?: number | null;
+};
+
+/** Definition for creating an asset folder via {@link APIClient.createAssetFolder}. */
+export type AssetFolderInput = {
+  /** The folder's display name (required). */
+  name: string;
+  /** Parent folder id. Omit for the root. */
+  parent_folder_id?: number;
+};
+
+/**
+ * Fields for updating an asset folder via {@link APIClient.updateAssetFolder}. At least one must
+ * be provided. `parent_folder_id` is tri-state: omit to keep the current parent, `null` to move to
+ * the root, or a folder id to move it into that folder.
+ */
+export type AssetFolderUpdate = {
+  name?: string;
+  parent_folder_id?: number | null;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -2900,6 +2959,195 @@ export class APIClient {
     }
 
     return this.request.destroy(`${this.apiRoot}/design_studio/components/${encodeURIComponent(componentId)}`);
+  }
+
+  /**
+   * List uploaded assets (files).
+   *
+   * @param options Optional folder filter and pagination. See {@link AssetListOptions}.
+   * @returns The parsed JSON response body (`{ assets: [...], meta }`).
+   */
+  listAssets(options: AssetListOptions = {}) {
+    const query = buildQueryString({
+      parent_folder_id: options.parentFolderId,
+      direct_descendants_only: options.directDescendantsOnly,
+      page: options.page,
+      limit: options.limit,
+    });
+
+    return this.request.get(`${this.apiRoot}/assets${query}`);
+  }
+
+  /**
+   * Upload a file asset (`multipart/form-data`).
+   *
+   * @param file The file to upload. `data` and `filename` are required. See {@link CreateAssetInput}.
+   * @returns The parsed JSON response body (`{ asset: {...} }`).
+   * @throws {MissingParamError} If `file` is missing/not an object, or `file.data`/`file.filename` is missing.
+   */
+  createAsset(file: CreateAssetInput) {
+    if (file == null || typeof file !== 'object') {
+      throw new MissingParamError('file');
+    }
+
+    if (file.data == null) {
+      throw new MissingParamError('file.data');
+    }
+
+    if (isEmpty(file.filename)) {
+      throw new MissingParamError('file.filename');
+    }
+
+    const form = new FormData();
+    const blob = file.contentType ? new Blob([file.data], { type: file.contentType }) : new Blob([file.data]);
+    form.append('file', blob, file.filename);
+
+    if (file.name !== undefined) {
+      form.append('name', file.name);
+    }
+
+    if (file.parentFolderId !== undefined) {
+      form.append('parent_folder_id', String(file.parentFolderId));
+    }
+
+    return this.request.postForm(`${this.apiRoot}/assets/files`, form);
+  }
+
+  /**
+   * Get a single asset (file).
+   *
+   * @param assetId The asset's numeric id.
+   * @returns The parsed JSON response body (`{ asset: {...} }`).
+   * @throws {MissingParamError} If `assetId` is empty.
+   */
+  getAsset(assetId: string | number) {
+    if (isEmpty(assetId)) {
+      throw new MissingParamError('assetId');
+    }
+
+    return this.request.get(`${this.apiRoot}/assets/files/${encodeURIComponent(assetId)}`);
+  }
+
+  /**
+   * Update an asset's name and/or parent folder. At least one field must be provided;
+   * the file bytes cannot be changed.
+   *
+   * @param assetId The asset's numeric id.
+   * @param updates The fields to change. See {@link AssetUpdate}.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `assetId` is empty or `updates` is missing/not an object.
+   */
+  updateAsset(assetId: string | number, updates: AssetUpdate) {
+    if (isEmpty(assetId)) {
+      throw new MissingParamError('assetId');
+    }
+
+    if (updates == null || typeof updates !== 'object') {
+      throw new MissingParamError('updates');
+    }
+
+    return this.request.put(`${this.apiRoot}/assets/files/${encodeURIComponent(assetId)}`, updates);
+  }
+
+  /**
+   * Delete an asset (file).
+   *
+   * @param assetId The asset's numeric id.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `assetId` is empty.
+   */
+  deleteAsset(assetId: string | number) {
+    if (isEmpty(assetId)) {
+      throw new MissingParamError('assetId');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/assets/files/${encodeURIComponent(assetId)}`);
+  }
+
+  /**
+   * List asset folders.
+   *
+   * @param options Optional folder filter and pagination. See {@link AssetListOptions}.
+   * @returns The parsed JSON response body (`{ folders: [...], meta }`).
+   */
+  listAssetFolders(options: AssetListOptions = {}) {
+    const query = buildQueryString({
+      parent_folder_id: options.parentFolderId,
+      direct_descendants_only: options.directDescendantsOnly,
+      page: options.page,
+      limit: options.limit,
+    });
+
+    return this.request.get(`${this.apiRoot}/assets/folders${query}`);
+  }
+
+  /**
+   * Create an asset folder.
+   *
+   * @param folder The folder definition. `name` is required. See {@link AssetFolderInput}.
+   * @returns The parsed JSON response body (`{ folder: {...} }`).
+   * @throws {MissingParamError} If `folder` is missing/not an object, or `folder.name` is empty.
+   */
+  createAssetFolder(folder: AssetFolderInput) {
+    if (folder == null || typeof folder !== 'object') {
+      throw new MissingParamError('folder');
+    }
+
+    if (isEmpty(folder.name)) {
+      throw new MissingParamError('folder.name');
+    }
+
+    return this.request.post(`${this.apiRoot}/assets/folders`, folder);
+  }
+
+  /**
+   * Get a single asset folder.
+   *
+   * @param folderId The folder's numeric id.
+   * @returns The parsed JSON response body (`{ folder: {...} }`).
+   * @throws {MissingParamError} If `folderId` is empty.
+   */
+  getAssetFolder(folderId: string | number) {
+    if (isEmpty(folderId)) {
+      throw new MissingParamError('folderId');
+    }
+
+    return this.request.get(`${this.apiRoot}/assets/folders/${encodeURIComponent(folderId)}`);
+  }
+
+  /**
+   * Update an asset folder. At least one field must be provided.
+   *
+   * @param folderId The folder's numeric id.
+   * @param updates The fields to change. See {@link AssetFolderUpdate}.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `folderId` is empty or `updates` is missing/not an object.
+   */
+  updateAssetFolder(folderId: string | number, updates: AssetFolderUpdate) {
+    if (isEmpty(folderId)) {
+      throw new MissingParamError('folderId');
+    }
+
+    if (updates == null || typeof updates !== 'object') {
+      throw new MissingParamError('updates');
+    }
+
+    return this.request.put(`${this.apiRoot}/assets/folders/${encodeURIComponent(folderId)}`, updates);
+  }
+
+  /**
+   * Delete an asset folder. The folder must be empty.
+   *
+   * @param folderId The folder's numeric id.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `folderId` is empty.
+   */
+  deleteAssetFolder(folderId: string | number) {
+    if (isEmpty(folderId)) {
+      throw new MissingParamError('folderId');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/assets/folders/${encodeURIComponent(folderId)}`);
   }
 }
 

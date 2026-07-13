@@ -35,7 +35,7 @@ export interface RequestHandlerOptions {
   method: string;
   uri: string;
   headers: Record<string, string | number>;
-  body?: string | null;
+  body?: string | FormData | null;
 }
 export interface PushRequestData {
   delivery_id?: string;
@@ -150,6 +150,23 @@ export default class CIORequest {
     }
 
     return { method, uri, headers, body };
+  }
+
+  /**
+   * Build request options for a `multipart/form-data` upload. Unlike
+   * {@link options}, the `Content-Type` is deliberately left unset so `fetch`
+   * adds it with the correct multipart boundary, and no `Content-Length` is
+   * computed (the runtime streams the body).
+   */
+  formOptions(uri: string, method: string, form: FormData): RequestHandlerOptions {
+    const customHeaders = (this.defaults.headers ?? {}) as Record<string, string | number>;
+    const headers: Record<string, string | number> = {
+      ...customHeaders,
+      Authorization: this.auth,
+      'User-Agent': `Customer.io Node Client/${version}`,
+    };
+
+    return { method, uri, headers, body: form };
   }
 
   private async execute({ uri, body, method, headers }: RequestHandlerOptions): Promise<Record<string, any>> {
@@ -339,5 +356,9 @@ export default class CIORequest {
 
   post(uri: string, data: RequestData = {}) {
     return this.handler(this.options(uri, 'POST', data));
+  }
+
+  postForm(uri: string, form: FormData) {
+    return this.handler(this.formOptions(uri, 'POST', form));
   }
 }
