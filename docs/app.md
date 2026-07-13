@@ -1324,3 +1324,157 @@ api.deleteNewsletterTestGroupLanguage(8, 2, "fr");
 - **newsletterId**: The newsletter's numeric id (required)
 - **testGroupId**: The test group's id (required)
 - **language**: The IETF language tag (required)
+
+## Design Studio
+
+Manage Design Studio folders and emails. Folders and emails are "nodes" identified by a UUID.
+
+The list endpoints share a common set of filters, sorting, and page-based pagination (they do **not** use the cursor pagination of the other App API list endpoints):
+
+- **parentFolderId**: Only list nodes directly within this folder (omit for the root)
+- **directDescendantsOnly**: When `true`, return only direct children rather than the whole subtree
+- **sortBy**: `"created"` / `"updated"` / `"name"` (default `"created"`)
+- **sortOrder**: `"asc"` / `"desc"` (default `"asc"`)
+- **createdBefore** / **createdAfter** / **updatedBefore** / **updatedAfter**: Unix timestamps (seconds)
+- **page**: 1-based page number (default 1)
+- **limit**: page size, 1–10000 (default 1000)
+
+In folder and email bodies, `parent_folder_id` is tri-state: **omit** it to keep the current parent, pass `null` to move to the root, or pass a folder UUID to move it into that folder.
+
+### api.listDesignStudioFolders(options)
+
+List Design Studio folders.
+
+```javascript
+api.listDesignStudioFolders({ parentFolderId: "1f0…", directDescendantsOnly: true, limit: 50 });
+```
+
+#### Options
+
+- **options**: Object (optional) — the shared list filters described above
+
+### api.createDesignStudioFolder(folder)
+
+Create a folder.
+
+```javascript
+api.createDesignStudioFolder({ name: "Campaigns", parent_folder_id: null });
+```
+
+#### Options
+
+- **folder**: The folder definition
+  - _name_: The folder's display name (required)
+  - _parent_folder_id_: Parent folder UUID, or `null`/omit for the root
+
+### api.getDesignStudioFolder(folderId)
+
+Get a single folder.
+
+```javascript
+api.getDesignStudioFolder("1f0…");
+```
+
+#### Options
+
+- **folderId**: The folder's UUID (required)
+
+### api.updateDesignStudioFolder(folderId, updates)
+
+Update a folder. At least one field must be provided. Returns no content on success.
+
+```javascript
+api.updateDesignStudioFolder("1f0…", { name: "Renamed", parent_folder_id: null });
+```
+
+#### Options
+
+- **folderId**: The folder's UUID (required)
+- **updates**: Object with any of `name`, `parent_folder_id`
+
+### api.deleteDesignStudioFolder(folderId)
+
+Delete a folder. Returns no content on success.
+
+```javascript
+api.deleteDesignStudioFolder("1f0…");
+```
+
+#### Options
+
+- **folderId**: The folder's UUID (required)
+
+### api.listDesignStudioEmails(options)
+
+List Design Studio emails. In addition to the shared list filters, emails support three tri-state filters — each `"true"`, `"false"`, or `"any"` (no filter).
+
+```javascript
+api.listDesignStudioEmails({ isTemplate: "true", hasTranslations: "any", limit: 25 });
+```
+
+#### Options
+
+- **options**: Object (optional) — the shared list filters, plus:
+  - _isTemplate_: `"true"` / `"false"` / `"any"`
+  - _hasTranslations_: `"true"` / `"false"` / `"any"`
+  - _isLinked_: `"true"` / `"false"` / `"any"` (whether the email is linked to a message)
+
+### api.createDesignStudioEmail(email)
+
+Create an email.
+
+```javascript
+api.createDesignStudioEmail({
+  name: "Welcome",
+  is_template: false,
+  content: { subject: "Welcome!", html: "<p>Hi {{customer.first_name}}</p>" },
+  envelope: { recipient: "{{customer.email}}" },
+});
+```
+
+#### Options
+
+- **email**: The email definition
+  - _name_: The email's display name (required)
+  - _parent_folder_id_: Parent folder UUID, or `null`/omit for the root
+  - _is_template_: Whether the email is a reusable template
+  - _content_: `{ subject, preheader_text, html, amp, text }`
+  - _envelope_: `{ from_id, reply_to_id, recipient, bcc, fake_bcc, cc, headers }`
+  - _transformers_: Content transformers (e.g. `url_parameters`, `css_inliner`, `accessibility`)
+
+### api.getDesignStudioEmail(emailId)
+
+Get a single email.
+
+```javascript
+api.getDesignStudioEmail("2a1…");
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+
+### api.updateDesignStudioEmail(emailId, updates)
+
+Update an email. At least one field must be provided. Returns no content on success.
+
+```javascript
+api.updateDesignStudioEmail("2a1…", { is_template: true, content: { subject: "Updated" } });
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+- **updates**: Object with any of `name`, `parent_folder_id`, `is_template`, `content`, `envelope`, `transformers`
+
+### api.deleteDesignStudioEmail(emailId)
+
+Delete an email. Returns no content on success.
+
+```javascript
+api.deleteDesignStudioEmail("2a1…");
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)

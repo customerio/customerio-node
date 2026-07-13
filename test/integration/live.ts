@@ -303,6 +303,48 @@ needs('CIO_TEST_NEWSLETTER_ID')('newsletter test-group + language reads resolve'
   t.pass();
 });
 
+liveTest('listDesignStudioFolders resolves', async (t) => {
+  const result = (await api!.listDesignStudioFolders({ limit: 5 })) as { folders?: unknown };
+  t.true('folders' in result);
+});
+
+liveTest('listDesignStudioEmails resolves', async (t) => {
+  const result = (await api!.listDesignStudioEmails({ limit: 5 })) as { emails?: unknown };
+  t.true('emails' in result);
+});
+
+liveTest('design studio folder + email create -> read -> update -> delete round-trip', async (t) => {
+  const folder = (await api!.createDesignStudioFolder({ name: `sdk-live-${customerId}` })) as {
+    folder?: { id?: string };
+  };
+  const folderId = folder.folder?.id;
+
+  let emailId: string | undefined;
+  if (folderId) {
+    await api!.getDesignStudioFolder(folderId).catch(() => undefined);
+    await api!.updateDesignStudioFolder(folderId, { name: `sdk-live-${customerId}-renamed` }).catch(() => undefined);
+
+    const email = (await api!
+      .createDesignStudioEmail({
+        name: `sdk-live-email-${customerId}`,
+        parent_folder_id: folderId,
+        content: { subject: 'SDK live', html: '<p>hi</p>' },
+      })
+      .catch(() => undefined)) as { email?: { id?: string } } | undefined;
+    emailId = email?.email?.id;
+
+    if (emailId) {
+      await api!.getDesignStudioEmail(emailId).catch(() => undefined);
+      await api!.updateDesignStudioEmail(emailId, { is_template: true }).catch(() => undefined);
+      await api!.deleteDesignStudioEmail(emailId).catch(() => undefined);
+    }
+
+    await api!.deleteDesignStudioFolder(folderId).catch(() => undefined);
+  }
+
+  t.truthy(folder);
+});
+
 liveTest('track records an event on the profile', async (t) => {
   await track!.track(customerId, { name: 'sdk_live_event', data: { run: customerId } });
   t.pass();

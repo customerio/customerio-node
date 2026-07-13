@@ -250,6 +250,112 @@ export type NewsletterMessagesOptions = PaginationOptions & {
   get_tracked_responses?: boolean;
 };
 
+/** Sort field for Design Studio list endpoints. */
+export type DesignStudioSortBy = 'created' | 'updated' | 'name';
+
+/** Filters, sorting, and pagination shared by the Design Studio list endpoints (page-based, not cursor-based). */
+export type DesignStudioListOptions = {
+  /** Only list nodes directly within this folder (omit for the root). */
+  parentFolderId?: string;
+  /** When `true`, return only direct children rather than the whole subtree. */
+  directDescendantsOnly?: boolean;
+  /** Field to sort by. Defaults to `created`. */
+  sortBy?: DesignStudioSortBy;
+  /** Sort direction. Defaults to `asc`. */
+  sortOrder?: SortDirection;
+  /** Only nodes created before this Unix timestamp (seconds). */
+  createdBefore?: number;
+  /** Only nodes created after this Unix timestamp (seconds). */
+  createdAfter?: number;
+  /** Only nodes updated before this Unix timestamp (seconds). */
+  updatedBefore?: number;
+  /** Only nodes updated after this Unix timestamp (seconds). */
+  updatedAfter?: number;
+  /** 1-based page number. Defaults to 1. */
+  page?: number;
+  /** Page size, 1–10000. Defaults to 1000. */
+  limit?: number;
+};
+
+/** Tri-state filter for {@link ListDesignStudioEmailsOptions}: `'true'`/`'false'` to filter, or `'any'` for no filter. */
+export type DesignStudioEmailFilter = 'true' | 'false' | 'any';
+
+/** Options for {@link APIClient.listDesignStudioEmails}. */
+export type ListDesignStudioEmailsOptions = DesignStudioListOptions & {
+  /** Filter by the template flag, or `'any'`. */
+  isTemplate?: DesignStudioEmailFilter;
+  /** Filter by the presence of translations, or `'any'`. */
+  hasTranslations?: DesignStudioEmailFilter;
+  /** Filter by linked-to-a-message status, or `'any'`. */
+  isLinked?: DesignStudioEmailFilter;
+};
+
+/** The `content` block of a Design Studio email. */
+export type DesignStudioEmailContent = {
+  subject?: string;
+  preheader_text?: string;
+  html?: string;
+  amp?: string;
+  text?: string;
+};
+
+/** The `envelope` block of a Design Studio email. */
+export type DesignStudioEmailEnvelope = {
+  from_id?: number;
+  reply_to_id?: number;
+  recipient?: string;
+  bcc?: string;
+  fake_bcc?: boolean;
+  cc?: string;
+  headers?: Array<Record<string, any>>;
+};
+
+/** Definition for creating a Design Studio email via {@link APIClient.createDesignStudioEmail}. */
+export type DesignStudioEmailInput = {
+  /** The email's display name (required). */
+  name: string;
+  /** Parent folder UUID. Omit or pass `null` for the root. */
+  parent_folder_id?: string | null;
+  /** Whether the email is a reusable template. */
+  is_template?: boolean;
+  content?: DesignStudioEmailContent;
+  envelope?: DesignStudioEmailEnvelope;
+  /** Content transformers (e.g. `url_parameters`, `css_inliner`, `accessibility`). */
+  transformers?: Record<string, any>;
+};
+
+/**
+ * Fields for updating a Design Studio email via {@link APIClient.updateDesignStudioEmail}.
+ * At least one must be provided. `parent_folder_id` is tri-state: omit to keep the current
+ * parent, `null` to move to the root, or a UUID to move into that folder.
+ */
+export type DesignStudioEmailUpdate = {
+  name?: string;
+  parent_folder_id?: string | null;
+  is_template?: boolean;
+  content?: DesignStudioEmailContent;
+  envelope?: DesignStudioEmailEnvelope;
+  transformers?: Record<string, any>;
+};
+
+/** Definition for creating a Design Studio folder via {@link APIClient.createDesignStudioFolder}. */
+export type DesignStudioFolderInput = {
+  /** The folder's display name (required). */
+  name: string;
+  /** Parent folder UUID. Omit or pass `null` for the root. */
+  parent_folder_id?: string | null;
+};
+
+/**
+ * Fields for updating a Design Studio folder via {@link APIClient.updateDesignStudioFolder}.
+ * At least one must be provided. `parent_folder_id` is tri-state: omit to keep the current
+ * parent, `null` to move to the root, or a UUID to move into that folder.
+ */
+export type DesignStudioFolderUpdate = {
+  name?: string;
+  parent_folder_id?: string | null;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -2345,6 +2451,193 @@ export class APIClient {
     return this.request.destroy(
       `${this.resourceBase('newsletters', newsletterId)}/test_group/${encodeURIComponent(testGroupId)}/language/${encodeURIComponent(language)}`,
     );
+  }
+
+  /**
+   * List Design Studio folders.
+   *
+   * @param options Optional filters, sorting, and pagination. See {@link DesignStudioListOptions}.
+   * @returns The parsed JSON response body (`{ folders: [...], meta }`).
+   */
+  listDesignStudioFolders(options: DesignStudioListOptions = {}) {
+    const query = buildQueryString({
+      parent_folder_id: options.parentFolderId,
+      direct_descendants_only: options.directDescendantsOnly,
+      sort_by: options.sortBy,
+      sort_order: options.sortOrder,
+      created_before: options.createdBefore,
+      created_after: options.createdAfter,
+      updated_before: options.updatedBefore,
+      updated_after: options.updatedAfter,
+      page: options.page,
+      limit: options.limit,
+    });
+
+    return this.request.get(`${this.apiRoot}/design_studio/folders${query}`);
+  }
+
+  /**
+   * Create a Design Studio folder.
+   *
+   * @param folder The folder definition. `name` is required. See {@link DesignStudioFolderInput}.
+   * @returns The parsed JSON response body (`{ folder: {...} }`).
+   * @throws {MissingParamError} If `folder` is missing/not an object, or `folder.name` is empty.
+   */
+  createDesignStudioFolder(folder: DesignStudioFolderInput) {
+    if (folder == null || typeof folder !== 'object') {
+      throw new MissingParamError('folder');
+    }
+
+    if (isEmpty(folder.name)) {
+      throw new MissingParamError('folder.name');
+    }
+
+    return this.request.post(`${this.apiRoot}/design_studio/folders`, folder);
+  }
+
+  /**
+   * Get a single Design Studio folder.
+   *
+   * @param folderId The folder's UUID.
+   * @returns The parsed JSON response body (`{ folder: {...} }`).
+   * @throws {MissingParamError} If `folderId` is empty.
+   */
+  getDesignStudioFolder(folderId: string) {
+    if (isEmpty(folderId)) {
+      throw new MissingParamError('folderId');
+    }
+
+    return this.request.get(`${this.apiRoot}/design_studio/folders/${encodeURIComponent(folderId)}`);
+  }
+
+  /**
+   * Update a Design Studio folder. At least one field must be provided.
+   *
+   * @param folderId The folder's UUID.
+   * @param updates The fields to change. See {@link DesignStudioFolderUpdate}.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `folderId` is empty or `updates` is missing/not an object.
+   */
+  updateDesignStudioFolder(folderId: string, updates: DesignStudioFolderUpdate) {
+    if (isEmpty(folderId)) {
+      throw new MissingParamError('folderId');
+    }
+
+    if (updates == null || typeof updates !== 'object') {
+      throw new MissingParamError('updates');
+    }
+
+    return this.request.put(`${this.apiRoot}/design_studio/folders/${encodeURIComponent(folderId)}`, updates);
+  }
+
+  /**
+   * Delete a Design Studio folder.
+   *
+   * @param folderId The folder's UUID.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `folderId` is empty.
+   */
+  deleteDesignStudioFolder(folderId: string) {
+    if (isEmpty(folderId)) {
+      throw new MissingParamError('folderId');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/design_studio/folders/${encodeURIComponent(folderId)}`);
+  }
+
+  /**
+   * List Design Studio emails.
+   *
+   * @param options Optional filters, sorting, and pagination. See {@link ListDesignStudioEmailsOptions}.
+   * @returns The parsed JSON response body (`{ emails: [...], folders: [...], meta }`).
+   */
+  listDesignStudioEmails(options: ListDesignStudioEmailsOptions = {}) {
+    const query = buildQueryString({
+      parent_folder_id: options.parentFolderId,
+      direct_descendants_only: options.directDescendantsOnly,
+      sort_by: options.sortBy,
+      sort_order: options.sortOrder,
+      created_before: options.createdBefore,
+      created_after: options.createdAfter,
+      updated_before: options.updatedBefore,
+      updated_after: options.updatedAfter,
+      page: options.page,
+      limit: options.limit,
+      is_template: options.isTemplate,
+      has_translations: options.hasTranslations,
+      is_linked: options.isLinked,
+    });
+
+    return this.request.get(`${this.apiRoot}/design_studio/emails${query}`);
+  }
+
+  /**
+   * Create a Design Studio email.
+   *
+   * @param email The email definition. `name` is required. See {@link DesignStudioEmailInput}.
+   * @returns The parsed JSON response body (`{ email: {...} }`).
+   * @throws {MissingParamError} If `email` is missing/not an object, or `email.name` is empty.
+   */
+  createDesignStudioEmail(email: DesignStudioEmailInput) {
+    if (email == null || typeof email !== 'object') {
+      throw new MissingParamError('email');
+    }
+
+    if (isEmpty(email.name)) {
+      throw new MissingParamError('email.name');
+    }
+
+    return this.request.post(`${this.apiRoot}/design_studio/emails`, email);
+  }
+
+  /**
+   * Get a single Design Studio email.
+   *
+   * @param emailId The email's UUID.
+   * @returns The parsed JSON response body (`{ email: {...} }`).
+   * @throws {MissingParamError} If `emailId` is empty.
+   */
+  getDesignStudioEmail(emailId: string) {
+    if (isEmpty(emailId)) {
+      throw new MissingParamError('emailId');
+    }
+
+    return this.request.get(`${this.apiRoot}/design_studio/emails/${encodeURIComponent(emailId)}`);
+  }
+
+  /**
+   * Update a Design Studio email. At least one field must be provided.
+   *
+   * @param emailId The email's UUID.
+   * @param updates The fields to change. See {@link DesignStudioEmailUpdate}.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `emailId` is empty or `updates` is missing/not an object.
+   */
+  updateDesignStudioEmail(emailId: string, updates: DesignStudioEmailUpdate) {
+    if (isEmpty(emailId)) {
+      throw new MissingParamError('emailId');
+    }
+
+    if (updates == null || typeof updates !== 'object') {
+      throw new MissingParamError('updates');
+    }
+
+    return this.request.put(`${this.apiRoot}/design_studio/emails/${encodeURIComponent(emailId)}`, updates);
+  }
+
+  /**
+   * Delete a Design Studio email.
+   *
+   * @param emailId The email's UUID.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `emailId` is empty.
+   */
+  deleteDesignStudioEmail(emailId: string) {
+    if (isEmpty(emailId)) {
+      throw new MissingParamError('emailId');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/design_studio/emails/${encodeURIComponent(emailId)}`);
   }
 }
 
