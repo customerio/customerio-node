@@ -1478,3 +1478,141 @@ api.deleteDesignStudioEmail("2a1…");
 #### Options
 
 - **emailId**: The email's UUID (required)
+
+### api.listDesignStudioEmailLanguages(emailId)
+
+List the translations (languages) of an email.
+
+```javascript
+api.listDesignStudioEmailLanguages("2a1…");
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+
+### api.createDesignStudioEmailLanguage(emailId, translation)
+
+Create a translation of an email. Content blocks you omit are inherited from the default-language email.
+
+```javascript
+api.createDesignStudioEmailLanguage("2a1…", {
+  language: "fr",
+  content: { subject: "Bonjour" },
+});
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+- **translation**: The translation definition
+  - _language_: IETF language tag (required)
+  - _content_: `{ subject, preheader_text, html, amp, text }`
+  - _envelope_: `{ from_id, reply_to_id, recipient, bcc, fake_bcc, cc, headers }`
+  - _transformers_: Content transformers
+
+### api.getDesignStudioEmailLanguage(emailId, language)
+
+Get a single-language translation of an email.
+
+```javascript
+api.getDesignStudioEmailLanguage("2a1…", "fr");
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+- **language**: The IETF language tag (required)
+
+### api.updateDesignStudioEmailLanguage(emailId, language, updates)
+
+Update a translation. At least one field must be provided. The language itself is immutable. Returns no content on success.
+
+```javascript
+api.updateDesignStudioEmailLanguage("2a1…", "fr", { content: { subject: "Salut" } });
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+- **language**: The IETF language tag (required)
+- **updates**: Object with any of `content`, `envelope`, `transformers`
+
+### api.deleteDesignStudioEmailLanguage(emailId, language)
+
+Delete a translation. Returns no content on success.
+
+```javascript
+api.deleteDesignStudioEmailLanguage("2a1…", "fr");
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+- **language**: The IETF language tag (required)
+
+### api.listDesignStudioComponents(options)
+
+List Design Studio components.
+
+```javascript
+api.listDesignStudioComponents({ tag: "header", limit: 25 });
+```
+
+#### Options
+
+- **options**: Object (optional) — the shared list filters described above, plus:
+  - _tag_: Only list components with this tag
+
+### api.createDesignStudioComponent(component)
+
+Create a component.
+
+```javascript
+api.createDesignStudioComponent({ name: "Header", tag: "header", content: "<div>…</div>" });
+```
+
+#### Options
+
+- **component**: The component definition
+  - _name_: The component's display name (required)
+  - _tag_: The component's tag, unique per workspace (required)
+  - _parent_folder_id_: Parent folder UUID, or `null`/omit for the root
+  - _content_: The component's HTML content
+
+### api.getDesignStudioComponent(componentId)
+
+Get a single component.
+
+```javascript
+api.getDesignStudioComponent("3b2…");
+```
+
+#### Options
+
+- **componentId**: The component's UUID (required)
+
+### api.updateDesignStudioComponent(componentId, updates)
+
+Update a component. At least one field must be provided. Returns no content on success.
+
+```javascript
+api.updateDesignStudioComponent("3b2…", { content: "<div>updated</div>" });
+```
+
+#### Options
+
+- **componentId**: The component's UUID (required)
+- **updates**: Object with any of `name`, `tag`, `parent_folder_id`, `content`
+
+### api.deleteDesignStudioComponent(componentId)
+
+Delete a component. Returns no content on success.
+
+```javascript
+api.deleteDesignStudioComponent("3b2…");
+```
+
+#### Options
+
+- **componentId**: The component's UUID (required)

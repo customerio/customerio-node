@@ -1858,3 +1858,114 @@ test('#deleteDesignStudioEmail: deletes an email and validates', (t) => {
   t.context.client.deleteDesignStudioEmail('email-1');
   t.true(destroy.calledWith(`${API}/design_studio/emails/email-1`));
 });
+
+// Design Studio: email languages (translations)
+
+test('#listDesignStudioEmailLanguages: gets the languages endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.listDesignStudioEmailLanguages(''), { message: 'emailId is required' });
+  t.context.client.listDesignStudioEmailLanguages('email-1');
+  t.true(get.calledWith(`${API}/design_studio/emails/email-1/languages`));
+});
+
+test('#createDesignStudioEmailLanguage: posts the translation body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createDesignStudioEmailLanguage as any)('', { language: 'fr' }), {
+    message: 'emailId is required',
+  });
+  t.throws(() => (t.context.client.createDesignStudioEmailLanguage as any)('email-1', null), {
+    message: 'translation is required',
+  });
+  t.throws(() => (t.context.client.createDesignStudioEmailLanguage as any)('email-1', {}), {
+    message: 'translation.language is required',
+  });
+  const translation = { language: 'fr', content: { subject: 'Bonjour' } };
+  t.context.client.createDesignStudioEmailLanguage('email-1', translation);
+  t.true(post.calledWith(`${API}/design_studio/emails/email-1/languages`, translation));
+});
+
+test('#getDesignStudioEmailLanguage: gets a single translation and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getDesignStudioEmailLanguage('', 'fr'), { message: 'emailId is required' });
+  t.throws(() => t.context.client.getDesignStudioEmailLanguage('email-1', ''), { message: 'language is required' });
+  t.context.client.getDesignStudioEmailLanguage('email-1', 'fr');
+  t.true(get.calledWith(`${API}/design_studio/emails/email-1/languages/fr`));
+});
+
+test('#updateDesignStudioEmailLanguage: puts the updates and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateDesignStudioEmailLanguage('', 'fr', { content: {} }), {
+    message: 'emailId is required',
+  });
+  t.throws(() => t.context.client.updateDesignStudioEmailLanguage('email-1', '', { content: {} }), {
+    message: 'language is required',
+  });
+  t.throws(() => (t.context.client.updateDesignStudioEmailLanguage as any)('email-1', 'fr', null), {
+    message: 'updates is required',
+  });
+  const updates = { content: { subject: 'Salut' } };
+  t.context.client.updateDesignStudioEmailLanguage('email-1', 'fr', updates);
+  t.true(put.calledWith(`${API}/design_studio/emails/email-1/languages/fr`, updates));
+});
+
+test('#deleteDesignStudioEmailLanguage: deletes a translation and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteDesignStudioEmailLanguage('', 'fr'), { message: 'emailId is required' });
+  t.throws(() => t.context.client.deleteDesignStudioEmailLanguage('email-1', ''), { message: 'language is required' });
+  t.context.client.deleteDesignStudioEmailLanguage('email-1', 'fr');
+  t.true(destroy.calledWith(`${API}/design_studio/emails/email-1/languages/fr`));
+});
+
+// Design Studio: components
+
+test('#listDesignStudioComponents: gets the components endpoint with no query by default', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listDesignStudioComponents();
+  t.true(get.calledWith(`${API}/design_studio/components`));
+});
+
+test('#listDesignStudioComponents: forwards base filters plus tag', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listDesignStudioComponents({ parentFolderId: 'folder-1', sortBy: 'name', limit: 10, tag: 'header' });
+  t.true(get.calledWith(`${API}/design_studio/components?parent_folder_id=folder-1&sort_by=name&limit=10&tag=header`));
+});
+
+test('#createDesignStudioComponent: posts the component body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createDesignStudioComponent as any)(null), { message: 'component is required' });
+  t.throws(() => (t.context.client.createDesignStudioComponent as any)({ tag: 'header' }), {
+    message: 'component.name is required',
+  });
+  t.throws(() => (t.context.client.createDesignStudioComponent as any)({ name: 'Header' }), {
+    message: 'component.tag is required',
+  });
+  const component = { name: 'Header', tag: 'header', content: '<div></div>' };
+  t.context.client.createDesignStudioComponent(component);
+  t.true(post.calledWith(`${API}/design_studio/components`, component));
+});
+
+test('#getDesignStudioComponent: gets a single component and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getDesignStudioComponent(''), { message: 'componentId is required' });
+  t.context.client.getDesignStudioComponent('comp-1');
+  t.true(get.calledWith(`${API}/design_studio/components/comp-1`));
+});
+
+test('#updateDesignStudioComponent: puts the updates and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateDesignStudioComponent('', { name: 'x' }), {
+    message: 'componentId is required',
+  });
+  t.throws(() => (t.context.client.updateDesignStudioComponent as any)('comp-1', null), {
+    message: 'updates is required',
+  });
+  t.context.client.updateDesignStudioComponent('comp-1', { tag: 'footer', parent_folder_id: null });
+  t.true(put.calledWith(`${API}/design_studio/components/comp-1`, { tag: 'footer', parent_folder_id: null }));
+});
+
+test('#deleteDesignStudioComponent: deletes a component and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteDesignStudioComponent(''), { message: 'componentId is required' });
+  t.context.client.deleteDesignStudioComponent('comp-1');
+  t.true(destroy.calledWith(`${API}/design_studio/components/comp-1`));
+});

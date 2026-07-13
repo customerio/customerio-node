@@ -356,6 +356,56 @@ export type DesignStudioFolderUpdate = {
   parent_folder_id?: string | null;
 };
 
+/** Definition for creating a Design Studio email translation via {@link APIClient.createDesignStudioEmailLanguage}. */
+export type DesignStudioEmailTranslationInput = {
+  /** IETF language tag for the translation (required). */
+  language: string;
+  /** Content overrides. Omitted blocks are inherited from the default-language email. */
+  content?: DesignStudioEmailContent;
+  envelope?: DesignStudioEmailEnvelope;
+  transformers?: Record<string, any>;
+};
+
+/**
+ * Fields for updating a Design Studio email translation via {@link APIClient.updateDesignStudioEmailLanguage}.
+ * At least one must be provided. The language itself is immutable (taken from the path).
+ */
+export type DesignStudioEmailTranslationUpdate = {
+  content?: DesignStudioEmailContent;
+  envelope?: DesignStudioEmailEnvelope;
+  transformers?: Record<string, any>;
+};
+
+/** Options for {@link APIClient.listDesignStudioComponents}. */
+export type ListDesignStudioComponentsOptions = DesignStudioListOptions & {
+  /** Only list components with this tag. */
+  tag?: string;
+};
+
+/** Definition for creating a Design Studio component via {@link APIClient.createDesignStudioComponent}. */
+export type DesignStudioComponentInput = {
+  /** The component's display name (required). */
+  name: string;
+  /** The component's tag — unique per workspace (required). */
+  tag: string;
+  /** Parent folder UUID. Omit or pass `null` for the root. */
+  parent_folder_id?: string | null;
+  /** The component's HTML content. */
+  content?: string;
+};
+
+/**
+ * Fields for updating a Design Studio component via {@link APIClient.updateDesignStudioComponent}.
+ * At least one must be provided. `parent_folder_id` is tri-state: omit to keep the current parent,
+ * `null` to move to the root, or a UUID to move into that folder.
+ */
+export type DesignStudioComponentUpdate = {
+  name?: string;
+  tag?: string;
+  parent_folder_id?: string | null;
+  content?: string;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -2638,6 +2688,218 @@ export class APIClient {
     }
 
     return this.request.destroy(`${this.apiRoot}/design_studio/emails/${encodeURIComponent(emailId)}`);
+  }
+
+  /**
+   * List the translations (languages) of a Design Studio email.
+   *
+   * @param emailId The email's UUID.
+   * @returns The parsed JSON response body (`{ email_translations: [...] }`).
+   * @throws {MissingParamError} If `emailId` is empty.
+   */
+  listDesignStudioEmailLanguages(emailId: string) {
+    if (isEmpty(emailId)) {
+      throw new MissingParamError('emailId');
+    }
+
+    return this.request.get(`${this.apiRoot}/design_studio/emails/${encodeURIComponent(emailId)}/languages`);
+  }
+
+  /**
+   * Create a translation of a Design Studio email. Content blocks you omit are
+   * inherited from the default-language email.
+   *
+   * @param emailId The email's UUID.
+   * @param translation The translation definition. `language` is required. See {@link DesignStudioEmailTranslationInput}.
+   * @returns The parsed JSON response body (`{ email_translation: {...} }`).
+   * @throws {MissingParamError} If `emailId` is empty, `translation` is missing/not an object, or `translation.language` is empty.
+   */
+  createDesignStudioEmailLanguage(emailId: string, translation: DesignStudioEmailTranslationInput) {
+    if (isEmpty(emailId)) {
+      throw new MissingParamError('emailId');
+    }
+
+    if (translation == null || typeof translation !== 'object') {
+      throw new MissingParamError('translation');
+    }
+
+    if (isEmpty(translation.language)) {
+      throw new MissingParamError('translation.language');
+    }
+
+    return this.request.post(
+      `${this.apiRoot}/design_studio/emails/${encodeURIComponent(emailId)}/languages`,
+      translation,
+    );
+  }
+
+  /**
+   * Get a single-language translation of a Design Studio email.
+   *
+   * @param emailId The email's UUID.
+   * @param language The IETF language tag.
+   * @returns The parsed JSON response body (`{ email_translation: {...} }`).
+   * @throws {MissingParamError} If `emailId` or `language` is empty.
+   */
+  getDesignStudioEmailLanguage(emailId: string, language: string) {
+    if (isEmpty(emailId)) {
+      throw new MissingParamError('emailId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.get(
+      `${this.apiRoot}/design_studio/emails/${encodeURIComponent(emailId)}/languages/${encodeURIComponent(language)}`,
+    );
+  }
+
+  /**
+   * Update a single-language translation of a Design Studio email. At least one field must be provided.
+   *
+   * @param emailId The email's UUID.
+   * @param language The IETF language tag.
+   * @param updates The fields to change. See {@link DesignStudioEmailTranslationUpdate}.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `emailId` or `language` is empty, or `updates` is missing/not an object.
+   */
+  updateDesignStudioEmailLanguage(emailId: string, language: string, updates: DesignStudioEmailTranslationUpdate) {
+    if (isEmpty(emailId)) {
+      throw new MissingParamError('emailId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    if (updates == null || typeof updates !== 'object') {
+      throw new MissingParamError('updates');
+    }
+
+    return this.request.put(
+      `${this.apiRoot}/design_studio/emails/${encodeURIComponent(emailId)}/languages/${encodeURIComponent(language)}`,
+      updates,
+    );
+  }
+
+  /**
+   * Delete a single-language translation of a Design Studio email.
+   *
+   * @param emailId The email's UUID.
+   * @param language The IETF language tag.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `emailId` or `language` is empty.
+   */
+  deleteDesignStudioEmailLanguage(emailId: string, language: string) {
+    if (isEmpty(emailId)) {
+      throw new MissingParamError('emailId');
+    }
+
+    if (isEmpty(language)) {
+      throw new MissingParamError('language');
+    }
+
+    return this.request.destroy(
+      `${this.apiRoot}/design_studio/emails/${encodeURIComponent(emailId)}/languages/${encodeURIComponent(language)}`,
+    );
+  }
+
+  /**
+   * List Design Studio components.
+   *
+   * @param options Optional filters, sorting, and pagination. See {@link ListDesignStudioComponentsOptions}.
+   * @returns The parsed JSON response body (`{ components: [...], folders: [...], meta }`).
+   */
+  listDesignStudioComponents(options: ListDesignStudioComponentsOptions = {}) {
+    const query = buildQueryString({
+      parent_folder_id: options.parentFolderId,
+      direct_descendants_only: options.directDescendantsOnly,
+      sort_by: options.sortBy,
+      sort_order: options.sortOrder,
+      created_before: options.createdBefore,
+      created_after: options.createdAfter,
+      updated_before: options.updatedBefore,
+      updated_after: options.updatedAfter,
+      page: options.page,
+      limit: options.limit,
+      tag: options.tag,
+    });
+
+    return this.request.get(`${this.apiRoot}/design_studio/components${query}`);
+  }
+
+  /**
+   * Create a Design Studio component.
+   *
+   * @param component The component definition. `name` and `tag` are required. See {@link DesignStudioComponentInput}.
+   * @returns The parsed JSON response body (`{ component: {...} }`).
+   * @throws {MissingParamError} If `component` is missing/not an object, or `component.name`/`component.tag` is empty.
+   */
+  createDesignStudioComponent(component: DesignStudioComponentInput) {
+    if (component == null || typeof component !== 'object') {
+      throw new MissingParamError('component');
+    }
+
+    if (isEmpty(component.name)) {
+      throw new MissingParamError('component.name');
+    }
+
+    if (isEmpty(component.tag)) {
+      throw new MissingParamError('component.tag');
+    }
+
+    return this.request.post(`${this.apiRoot}/design_studio/components`, component);
+  }
+
+  /**
+   * Get a single Design Studio component.
+   *
+   * @param componentId The component's UUID.
+   * @returns The parsed JSON response body (`{ component: {...} }`).
+   * @throws {MissingParamError} If `componentId` is empty.
+   */
+  getDesignStudioComponent(componentId: string) {
+    if (isEmpty(componentId)) {
+      throw new MissingParamError('componentId');
+    }
+
+    return this.request.get(`${this.apiRoot}/design_studio/components/${encodeURIComponent(componentId)}`);
+  }
+
+  /**
+   * Update a Design Studio component. At least one field must be provided.
+   *
+   * @param componentId The component's UUID.
+   * @param updates The fields to change. See {@link DesignStudioComponentUpdate}.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `componentId` is empty or `updates` is missing/not an object.
+   */
+  updateDesignStudioComponent(componentId: string, updates: DesignStudioComponentUpdate) {
+    if (isEmpty(componentId)) {
+      throw new MissingParamError('componentId');
+    }
+
+    if (updates == null || typeof updates !== 'object') {
+      throw new MissingParamError('updates');
+    }
+
+    return this.request.put(`${this.apiRoot}/design_studio/components/${encodeURIComponent(componentId)}`, updates);
+  }
+
+  /**
+   * Delete a Design Studio component.
+   *
+   * @param componentId The component's UUID.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `componentId` is empty.
+   */
+  deleteDesignStudioComponent(componentId: string) {
+    if (isEmpty(componentId)) {
+      throw new MissingParamError('componentId');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/design_studio/components/${encodeURIComponent(componentId)}`);
   }
 }
 
