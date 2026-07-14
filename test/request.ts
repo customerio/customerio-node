@@ -159,6 +159,53 @@ test.serial('#options does not allow defaults.headers to clobber the standard he
   t.is((result.headers as Record<string, string>)['User-Agent'], `Customer.io Node Client/${PACKAGE_VERSION}`);
 });
 
+test.serial(
+  '#formOptions omits Content-Type (fetch adds the multipart boundary) and keeps the standard headers',
+  (t) => {
+    const form = new FormData();
+    form.append('file', new Blob([Buffer.from('x')], { type: 'image/png' }), 'x.png');
+
+    const result = t.context.req.formOptions(uri, 'POST', form);
+
+    t.is(result.method, 'POST');
+    t.is(result.uri, uri);
+    t.is(result.body, form);
+    const headers = result.headers as Record<string, string>;
+    t.false('Content-Type' in headers);
+    t.false('Content-Length' in headers);
+    t.is(headers.Authorization, trackAuth);
+    t.is(headers['User-Agent'], `Customer.io Node Client/${PACKAGE_VERSION}`);
+  },
+);
+
+test.serial('#formOptions merges custom headers but drops any Content-Type from defaults.headers', (t) => {
+  const req = new Request(
+    { siteid, apikey },
+    { headers: { 'X-Strict-Mode': '1', 'Content-Type': 'application/json' } },
+  );
+  const result = req.formOptions(uri, 'POST', new FormData());
+  const headers = result.headers as Record<string, string>;
+  t.is(headers['X-Strict-Mode'], '1');
+  t.false('Content-Type' in headers);
+  t.is(headers.Authorization, trackAuth);
+});
+
+test.serial('#postForm sends the FormData body to fetch without a JSON content type', async (t) => {
+  const form = new FormData();
+  form.append('file', new Blob([Buffer.from('hello')], { type: 'image/png' }), 'hello.png');
+  createMockRequest(t.context.fetchStub, 200, { asset: { id: 1 } });
+
+  const res = await t.context.req.postForm(uri, form);
+
+  const call = t.context.fetchStub.getCall(0);
+  t.is(call.args[0], uri);
+  const init = call.args[1] as RequestInit;
+  t.is(init.method, 'POST');
+  t.is(init.body, form);
+  t.false('Content-Type' in (init.headers as Record<string, string>));
+  t.deepEqual(res, { asset: { id: 1 } });
+});
+
 test.serial('#handler returns a promise', (t) => {
   createMockRequest(t.context.fetchStub, 200);
   const promise = t.context.req.handler(putOptions);
@@ -235,10 +282,12 @@ test.serial('#handler does not let defaults override the SDK-owned fetch fields'
   // `method`/`body`/`redirect`/`signal` are owned by the SDK. Even if a caller
   // smuggles them in via defaults (they're omitted from the type), the
   // transport's own values must win.
-  const req = new Request(
-    { siteid, apikey },
-    { timeout: 5000, redirect: 'follow', method: 'PATCH', body: 'nope' } as never,
-  );
+  const req = new Request({ siteid, apikey }, {
+    timeout: 5000,
+    redirect: 'follow',
+    method: 'PATCH',
+    body: 'nope',
+  } as never);
   createMockRequest(t.context.fetchStub, 200, {});
 
   await req.handler(req.options(uri, 'GET'));
