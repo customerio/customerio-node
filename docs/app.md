@@ -1324,3 +1324,444 @@ api.deleteNewsletterTestGroupLanguage(8, 2, "fr");
 - **newsletterId**: The newsletter's numeric id (required)
 - **testGroupId**: The test group's id (required)
 - **language**: The IETF language tag (required)
+
+## Design Studio
+
+Manage Design Studio folders and emails. Folders and emails are "nodes" identified by a UUID.
+
+The list endpoints share a common set of filters, sorting, and page-based pagination (they do **not** use the cursor pagination of the other App API list endpoints):
+
+- **parentFolderId**: Only list nodes directly within this folder (omit for the root)
+- **directDescendantsOnly**: When `true`, return only direct children rather than the whole subtree
+- **sortBy**: `"created"` / `"updated"` / `"name"` (default `"created"`)
+- **sortOrder**: `"asc"` / `"desc"` (default `"asc"`)
+- **createdBefore** / **createdAfter** / **updatedBefore** / **updatedAfter**: Unix timestamps (seconds)
+- **page**: 1-based page number (default 1)
+- **limit**: page size, 1–10000 (default 1000)
+
+In folder and email bodies, `parent_folder_id` is tri-state: **omit** it to keep the current parent, pass `null` to move to the root, or pass a folder UUID to move it into that folder.
+
+### api.listDesignStudioFolders(options)
+
+List Design Studio folders.
+
+```javascript
+api.listDesignStudioFolders({ parentFolderId: "1f0…", directDescendantsOnly: true, limit: 50 });
+```
+
+#### Options
+
+- **options**: Object (optional) — the shared list filters described above
+
+### api.createDesignStudioFolder(folder)
+
+Create a folder.
+
+```javascript
+api.createDesignStudioFolder({ name: "Campaigns", parent_folder_id: null });
+```
+
+#### Options
+
+- **folder**: The folder definition
+  - _name_: The folder's display name (required)
+  - _parent_folder_id_: Parent folder UUID, or `null`/omit for the root
+
+### api.getDesignStudioFolder(folderId)
+
+Get a single folder.
+
+```javascript
+api.getDesignStudioFolder("1f0…");
+```
+
+#### Options
+
+- **folderId**: The folder's UUID (required)
+
+### api.updateDesignStudioFolder(folderId, updates)
+
+Update a folder. At least one field must be provided. Returns no content on success.
+
+```javascript
+api.updateDesignStudioFolder("1f0…", { name: "Renamed", parent_folder_id: null });
+```
+
+#### Options
+
+- **folderId**: The folder's UUID (required)
+- **updates**: Object with any of `name`, `parent_folder_id`
+
+### api.deleteDesignStudioFolder(folderId)
+
+Delete a folder. Returns no content on success.
+
+```javascript
+api.deleteDesignStudioFolder("1f0…");
+```
+
+#### Options
+
+- **folderId**: The folder's UUID (required)
+
+### api.listDesignStudioEmails(options)
+
+List Design Studio emails. In addition to the shared list filters, emails support three tri-state filters — each `"true"`, `"false"`, or `"any"` (no filter).
+
+```javascript
+api.listDesignStudioEmails({ isTemplate: "true", hasTranslations: "any", limit: 25 });
+```
+
+#### Options
+
+- **options**: Object (optional) — the shared list filters, plus:
+  - _isTemplate_: `"true"` / `"false"` / `"any"`
+  - _hasTranslations_: `"true"` / `"false"` / `"any"`
+  - _isLinked_: `"true"` / `"false"` / `"any"` (whether the email is linked to a message)
+
+### api.createDesignStudioEmail(email)
+
+Create an email.
+
+```javascript
+api.createDesignStudioEmail({
+  name: "Welcome",
+  is_template: false,
+  content: { subject: "Welcome!", html: "<p>Hi {{customer.first_name}}</p>" },
+  envelope: { recipient: "{{customer.email}}" },
+});
+```
+
+#### Options
+
+- **email**: The email definition
+  - _name_: The email's display name (required)
+  - _parent_folder_id_: Parent folder UUID, or `null`/omit for the root
+  - _is_template_: Whether the email is a reusable template
+  - _content_: `{ subject, preheader_text, html, amp, text }`
+  - _envelope_: `{ from_id, reply_to_id, recipient, bcc, fake_bcc, cc, headers }`
+  - _transformers_: Content transformers (e.g. `url_parameters`, `css_inliner`, `accessibility`)
+
+### api.getDesignStudioEmail(emailId)
+
+Get a single email.
+
+```javascript
+api.getDesignStudioEmail("2a1…");
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+
+### api.updateDesignStudioEmail(emailId, updates)
+
+Update an email. At least one field must be provided. Returns no content on success.
+
+```javascript
+api.updateDesignStudioEmail("2a1…", { is_template: true, content: { subject: "Updated" } });
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+- **updates**: Object with any of `name`, `parent_folder_id`, `is_template`, `content`, `envelope`, `transformers`
+
+### api.deleteDesignStudioEmail(emailId)
+
+Delete an email. Returns no content on success.
+
+```javascript
+api.deleteDesignStudioEmail("2a1…");
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+
+### api.listDesignStudioEmailLanguages(emailId)
+
+List the translations (languages) of an email.
+
+```javascript
+api.listDesignStudioEmailLanguages("2a1…");
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+
+### api.createDesignStudioEmailLanguage(emailId, translation)
+
+Create a translation of an email. Content blocks you omit are inherited from the default-language email.
+
+```javascript
+api.createDesignStudioEmailLanguage("2a1…", {
+  language: "fr",
+  content: { subject: "Bonjour" },
+});
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+- **translation**: The translation definition
+  - _language_: IETF language tag (required)
+  - _content_: `{ subject, preheader_text, html, amp, text }`
+  - _envelope_: `{ from_id, reply_to_id, recipient, bcc, fake_bcc, cc, headers }`
+  - _transformers_: Content transformers
+
+### api.getDesignStudioEmailLanguage(emailId, language)
+
+Get a single-language translation of an email.
+
+```javascript
+api.getDesignStudioEmailLanguage("2a1…", "fr");
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+- **language**: The IETF language tag (required)
+
+### api.updateDesignStudioEmailLanguage(emailId, language, updates)
+
+Update a translation. At least one field must be provided. The language itself is immutable. Returns no content on success.
+
+```javascript
+api.updateDesignStudioEmailLanguage("2a1…", "fr", { content: { subject: "Salut" } });
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+- **language**: The IETF language tag (required)
+- **updates**: Object with any of `content`, `envelope`, `transformers`
+
+### api.deleteDesignStudioEmailLanguage(emailId, language)
+
+Delete a translation. Returns no content on success.
+
+```javascript
+api.deleteDesignStudioEmailLanguage("2a1…", "fr");
+```
+
+#### Options
+
+- **emailId**: The email's UUID (required)
+- **language**: The IETF language tag (required)
+
+### api.listDesignStudioComponents(options)
+
+List Design Studio components.
+
+```javascript
+api.listDesignStudioComponents({ tag: "header", limit: 25 });
+```
+
+#### Options
+
+- **options**: Object (optional) — the shared list filters described above, plus:
+  - _tag_: Only list components with this tag
+
+### api.createDesignStudioComponent(component)
+
+Create a component.
+
+```javascript
+api.createDesignStudioComponent({ name: "Header", tag: "header", content: "<div>…</div>" });
+```
+
+#### Options
+
+- **component**: The component definition
+  - _name_: The component's display name (required)
+  - _tag_: The component's tag, unique per workspace (required)
+  - _parent_folder_id_: Parent folder UUID, or `null`/omit for the root
+  - _content_: The component's HTML content
+
+### api.getDesignStudioComponent(componentId)
+
+Get a single component.
+
+```javascript
+api.getDesignStudioComponent("3b2…");
+```
+
+#### Options
+
+- **componentId**: The component's UUID (required)
+
+### api.updateDesignStudioComponent(componentId, updates)
+
+Update a component. At least one field must be provided. Returns no content on success.
+
+```javascript
+api.updateDesignStudioComponent("3b2…", { content: "<div>updated</div>" });
+```
+
+#### Options
+
+- **componentId**: The component's UUID (required)
+- **updates**: Object with any of `name`, `tag`, `parent_folder_id`, `content`
+
+### api.deleteDesignStudioComponent(componentId)
+
+Delete a component. Returns no content on success.
+
+```javascript
+api.deleteDesignStudioComponent("3b2…");
+```
+
+#### Options
+
+- **componentId**: The component's UUID (required)
+
+## Assets
+
+Manage uploaded files (images, PDFs) and the folders that organize them. Asset and folder ids are **integers**.
+
+The list endpoints share folder filtering and page-based pagination:
+
+- **parentFolderId**: Only list items within this folder id (omit for all/root)
+- **directDescendantsOnly**: When `true`, return only direct children rather than the whole subtree
+- **page**: 1-based page number (default 1)
+- **limit**: page size, 1–10000 (default 1000)
+
+On file and folder updates, `parent_folder_id` is tri-state: **omit** to keep the current parent, pass `null` to move to the root, or pass a folder id to move it.
+
+### api.listAssets(options)
+
+List uploaded files.
+
+```javascript
+api.listAssets({ parentFolderId: 5, limit: 50 });
+```
+
+#### Options
+
+- **options**: Object (optional) — `parentFolderId`, `directDescendantsOnly`, `page`, `limit`
+
+### api.createAsset(file)
+
+Upload a file (`multipart/form-data`). The API accepts images (`image/bmp`, `image/jpeg`, `image/jpg`, `image/png`, `image/gif`) and `application/pdf`, up to 2 MB (images max 4096px per side).
+
+```javascript
+const fs = require("fs");
+
+api.createAsset({
+  data: fs.readFileSync("logo.png"),
+  filename: "logo.png",
+  contentType: "image/png",
+  parentFolderId: 5,
+});
+```
+
+#### Options
+
+- **file**: The upload definition
+  - _data_: File contents — any `Buffer`/`Blob`-compatible value (required)
+  - _filename_: Filename; also the default asset name and, when `contentType` is omitted, the source for the derived content type (required)
+  - _contentType_: MIME type of the upload; when omitted the SDK derives it from the filename extension (`.bmp`, `.jpg`/`.jpeg`, `.png`, `.gif`, `.pdf`)
+  - _name_: Asset name; defaults to `filename`
+  - _parentFolderId_: Parent folder id; omit for the root
+
+### api.getAsset(assetId)
+
+Get a single file.
+
+```javascript
+api.getAsset(42);
+```
+
+#### Options
+
+- **assetId**: The asset's numeric id (required)
+
+### api.updateAsset(assetId, updates)
+
+Rename and/or move a file. At least one field must be provided; the file bytes cannot be changed. Returns no content on success.
+
+```javascript
+api.updateAsset(42, { name: "renamed.png", parent_folder_id: null });
+```
+
+#### Options
+
+- **assetId**: The asset's numeric id (required)
+- **updates**: Object with any of `name`, `parent_folder_id`
+
+### api.deleteAsset(assetId)
+
+Delete a file. Returns no content on success.
+
+```javascript
+api.deleteAsset(42);
+```
+
+#### Options
+
+- **assetId**: The asset's numeric id (required)
+
+### api.listAssetFolders(options)
+
+List asset folders.
+
+```javascript
+api.listAssetFolders({ parentFolderId: 5, limit: 50 });
+```
+
+#### Options
+
+- **options**: Object (optional) — `parentFolderId`, `directDescendantsOnly`, `page`, `limit`
+
+### api.createAssetFolder(folder)
+
+Create an asset folder.
+
+```javascript
+api.createAssetFolder({ name: "Product images", parent_folder_id: 5 });
+```
+
+#### Options
+
+- **folder**: The folder definition
+  - _name_: The folder's display name (required)
+  - _parent_folder_id_: Parent folder id; omit for the root
+
+### api.getAssetFolder(folderId)
+
+Get a single asset folder.
+
+```javascript
+api.getAssetFolder(5);
+```
+
+#### Options
+
+- **folderId**: The folder's numeric id (required)
+
+### api.updateAssetFolder(folderId, updates)
+
+Rename and/or move a folder. At least one field must be provided. Returns no content on success.
+
+```javascript
+api.updateAssetFolder(5, { name: "Renamed", parent_folder_id: null });
+```
+
+#### Options
+
+- **folderId**: The folder's numeric id (required)
+- **updates**: Object with any of `name`, `parent_folder_id`
+
+### api.deleteAssetFolder(folderId)
+
+Delete an asset folder. The folder must be empty.
+
+```javascript
+api.deleteAssetFolder(5);
+```
+
+#### Options
+
+- **folderId**: The folder's numeric id (required)
