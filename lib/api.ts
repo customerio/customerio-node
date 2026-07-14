@@ -425,8 +425,8 @@ export type AssetListOptions = {
  * `image/gif`) and `application/pdf`, up to 2 MB (images max 4096px per side).
  */
 export type CreateAssetInput = {
-  /** File contents. Any `Buffer.from`/`Blob`-compatible value (Buffer, Uint8Array, ArrayBuffer, string). */
-  data: any;
+  /** File contents. A `Uint8Array` (a `Buffer`, e.g. from `fs.readFileSync`, is one), `ArrayBuffer`, `Blob`, or `string`. */
+  data: Uint8Array | ArrayBuffer | Blob | string;
   /** Filename — also the multipart filename, the default asset `name`, and the source for the derived content type. */
   filename: string;
   /** MIME type of the upload. When omitted, the API derives it from `filename`. */
