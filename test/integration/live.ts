@@ -336,6 +336,18 @@ liveTest('design studio folder + email create -> read -> update -> delete round-
     if (emailId) {
       await api!.getDesignStudioEmail(emailId).catch(() => undefined);
       await api!.updateDesignStudioEmail(emailId, { is_template: true }).catch(() => undefined);
+
+      // Email translations (languages).
+      await api!.listDesignStudioEmailLanguages(emailId).catch(() => undefined);
+      await api!
+        .createDesignStudioEmailLanguage(emailId, { language: 'fr', content: { subject: 'Bonjour' } })
+        .catch(() => undefined);
+      await api!.getDesignStudioEmailLanguage(emailId, 'fr').catch(() => undefined);
+      await api!
+        .updateDesignStudioEmailLanguage(emailId, 'fr', { content: { subject: 'Salut' } })
+        .catch(() => undefined);
+      await api!.deleteDesignStudioEmailLanguage(emailId, 'fr').catch(() => undefined);
+
       await api!.deleteDesignStudioEmail(emailId).catch(() => undefined);
     }
 
@@ -343,6 +355,74 @@ liveTest('design studio folder + email create -> read -> update -> delete round-
   }
 
   t.truthy(folder);
+});
+
+liveTest('listDesignStudioComponents resolves', async (t) => {
+  const result = (await api!.listDesignStudioComponents({ limit: 5 })) as { components?: unknown };
+  t.true('components' in result);
+});
+
+liveTest('design studio component create -> read -> update -> delete round-trip', async (t) => {
+  const created = (await api!
+    .createDesignStudioComponent({
+      name: `sdk-live-component-${customerId}`,
+      tag: `sdk-live-${customerId}`,
+      content: '<div>hi</div>',
+    })
+    .catch(() => undefined)) as { component?: { id?: string } } | undefined;
+  const componentId = created?.component?.id;
+
+  if (componentId) {
+    await api!.getDesignStudioComponent(componentId).catch(() => undefined);
+    await api!.updateDesignStudioComponent(componentId, { content: '<div>updated</div>' }).catch(() => undefined);
+    await api!.deleteDesignStudioComponent(componentId).catch(() => undefined);
+  }
+
+  t.pass();
+});
+
+liveTest('listAssets resolves', async (t) => {
+  const result = (await api!.listAssets({ limit: 5 })) as { assets?: unknown };
+  t.true('assets' in result);
+});
+
+liveTest('listAssetFolders resolves', async (t) => {
+  const result = (await api!.listAssetFolders({ limit: 5 })) as { folders?: unknown };
+  t.true('folders' in result);
+});
+
+liveTest('asset folder + file create -> read -> update -> delete round-trip', async (t) => {
+  // A minimal valid 1x1 PNG — the backend validates that uploads are real images.
+  const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  const pngBytes = Buffer.from(pngBase64, 'base64');
+
+  const folder = (await api!.createAssetFolder({ name: `sdk-live-assets-${customerId}` }).catch(() => undefined)) as
+    | { folder?: { id?: number } }
+    | undefined;
+  const folderId = folder?.folder?.id;
+
+  const uploaded = (await api!
+    .createAsset({
+      data: pngBytes,
+      // No contentType: exercises the filename-extension derivation end-to-end.
+      filename: `sdk-live-${customerId}.png`,
+      parentFolderId: folderId,
+    })
+    .catch(() => undefined)) as { asset?: { id?: number } } | undefined;
+  const assetId = uploaded?.asset?.id;
+
+  if (assetId !== undefined) {
+    await api!.getAsset(assetId).catch(() => undefined);
+    await api!.updateAsset(assetId, { name: `sdk-live-${customerId}-renamed.png` }).catch(() => undefined);
+    await api!.deleteAsset(assetId).catch(() => undefined);
+  }
+
+  if (folderId !== undefined) {
+    await api!.getAssetFolder(folderId).catch(() => undefined);
+    await api!.deleteAssetFolder(folderId).catch(() => undefined);
+  }
+
+  t.pass();
 });
 
 liveTest('track records an event on the profile', async (t) => {

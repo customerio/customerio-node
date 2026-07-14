@@ -1858,3 +1858,256 @@ test('#deleteDesignStudioEmail: deletes an email and validates', (t) => {
   t.context.client.deleteDesignStudioEmail('email-1');
   t.true(destroy.calledWith(`${API}/design_studio/emails/email-1`));
 });
+
+// Design Studio: email languages (translations)
+
+test('#listDesignStudioEmailLanguages: gets the languages endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.listDesignStudioEmailLanguages(''), { message: 'emailId is required' });
+  t.context.client.listDesignStudioEmailLanguages('email-1');
+  t.true(get.calledWith(`${API}/design_studio/emails/email-1/languages`));
+});
+
+test('#createDesignStudioEmailLanguage: posts the translation body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createDesignStudioEmailLanguage as any)('', { language: 'fr' }), {
+    message: 'emailId is required',
+  });
+  t.throws(() => (t.context.client.createDesignStudioEmailLanguage as any)('email-1', null), {
+    message: 'translation is required',
+  });
+  t.throws(() => (t.context.client.createDesignStudioEmailLanguage as any)('email-1', {}), {
+    message: 'translation.language is required',
+  });
+  const translation = { language: 'fr', content: { subject: 'Bonjour' } };
+  t.context.client.createDesignStudioEmailLanguage('email-1', translation);
+  t.true(post.calledWith(`${API}/design_studio/emails/email-1/languages`, translation));
+});
+
+test('#getDesignStudioEmailLanguage: gets a single translation and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getDesignStudioEmailLanguage('', 'fr'), { message: 'emailId is required' });
+  t.throws(() => t.context.client.getDesignStudioEmailLanguage('email-1', ''), { message: 'language is required' });
+  t.context.client.getDesignStudioEmailLanguage('email-1', 'fr');
+  t.true(get.calledWith(`${API}/design_studio/emails/email-1/languages/fr`));
+});
+
+test('#updateDesignStudioEmailLanguage: puts the updates and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateDesignStudioEmailLanguage('', 'fr', { content: {} }), {
+    message: 'emailId is required',
+  });
+  t.throws(() => t.context.client.updateDesignStudioEmailLanguage('email-1', '', { content: {} }), {
+    message: 'language is required',
+  });
+  t.throws(() => (t.context.client.updateDesignStudioEmailLanguage as any)('email-1', 'fr', null), {
+    message: 'updates is required',
+  });
+  const updates = { content: { subject: 'Salut' } };
+  t.context.client.updateDesignStudioEmailLanguage('email-1', 'fr', updates);
+  t.true(put.calledWith(`${API}/design_studio/emails/email-1/languages/fr`, updates));
+});
+
+test('#deleteDesignStudioEmailLanguage: deletes a translation and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteDesignStudioEmailLanguage('', 'fr'), { message: 'emailId is required' });
+  t.throws(() => t.context.client.deleteDesignStudioEmailLanguage('email-1', ''), { message: 'language is required' });
+  t.context.client.deleteDesignStudioEmailLanguage('email-1', 'fr');
+  t.true(destroy.calledWith(`${API}/design_studio/emails/email-1/languages/fr`));
+});
+
+// Design Studio: components
+
+test('#listDesignStudioComponents: gets the components endpoint with no query by default', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listDesignStudioComponents();
+  t.true(get.calledWith(`${API}/design_studio/components`));
+});
+
+test('#listDesignStudioComponents: forwards base filters plus tag', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listDesignStudioComponents({ parentFolderId: 'folder-1', sortBy: 'name', limit: 10, tag: 'header' });
+  t.true(get.calledWith(`${API}/design_studio/components?parent_folder_id=folder-1&sort_by=name&limit=10&tag=header`));
+});
+
+test('#createDesignStudioComponent: posts the component body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createDesignStudioComponent as any)(null), { message: 'component is required' });
+  t.throws(() => (t.context.client.createDesignStudioComponent as any)({ tag: 'header' }), {
+    message: 'component.name is required',
+  });
+  t.throws(() => (t.context.client.createDesignStudioComponent as any)({ name: 'Header' }), {
+    message: 'component.tag is required',
+  });
+  const component = { name: 'Header', tag: 'header', content: '<div></div>' };
+  t.context.client.createDesignStudioComponent(component);
+  t.true(post.calledWith(`${API}/design_studio/components`, component));
+});
+
+test('#getDesignStudioComponent: gets a single component and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getDesignStudioComponent(''), { message: 'componentId is required' });
+  t.context.client.getDesignStudioComponent('comp-1');
+  t.true(get.calledWith(`${API}/design_studio/components/comp-1`));
+});
+
+test('#updateDesignStudioComponent: puts the updates and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateDesignStudioComponent('', { name: 'x' }), {
+    message: 'componentId is required',
+  });
+  t.throws(() => (t.context.client.updateDesignStudioComponent as any)('comp-1', null), {
+    message: 'updates is required',
+  });
+  t.context.client.updateDesignStudioComponent('comp-1', { tag: 'footer', parent_folder_id: null });
+  t.true(put.calledWith(`${API}/design_studio/components/comp-1`, { tag: 'footer', parent_folder_id: null }));
+});
+
+test('#deleteDesignStudioComponent: deletes a component and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteDesignStudioComponent(''), { message: 'componentId is required' });
+  t.context.client.deleteDesignStudioComponent('comp-1');
+  t.true(destroy.calledWith(`${API}/design_studio/components/comp-1`));
+});
+
+// Assets: files
+
+test('#listAssets: gets the assets endpoint with no query by default', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listAssets();
+  t.true(get.calledWith(`${API}/assets`));
+});
+
+test('#listAssets: forwards folder filter and pagination', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listAssets({ parentFolderId: 5, directDescendantsOnly: true, page: 2, limit: 50 });
+  t.true(get.calledWith(`${API}/assets?parent_folder_id=5&direct_descendants_only=true&page=2&limit=50`));
+});
+
+test('#createAsset: uploads a multipart form with all fields', (t) => {
+  const postForm = sinon.stub(t.context.client.request, 'postForm');
+  t.throws(() => (t.context.client.createAsset as any)(null), { message: 'file is required' });
+  t.throws(() => (t.context.client.createAsset as any)({ filename: 'a.png' }), { message: 'file.data is required' });
+  t.throws(() => (t.context.client.createAsset as any)({ data: Buffer.from('x') }), {
+    message: 'file.filename is required',
+  });
+
+  t.context.client.createAsset({
+    data: Buffer.from('hello'),
+    filename: 'hello.png',
+    contentType: 'image/png',
+    name: 'Hello',
+    parentFolderId: 7,
+  });
+
+  t.true(postForm.calledOnce);
+  const [uri, form] = postForm.getCall(0).args as [string, FormData];
+  t.is(uri, `${API}/assets/files`);
+  const filePart = form.get('file') as any;
+  t.is(filePart.type, 'image/png');
+  t.is(filePart.name, 'hello.png');
+  t.is(form.get('name'), 'Hello');
+  t.is(form.get('parent_folder_id'), '7');
+});
+
+test('#createAsset: derives the content type from the filename when unset', (t) => {
+  const postForm = sinon.stub(t.context.client.request, 'postForm');
+  t.context.client.createAsset({ data: Buffer.from('hello'), filename: 'hello.PNG' });
+
+  const form = postForm.getCall(0).args[1] as FormData;
+  const filePart = form.get('file') as any;
+  // Derived from the (case-insensitive) extension, so the wire part is not application/octet-stream.
+  t.is(filePart.type, 'image/png');
+  t.is(form.get('name'), null);
+  t.is(form.get('parent_folder_id'), null);
+});
+
+test('#createAsset: treats an empty contentType as absent and derives from the filename', (t) => {
+  const postForm = sinon.stub(t.context.client.request, 'postForm');
+  t.context.client.createAsset({ data: Buffer.from('hello'), filename: 'hello.png', contentType: '' });
+
+  const filePart = (postForm.getCall(0).args[1] as FormData).get('file') as any;
+  t.is(filePart.type, 'image/png');
+});
+
+test('#createAsset: preserves the type of a Blob passed as data when nothing else resolves', (t) => {
+  const postForm = sinon.stub(t.context.client.request, 'postForm');
+  t.context.client.createAsset({ data: new Blob([Buffer.from('hello')], { type: 'image/gif' }), filename: 'noext' });
+
+  const filePart = (postForm.getCall(0).args[1] as FormData).get('file') as any;
+  t.is(filePart.type, 'image/gif');
+});
+
+test('#createAsset: leaves the content type unset for an unrecognized extension', (t) => {
+  const postForm = sinon.stub(t.context.client.request, 'postForm');
+  t.context.client.createAsset({ data: Buffer.from('hello'), filename: 'notes' });
+
+  const filePart = (postForm.getCall(0).args[1] as FormData).get('file') as any;
+  t.is(filePart.type, '');
+});
+
+test('#getAsset: gets a single asset and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getAsset(''), { message: 'assetId is required' });
+  t.context.client.getAsset(3);
+  t.true(get.calledWith(`${API}/assets/files/3`));
+});
+
+test('#updateAsset: puts the updates and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateAsset('', { name: 'x' }), { message: 'assetId is required' });
+  t.throws(() => (t.context.client.updateAsset as any)(3, null), { message: 'updates is required' });
+  t.context.client.updateAsset(3, { name: 'Renamed', parent_folder_id: null });
+  t.true(put.calledWith(`${API}/assets/files/3`, { name: 'Renamed', parent_folder_id: null }));
+});
+
+test('#deleteAsset: deletes an asset and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteAsset(''), { message: 'assetId is required' });
+  t.context.client.deleteAsset(3);
+  t.true(destroy.calledWith(`${API}/assets/files/3`));
+});
+
+// Assets: folders
+
+test('#listAssetFolders: gets the folders endpoint with no query by default', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listAssetFolders();
+  t.true(get.calledWith(`${API}/assets/folders`));
+});
+
+test('#listAssetFolders: forwards folder filter and pagination', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listAssetFolders({ parentFolderId: 5, limit: 10 });
+  t.true(get.calledWith(`${API}/assets/folders?parent_folder_id=5&limit=10`));
+});
+
+test('#createAssetFolder: posts the folder body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createAssetFolder as any)(null), { message: 'folder is required' });
+  t.throws(() => (t.context.client.createAssetFolder as any)({}), { message: 'folder.name is required' });
+  t.context.client.createAssetFolder({ name: 'Images', parent_folder_id: 2 });
+  t.true(post.calledWith(`${API}/assets/folders`, { name: 'Images', parent_folder_id: 2 }));
+});
+
+test('#getAssetFolder: gets a single folder and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getAssetFolder(''), { message: 'folderId is required' });
+  t.context.client.getAssetFolder(2);
+  t.true(get.calledWith(`${API}/assets/folders/2`));
+});
+
+test('#updateAssetFolder: puts the updates and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateAssetFolder('', { name: 'x' }), { message: 'folderId is required' });
+  t.throws(() => (t.context.client.updateAssetFolder as any)(2, null), { message: 'updates is required' });
+  t.context.client.updateAssetFolder(2, { name: 'Renamed', parent_folder_id: null });
+  t.true(put.calledWith(`${API}/assets/folders/2`, { name: 'Renamed', parent_folder_id: null }));
+});
+
+test('#deleteAssetFolder: deletes a folder and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteAssetFolder(''), { message: 'folderId is required' });
+  t.context.client.deleteAssetFolder(2);
+  t.true(destroy.calledWith(`${API}/assets/folders/2`));
+});
