@@ -160,11 +160,19 @@ export default class CIORequest {
    */
   formOptions(uri: string, method: string, form: FormData): RequestHandlerOptions {
     const customHeaders = (this.defaults.headers ?? {}) as Record<string, string | number>;
-    const headers: Record<string, string | number> = {
-      ...customHeaders,
-      Authorization: this.auth,
-      'User-Agent': `Customer.io Node Client/${version}`,
-    };
+    const headers: Record<string, string | number> = {};
+
+    // Merge caller headers, but never a Content-Type: multipart uploads rely on
+    // `fetch` setting `multipart/form-data` with a boundary, so a stray
+    // Content-Type from `defaults.headers` would corrupt the request body.
+    for (const [key, value] of Object.entries(customHeaders)) {
+      if (key.toLowerCase() !== 'content-type') {
+        headers[key] = value;
+      }
+    }
+
+    headers.Authorization = this.auth;
+    headers['User-Agent'] = `Customer.io Node Client/${version}`;
 
     return { method, uri, headers, body: form };
   }

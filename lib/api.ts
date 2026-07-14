@@ -427,14 +427,42 @@ export type AssetListOptions = {
 export type CreateAssetInput = {
   /** File contents. A `Uint8Array` (a `Buffer`, e.g. from `fs.readFileSync`, is one), `ArrayBuffer`, `Blob`, or `string`. */
   data: Uint8Array | ArrayBuffer | Blob | string;
-  /** Filename — also the multipart filename, the default asset `name`, and the source for the derived content type. */
+  /** Filename — also the multipart filename, the default asset `name`, and (when `contentType` is omitted) the source for the derived content type. */
   filename: string;
-  /** MIME type of the upload. When omitted, the API derives it from `filename`. */
+  /**
+   * MIME type of the upload. When omitted, the SDK derives it from the `filename` extension
+   * for the accepted image/PDF types (`.bmp`, `.jpg`/`.jpeg`, `.png`, `.gif`, `.pdf`).
+   */
   contentType?: string;
   /** Asset name. Defaults to `filename`. */
   name?: string;
   /** Parent folder id. Omit for the root. */
   parentFolderId?: number;
+};
+
+/**
+ * Accepted upload extensions mapped to their MIME type. Used to set the multipart
+ * part's `Content-Type` client-side when the caller omits `contentType`: an untyped
+ * `Blob` is serialized as `application/octet-stream`, which the Assets API rejects,
+ * and the API's own extension fallback only runs when the part carries no type at all.
+ */
+const ASSET_CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
+  bmp: 'image/bmp',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  pdf: 'application/pdf',
+};
+
+/** Derive an accepted asset MIME type from a filename's extension, or `undefined` if unrecognized. */
+const assetContentTypeForFilename = (filename: string): string | undefined => {
+  const dot = filename.lastIndexOf('.');
+  if (dot < 0) {
+    return undefined;
+  }
+
+  return ASSET_CONTENT_TYPE_BY_EXTENSION[filename.slice(dot + 1).toLowerCase()];
 };
 
 /**
@@ -2998,8 +3026,18 @@ export class APIClient {
       throw new MissingParamError('file.filename');
     }
 
+    // Set the part's Content-Type explicitly. An untyped Blob is serialized as
+    // `application/octet-stream`, which the API rejects, so resolve a type from
+    // (in order) an explicit `contentType`, the filename extension, or the type
+    // already on `data` when it is a Blob. An empty-string `contentType` is
+    // treated as absent so it still falls through to derivation.
+    const explicitType = isEmpty(file.contentType) ? undefined : file.contentType;
+    const contentType =
+      explicitType ??
+      assetContentTypeForFilename(file.filename) ??
+      (file.data instanceof Blob && file.data.type ? file.data.type : undefined);
     const form = new FormData();
-    const blob = file.contentType ? new Blob([file.data], { type: file.contentType }) : new Blob([file.data]);
+    const blob = contentType ? new Blob([file.data], { type: contentType }) : new Blob([file.data]);
     form.append('file', blob, file.filename);
 
     if (file.name !== undefined) {

@@ -1661,8 +1661,8 @@ api.createAsset({
 
 - **file**: The upload definition
   - _data_: File contents — any `Buffer`/`Blob`-compatible value (required)
-  - _filename_: Filename; also the default asset name and the source of the derived content type (required)
-  - _contentType_: MIME type of the upload; when omitted the API derives it from the filename
+  - _filename_: Filename; also the default asset name and, when `contentType` is omitted, the source for the derived content type (required)
+  - _contentType_: MIME type of the upload; when omitted the SDK derives it from the filename extension (`.bmp`, `.jpg`/`.jpeg`, `.png`, `.gif`, `.pdf`)
   - _name_: Asset name; defaults to `filename`
   - _parentFolderId_: Parent folder id; omit for the root
 

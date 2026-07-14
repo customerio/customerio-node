@@ -404,8 +404,8 @@ liveTest('asset folder + file create -> read -> update -> delete round-trip', as
   const uploaded = (await api!
     .createAsset({
       data: pngBytes,
+      // No contentType: exercises the filename-extension derivation end-to-end.
       filename: `sdk-live-${customerId}.png`,
-      contentType: 'image/png',
       parentFolderId: folderId,
     })
     .catch(() => undefined)) as { asset?: { id?: number } } | undefined;

@@ -2010,15 +2010,40 @@ test('#createAsset: uploads a multipart form with all fields', (t) => {
   t.is(form.get('parent_folder_id'), '7');
 });
 
-test('#createAsset: omits optional fields and derives content type when unset', (t) => {
+test('#createAsset: derives the content type from the filename when unset', (t) => {
   const postForm = sinon.stub(t.context.client.request, 'postForm');
-  t.context.client.createAsset({ data: Buffer.from('hello'), filename: 'hello.png' });
+  t.context.client.createAsset({ data: Buffer.from('hello'), filename: 'hello.PNG' });
 
   const form = postForm.getCall(0).args[1] as FormData;
   const filePart = form.get('file') as any;
-  t.is(filePart.type, '');
+  // Derived from the (case-insensitive) extension, so the wire part is not application/octet-stream.
+  t.is(filePart.type, 'image/png');
   t.is(form.get('name'), null);
   t.is(form.get('parent_folder_id'), null);
+});
+
+test('#createAsset: treats an empty contentType as absent and derives from the filename', (t) => {
+  const postForm = sinon.stub(t.context.client.request, 'postForm');
+  t.context.client.createAsset({ data: Buffer.from('hello'), filename: 'hello.png', contentType: '' });
+
+  const filePart = (postForm.getCall(0).args[1] as FormData).get('file') as any;
+  t.is(filePart.type, 'image/png');
+});
+
+test('#createAsset: preserves the type of a Blob passed as data when nothing else resolves', (t) => {
+  const postForm = sinon.stub(t.context.client.request, 'postForm');
+  t.context.client.createAsset({ data: new Blob([Buffer.from('hello')], { type: 'image/gif' }), filename: 'noext' });
+
+  const filePart = (postForm.getCall(0).args[1] as FormData).get('file') as any;
+  t.is(filePart.type, 'image/gif');
+});
+
+test('#createAsset: leaves the content type unset for an unrecognized extension', (t) => {
+  const postForm = sinon.stub(t.context.client.request, 'postForm');
+  t.context.client.createAsset({ data: Buffer.from('hello'), filename: 'notes' });
+
+  const filePart = (postForm.getCall(0).args[1] as FormData).get('file') as any;
+  t.is(filePart.type, '');
 });
 
 test('#getAsset: gets a single asset and validates', (t) => {

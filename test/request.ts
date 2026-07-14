@@ -178,10 +178,16 @@ test.serial(
   },
 );
 
-test.serial('#formOptions merges custom headers from defaults.headers', (t) => {
-  const req = new Request({ siteid, apikey }, { headers: { 'X-Strict-Mode': '1' } });
+test.serial('#formOptions merges custom headers but drops any Content-Type from defaults.headers', (t) => {
+  const req = new Request(
+    { siteid, apikey },
+    { headers: { 'X-Strict-Mode': '1', 'Content-Type': 'application/json' } },
+  );
   const result = req.formOptions(uri, 'POST', new FormData());
-  t.is((result.headers as Record<string, string>)['X-Strict-Mode'], '1');
+  const headers = result.headers as Record<string, string>;
+  t.is(headers['X-Strict-Mode'], '1');
+  t.false('Content-Type' in headers);
+  t.is(headers.Authorization, trackAuth);
 });
 
 test.serial('#postForm sends the FormData body to fetch without a JSON content type', async (t) => {
