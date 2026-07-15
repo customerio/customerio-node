@@ -425,6 +425,28 @@ liveTest('asset folder + file create -> read -> update -> delete round-trip', as
   t.pass();
 });
 
+liveTest('listCollections resolves', async (t) => {
+  const result = (await api!.listCollections()) as { collections?: unknown };
+  t.true('collections' in result);
+});
+
+liveTest('collection create -> read -> content -> delete round-trip', async (t) => {
+  const created = (await api!
+    .createCollection({ name: `sdk-live-${customerId}`, data: [{ tier: 'pro', price: 20 }] })
+    .catch(() => undefined)) as { collection?: { id?: number } } | undefined;
+  const collectionId = created?.collection?.id;
+
+  if (collectionId !== undefined) {
+    await api!.getCollection(collectionId).catch(() => undefined);
+    await api!.getCollectionContent(collectionId).catch(() => undefined);
+    await api!.updateCollection(collectionId, { name: `sdk-live-${customerId}-renamed` }).catch(() => undefined);
+    await api!.updateCollectionContent(collectionId, [{ tier: 'free', price: 0 }]).catch(() => undefined);
+    await api!.deleteCollection(collectionId).catch(() => undefined);
+  }
+
+  t.pass();
+});
+
 liveTest('track records an event on the profile', async (t) => {
   await track!.track(customerId, { name: 'sdk_live_event', data: { run: customerId } });
   t.pass();

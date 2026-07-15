@@ -2111,3 +2111,59 @@ test('#deleteAssetFolder: deletes a folder and validates', (t) => {
   t.context.client.deleteAssetFolder(2);
   t.true(destroy.calledWith(`${API}/assets/folders/2`));
 });
+
+// Collections
+
+test('#listCollections: gets the collections endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listCollections();
+  t.true(get.calledWith(`${API}/collections`));
+});
+
+test('#createCollection: posts the collection body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createCollection as any)(null), { message: 'collection is required' });
+  t.throws(() => (t.context.client.createCollection as any)('nope'), { message: 'collection is required' });
+  t.throws(() => (t.context.client.createCollection as any)({}), { message: 'collection.name is required' });
+  const collection = { name: 'Plans', data: [{ tier: 'pro', price: 20 }] };
+  t.context.client.createCollection(collection);
+  t.true(post.calledWith(`${API}/collections`, collection));
+});
+
+test('#getCollection: gets a single collection and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCollection(''), { message: 'collectionId is required' });
+  t.context.client.getCollection(9);
+  t.true(get.calledWith(`${API}/collections/9`));
+});
+
+test('#updateCollection: puts the updates and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateCollection('', { name: 'x' }), { message: 'collectionId is required' });
+  t.throws(() => (t.context.client.updateCollection as any)(9, null), { message: 'updates is required' });
+  t.context.client.updateCollection(9, { name: 'Renamed', url: 'https://example.com/data.csv' });
+  t.true(put.calledWith(`${API}/collections/9`, { name: 'Renamed', url: 'https://example.com/data.csv' }));
+});
+
+test('#deleteCollection: deletes a collection and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteCollection(''), { message: 'collectionId is required' });
+  t.context.client.deleteCollection(9);
+  t.true(destroy.calledWith(`${API}/collections/9`));
+});
+
+test('#getCollectionContent: gets the content endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCollectionContent(''), { message: 'collectionId is required' });
+  t.context.client.getCollectionContent(9);
+  t.true(get.calledWith(`${API}/collections/9/content`));
+});
+
+test('#updateCollectionContent: puts the raw row array and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateCollectionContent('', [{ a: 1 }]), { message: 'collectionId is required' });
+  t.throws(() => (t.context.client.updateCollectionContent as any)(9, { a: 1 }), { message: 'content is required' });
+  const rows = [{ tier: 'pro' }, { tier: 'free' }];
+  t.context.client.updateCollectionContent(9, rows);
+  t.true(put.calledWith(`${API}/collections/9/content`, rows));
+});

@@ -493,6 +493,32 @@ export type AssetFolderUpdate = {
   parent_folder_id?: number | null;
 };
 
+/** A single row of collection data — an arbitrary flat object. */
+export type CollectionRow = Record<string, any>;
+
+/**
+ * Definition for creating a collection via {@link APIClient.createCollection}.
+ * Provide inline `data` **or** a source `url`, not both.
+ */
+export type CollectionInput = {
+  /** The collection's name (required). */
+  name: string;
+  /** Inline row data. Mutually exclusive with `url`. */
+  data?: CollectionRow[];
+  /** Source URL to import rows from (CSV/JSON/Google Sheet). Mutually exclusive with `data`. */
+  url?: string;
+};
+
+/**
+ * Fields for updating a collection via {@link APIClient.updateCollection}. Any subset may be
+ * provided; `data` and `url` are mutually exclusive.
+ */
+export type CollectionUpdate = {
+  name?: string;
+  data?: CollectionRow[];
+  url?: string;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -3186,6 +3212,124 @@ export class APIClient {
     }
 
     return this.request.destroy(`${this.apiRoot}/assets/folders/${encodeURIComponent(folderId)}`);
+  }
+
+  /**
+   * List the collections in your workspace.
+   *
+   * @returns The parsed JSON response body (`{ collections: [...] }`).
+   */
+  listCollections() {
+    return this.request.get(`${this.apiRoot}/collections`);
+  }
+
+  /**
+   * Create a collection. Provide inline `data` or a source `url`, not both.
+   *
+   * @param collection The collection definition. `name` is required. See {@link CollectionInput}.
+   * @returns The parsed JSON response body (`{ collection: {...} }`).
+   * @throws {MissingParamError} If `collection` is missing/not an object, or `collection.name` is empty.
+   */
+  createCollection(collection: CollectionInput) {
+    if (collection == null || typeof collection !== 'object') {
+      throw new MissingParamError('collection');
+    }
+
+    if (isEmpty(collection.name)) {
+      throw new MissingParamError('collection.name');
+    }
+
+    return this.request.post(`${this.apiRoot}/collections`, collection);
+  }
+
+  /**
+   * Get a single collection's metadata (name, schema, row count, size).
+   *
+   * @param collectionId The collection's numeric id.
+   * @returns The parsed JSON response body (`{ collection: {...} }`).
+   * @throws {MissingParamError} If `collectionId` is empty.
+   */
+  getCollection(collectionId: string | number) {
+    if (isEmpty(collectionId)) {
+      throw new MissingParamError('collectionId');
+    }
+
+    return this.request.get(`${this.apiRoot}/collections/${encodeURIComponent(collectionId)}`);
+  }
+
+  /**
+   * Update a collection. Any subset of fields may be provided; `data` and `url` are mutually exclusive.
+   *
+   * @param collectionId The collection's numeric id.
+   * @param updates The fields to change. See {@link CollectionUpdate}.
+   * @returns The parsed JSON response body (`{ collection: {...} }`).
+   * @throws {MissingParamError} If `collectionId` is empty or `updates` is missing/not an object.
+   */
+  updateCollection(collectionId: string | number, updates: CollectionUpdate) {
+    if (isEmpty(collectionId)) {
+      throw new MissingParamError('collectionId');
+    }
+
+    if (updates == null || typeof updates !== 'object') {
+      throw new MissingParamError('updates');
+    }
+
+    return this.request.put(`${this.apiRoot}/collections/${encodeURIComponent(collectionId)}`, updates);
+  }
+
+  /**
+   * Delete a collection. Fails if the collection is still referenced by a campaign.
+   *
+   * @param collectionId The collection's numeric id.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `collectionId` is empty.
+   */
+  deleteCollection(collectionId: string | number) {
+    if (isEmpty(collectionId)) {
+      throw new MissingParamError('collectionId');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/collections/${encodeURIComponent(collectionId)}`);
+  }
+
+  /**
+   * Get a collection's content — the full array of data rows.
+   *
+   * @param collectionId The collection's numeric id.
+   * @returns The parsed JSON response body: an array of row objects.
+   * @throws {MissingParamError} If `collectionId` is empty.
+   */
+  getCollectionContent(collectionId: string | number) {
+    if (isEmpty(collectionId)) {
+      throw new MissingParamError('collectionId');
+    }
+
+    return this.request.get(`${this.apiRoot}/collections/${encodeURIComponent(collectionId)}/content`);
+  }
+
+  /**
+   * Replace a collection's content with a new array of data rows.
+   *
+   * @param collectionId The collection's numeric id.
+   * @param content The full array of row objects to store.
+   * @returns The parsed JSON response body (`{ collection: {...} }`).
+   * @throws {MissingParamError} If `collectionId` is empty or `content` is not an array.
+   */
+  updateCollectionContent(collectionId: string | number, content: CollectionRow[]) {
+    if (isEmpty(collectionId)) {
+      throw new MissingParamError('collectionId');
+    }
+
+    if (!Array.isArray(content)) {
+      throw new MissingParamError('content');
+    }
+
+    // This endpoint takes a top-level JSON array; the transport serializes it
+    // as-is. The cast keeps `RequestData` object-shaped for its other callers.
+    return this.request.put(
+      `${this.apiRoot}/collections/${encodeURIComponent(collectionId)}/content`,
+      content as unknown as Record<string, any>,
+    );
   }
 }
 

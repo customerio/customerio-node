@@ -1765,3 +1765,101 @@ api.deleteAssetFolder(5);
 #### Options
 
 - **folderId**: The folder's numeric id (required)
+
+## Collections
+
+Manage [data collections](https://customer.io/docs/journeys/collections/) — reusable datasets you can reference from messages. Collection ids are **integers**.
+
+### api.listCollections()
+
+List the collections in your workspace.
+
+```javascript
+api.listCollections();
+```
+
+### api.createCollection(collection)
+
+Create a collection. Provide inline `data` **or** a source `url`, not both.
+
+```javascript
+api.createCollection({
+  name: "Plans",
+  data: [
+    { tier: "free", price: 0 },
+    { tier: "pro", price: 20 },
+  ],
+});
+```
+
+#### Options
+
+- **collection**: The collection definition
+  - _name_: The collection's name (required)
+  - _data_: An array of row objects (mutually exclusive with `url`)
+  - _url_: A source URL to import rows from — CSV/JSON/Google Sheet (mutually exclusive with `data`)
+
+### api.getCollection(collectionId)
+
+Get a single collection's metadata (`name`, `schema`, `rows`, `bytes`, timestamps). Use `getCollectionContent` for the rows themselves.
+
+```javascript
+api.getCollection(9);
+```
+
+#### Options
+
+- **collectionId**: The collection's numeric id (required)
+
+### api.updateCollection(collectionId, updates)
+
+Update a collection. Any subset of fields may be provided; `data` and `url` are mutually exclusive.
+
+```javascript
+api.updateCollection(9, { name: "Renamed" });
+```
+
+#### Options
+
+- **collectionId**: The collection's numeric id (required)
+- **updates**: Object with any of `name`, `data`, `url`
+
+### api.deleteCollection(collectionId)
+
+Delete a collection. Returns no content on success. Fails if the collection is still referenced by a campaign.
+
+```javascript
+api.deleteCollection(9);
+```
+
+#### Options
+
+- **collectionId**: The collection's numeric id (required)
+
+### api.getCollectionContent(collectionId)
+
+Get a collection's content — the full array of data rows.
+
+```javascript
+api.getCollectionContent(9);
+```
+
+#### Options
+
+- **collectionId**: The collection's numeric id (required)
+
+### api.updateCollectionContent(collectionId, content)
+
+Replace a collection's content with a new array of data rows.
+
+```javascript
+api.updateCollectionContent(9, [
+  { tier: "free", price: 0 },
+  { tier: "pro", price: 20 },
+]);
+```
+
+#### Options
+
+- **collectionId**: The collection's numeric id (required)
+- **content**: An array of row objects (required)
