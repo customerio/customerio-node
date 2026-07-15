@@ -1863,3 +1863,364 @@ api.updateCollectionContent(9, [
 
 - **collectionId**: The collection's numeric id (required)
 - **content**: An array of row objects (required)
+
+## Deliverability
+
+### ESP suppressions
+
+Manage the email-provider suppression lists. `suppressionType` is one of `"blocks"`, `"bounces"`, `"spam_reports"`, or `"invalid_emails"`.
+
+### api.searchSuppression(email)
+
+Search every suppression category for an email address.
+
+```javascript
+api.searchSuppression("person@example.com");
+```
+
+#### Options
+
+- **email**: The email address to search for (required)
+
+### api.getSuppressions(suppressionType, options)
+
+List suppressions in a category (offset-based pagination).
+
+```javascript
+api.getSuppressions("bounces", { limit: 50, offset: 0 });
+```
+
+#### Options
+
+- **suppressionType**: One of `"blocks"` / `"bounces"` / `"spam_reports"` / `"invalid_emails"` (required)
+- **options**: Object (optional) — `limit` (1–1000, default 100), `offset` (default 0), `email`, `domain`
+
+### api.getDomainSuppressions(domainName, suppressionType, options)
+
+List suppressions in a category for a single sending domain (cursor-based pagination — preferred for large volumes).
+
+```javascript
+api.getDomainSuppressions("mail.example.com", "bounces", { limit: 100, start: cursor });
+```
+
+#### Options
+
+- **domainName**: The sending domain (required)
+- **suppressionType**: One of `"blocks"` / `"bounces"` / `"spam_reports"` / `"invalid_emails"` (required)
+- **options**: Object (optional) — `limit` (1–1000, default 100), `email`, `start` (pagination cursor from a previous page's `next`)
+
+### api.createSuppression(suppressionType, email)
+
+Add an email address to a suppression category.
+
+```javascript
+api.createSuppression("bounces", "person@example.com");
+```
+
+#### Options
+
+- **suppressionType**: One of `"blocks"` / `"bounces"` / `"spam_reports"` / `"invalid_emails"` (required)
+- **email**: The email address to suppress (required)
+
+### api.deleteSuppression(suppressionType, email)
+
+Remove an email address from a suppression category. Returns no content on success.
+
+```javascript
+api.deleteSuppression("bounces", "person@example.com");
+```
+
+#### Options
+
+- **suppressionType**: One of `"blocks"` / `"bounces"` / `"spam_reports"` / `"invalid_emails"` (required)
+- **email**: The email address to unsuppress (required)
+
+### Reporting webhooks
+
+Manage [reporting webhooks](https://customer.io/docs/journeys/webhooks/) that POST message events to your endpoint. Webhook ids are **integers**.
+
+### api.listReportingWebhooks()
+
+List the reporting webhooks in your workspace.
+
+```javascript
+api.listReportingWebhooks();
+```
+
+### api.createReportingWebhook(webhook)
+
+Create a reporting webhook.
+
+```javascript
+api.createReportingWebhook({
+  endpoint: "https://example.com/cio-events",
+  events: ["sent", "delivered", "opened", "clicked", "bounced"],
+  name: "Production events",
+  with_content: false,
+});
+```
+
+#### Options
+
+- **webhook**: The webhook definition
+  - _endpoint_: The destination URL that events are POSTed to (required)
+  - _events_: The event types to send (e.g. `drafted`, `sent`, `delivered`, `opened`, `clicked`, `bounced`, `converted`)
+  - _name_: Display name, ≤190 characters
+  - _full_resolution_: Send an event for every occurrence rather than de-duplicating
+  - _with_content_: Include message content in the payloads
+  - _disabled_: Create the webhook in a disabled state
+
+### api.getReportingWebhook(webhookId)
+
+Get a single reporting webhook.
+
+```javascript
+api.getReportingWebhook(4);
+```
+
+#### Options
+
+- **webhookId**: The webhook's numeric id (required)
+
+### api.updateReportingWebhook(webhookId, updates)
+
+Update a reporting webhook. Any subset of fields may be provided.
+
+```javascript
+api.updateReportingWebhook(4, { disabled: true });
+```
+
+#### Options
+
+- **webhookId**: The webhook's numeric id (required)
+- **updates**: Object with any of `endpoint`, `events`, `name`, `full_resolution`, `with_content`, `disabled`
+
+### api.deleteReportingWebhook(webhookId)
+
+Delete a reporting webhook. Returns no content on success.
+
+```javascript
+api.deleteReportingWebhook(4);
+```
+
+#### Options
+
+- **webhookId**: The webhook's numeric id (required)
+
+## Content & sender utilities
+
+### Snippets
+
+Manage [snippets](https://customer.io/docs/journeys/snippets/) — reusable content blocks referenced from messages. Snippets are identified by `name`.
+
+### api.getSnippets()
+
+List the snippets in your workspace.
+
+```javascript
+api.getSnippets();
+```
+
+### api.createSnippet(snippet)
+
+Create a snippet.
+
+```javascript
+api.createSnippet({ name: "footer", value: "<p>© 2026 Example</p>" });
+```
+
+#### Options
+
+- **snippet**: The snippet definition
+  - _name_: The snippet's unique name/key (required)
+  - _value_: The snippet's value; may contain Liquid (required)
+
+### api.updateSnippet(snippet)
+
+Create or update a snippet (upsert by name).
+
+```javascript
+api.updateSnippet({ name: "footer", value: "<p>© 2027 Example</p>" });
+```
+
+#### Options
+
+- **snippet**: The snippet definition — `name` and `value` (both required)
+
+### api.deleteSnippet(name)
+
+Delete a snippet by name. Returns no content on success. Fails if the snippet is still in use.
+
+```javascript
+api.deleteSnippet("footer");
+```
+
+#### Options
+
+- **name**: The snippet's name (required)
+
+### Sender identities
+
+### api.getSenderIdentities(options)
+
+List the sender identities in your workspace.
+
+```javascript
+api.getSenderIdentities({ limit: 50, sort: "asc" });
+```
+
+#### Options
+
+- **options**: Object (optional) — `start`, `limit`, `sort` ("asc" / "desc"), `hidden` (omit for all, `true`/`false` to filter)
+
+### api.getSenderIdentity(senderId)
+
+Get a single sender identity.
+
+```javascript
+api.getSenderIdentity(12);
+```
+
+#### Options
+
+- **senderId**: The sender identity's numeric id (required)
+
+### api.getSenderIdentityUsedBy(senderId)
+
+List the campaigns and newsletters that use a sender identity.
+
+```javascript
+api.getSenderIdentityUsedBy(12);
+```
+
+#### Options
+
+- **senderId**: The sender identity's numeric id (required)
+
+### Messages
+
+Look up sent messages (deliveries) across your workspace. For a single person's messages, use [`getCustomerMessages`](#apigetcustomermessagescustomerid-options).
+
+### api.getMessages(options)
+
+List sent messages.
+
+```javascript
+api.getMessages({ metric: "delivered", type: "email", limit: 50 });
+```
+
+#### Options
+
+- **options**: Object (optional)
+  - _start_: Pagination cursor from a previous page's `next`
+  - _limit_: Maximum number of results
+  - _drafts_: Return only drafts (`true`) or exclude them (default)
+  - _metric_: Filter to a delivery metric (e.g. `delivered`, `opened`, `bounced`)
+  - _type_: Scope to a channel ("email" / "webhook" / "twilio" / "whatsapp" / "slack" / "push" / "in_app")
+  - _campaign_id_ / _action_id_ / _newsletter_id_ / _transactional_id_ / _trigger_id_ / _template_id_ / _content_id_: Scope to a single resource
+  - _start_ts_ / _end_ts_: Unix timestamp bounds (seconds)
+  - _associations_: Include related campaigns/actions/newsletters/contents
+  - _get_tracked_responses_: Include tracked responses on each delivery
+
+### api.getMessage(messageId, options)
+
+Get a single sent message.
+
+```javascript
+api.getMessage("RPCImftJDcAAAAd...", { archived_message: true });
+```
+
+#### Options
+
+- **messageId**: The delivery id (`CIO-Delivery-ID`) (required)
+- **options**: Object (optional) — `archived_message`, `associations`, `get_tracked_responses`
+
+### api.getArchivedMessage(messageId)
+
+Get the archived content of a single sent message.
+
+```javascript
+api.getArchivedMessage("RPCImftJDcAAAAd...");
+```
+
+#### Options
+
+- **messageId**: The delivery id (`CIO-Delivery-ID`) (required)
+
+## Imports, data index & workspace info
+
+### api.createImport(importData)
+
+Start a [CSV import](https://customer.io/docs/api/app/#operation/createImports). The CSV is loaded from a hosted URL you provide as `data_file_url`.
+
+```javascript
+api.createImport({
+  data_file_url: "https://example.com/people.csv",
+  type: "people",
+  identifier: "email",
+  name: "Q3 signups",
+});
+```
+
+#### Options
+
+- **importData**: The import definition
+  - _data_file_url_: URL of the CSV file to import (required)
+  - _type_: `"people"` / `"event"` / `"object"` / `"relationship"` (required)
+  - _identifier_: Which column keys the rows — `"id"`/`"email"` for people & events; `"id"`/`"email"`/`"cio_id"` for relationships
+  - _object_type_id_: Required when `type` is `"object"`
+  - _name_: Display name (defaults to the filename)
+  - _description_: Description of the import
+  - _people_to_process_ / _data_to_process_: `"all"` / `"only_existing"` / `"only_new"` (mutually exclusive)
+
+### api.getImport(importId)
+
+Get the status of an import.
+
+```javascript
+api.getImport(15);
+```
+
+#### Options
+
+- **importId**: The import's numeric id (required)
+
+### api.batchUpdateAttributes(attributes)
+
+Batch-update attribute metadata (descriptions, etc.) — up to 100 at a time.
+
+```javascript
+api.batchUpdateAttributes([{ name: "plan", description: "Subscription plan" }]);
+```
+
+#### Options
+
+- **attributes**: A non-empty array of attribute updates (max 100). Each requires a `name`; may also include `description`, `object_type_id`, `is_relationship`, `event_name`, `privacy_level`
+
+### api.batchUpdateEvents(events)
+
+Batch-update event metadata — up to 100 at a time.
+
+```javascript
+api.batchUpdateEvents([{ name: "purchase", description: "Completed a purchase" }]);
+```
+
+#### Options
+
+- **events**: A non-empty array of event updates (max 100). Each requires a `name`; may also include `description`
+
+### api.listWorkspaces()
+
+List the workspaces (environments) in your account, with usage counts.
+
+```javascript
+api.listWorkspaces();
+```
+
+### api.getIpAddresses()
+
+List the Customer.io egress IP addresses (for allowlisting).
+
+```javascript
+api.getIpAddresses();
+```
