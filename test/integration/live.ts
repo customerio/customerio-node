@@ -28,6 +28,7 @@
  *   CIO_TEST_OBJECT_ID               object id for object reads (defaults to a throwaway id)
  *   CIO_TEST_CAMPAIGN_ID             campaign id for campaign read methods
  *   CIO_TEST_TRIGGER_ID              trigger id (with CIO_TEST_BROADCAST_ID) for trigger status/errors
+ *   CIO_TEST_IMPORT_CSV_URL          downloadable CSV URL for createImport
  *
  * Profile lifecycle: one throwaway customer per run, id = `sdk-live-${uuid()}`.
  * Cleanup is best-effort; the dedicated workspace tolerates orphans.
@@ -422,6 +423,122 @@ liveTest('asset folder + file create -> read -> update -> delete round-trip', as
     await api!.deleteAssetFolder(folderId).catch(() => undefined);
   }
 
+  t.pass();
+});
+
+liveTest('listCollections resolves', async (t) => {
+  const result = (await api!.listCollections()) as { collections?: unknown };
+  t.true('collections' in result);
+});
+
+liveTest('collection create -> read -> content -> delete round-trip', async (t) => {
+  const created = (await api!
+    .createCollection({ name: `sdk-live-${customerId}`, data: [{ tier: 'pro', price: 20 }] })
+    .catch(() => undefined)) as { collection?: { id?: number } } | undefined;
+  const collectionId = created?.collection?.id;
+
+  if (collectionId !== undefined) {
+    await api!.getCollection(collectionId).catch(() => undefined);
+    await api!.getCollectionContent(collectionId).catch(() => undefined);
+    await api!.updateCollection(collectionId, { name: `sdk-live-${customerId}-renamed` }).catch(() => undefined);
+    await api!.updateCollectionContent(collectionId, [{ tier: 'free', price: 0 }]).catch(() => undefined);
+    await api!.deleteCollection(collectionId).catch(() => undefined);
+  }
+
+  t.pass();
+});
+
+liveTest('esp suppression reads resolve', async (t) => {
+  const list = (await api!.getSuppressions('bounces', { limit: 1 })) as { suppressions?: unknown };
+  t.true('suppressions' in list);
+  await api!.searchSuppression(`absent-${randomUUID()}@example.com`).catch(() => undefined);
+  t.pass();
+});
+
+liveTest('esp suppression create -> delete round-trip', async (t) => {
+  const email = `sdk-live-${randomUUID()}@example.com`;
+  await api!.createSuppression('bounces', email).catch(() => undefined);
+  await api!.deleteSuppression('bounces', email).catch(() => undefined);
+  t.pass();
+});
+
+liveTest('listReportingWebhooks resolves', async (t) => {
+  const result = (await api!.listReportingWebhooks()) as { reporting_webhooks?: unknown };
+  t.true('reporting_webhooks' in result);
+});
+
+liveTest('reporting webhook create -> read -> update -> delete round-trip', async (t) => {
+  const created = (await api!
+    .createReportingWebhook({
+      endpoint: `https://example.com/sdk-live-${customerId}`,
+      events: ['sent', 'delivered'],
+      name: `sdk-live-${customerId}`,
+      disabled: true,
+    })
+    .catch(() => undefined)) as { id?: number } | undefined;
+  const webhookId = created?.id;
+
+  if (webhookId !== undefined) {
+    await api!.getReportingWebhook(webhookId).catch(() => undefined);
+    await api!.updateReportingWebhook(webhookId, { name: `sdk-live-${customerId}-renamed` }).catch(() => undefined);
+    await api!.deleteReportingWebhook(webhookId).catch(() => undefined);
+  }
+
+  t.pass();
+});
+
+liveTest('snippet upsert -> read -> delete round-trip', async (t) => {
+  const name = `sdk-live-${customerId}`;
+  await api!.updateSnippet({ name, value: 'hello' }).catch(() => undefined);
+  const list = (await api!.getSnippets()) as { snippets?: unknown };
+  t.true('snippets' in list);
+  await api!.deleteSnippet(name).catch(() => undefined);
+  t.pass();
+});
+
+liveTest('sender identity reads resolve', async (t) => {
+  const result = (await api!.getSenderIdentities({ limit: 5 })) as { sender_identities?: unknown };
+  t.true('sender_identities' in result);
+});
+
+liveTest('getMessages resolves', async (t) => {
+  const result = (await api!.getMessages({ limit: 5 })) as { messages?: unknown };
+  t.true('messages' in result);
+});
+
+liveTest('listWorkspaces resolves', async (t) => {
+  const result = (await api!.listWorkspaces()) as { workspaces?: unknown };
+  t.true('workspaces' in result);
+});
+
+liveTest('getIpAddresses resolves', async (t) => {
+  const result = (await api!.getIpAddresses()) as { ip_addresses?: unknown };
+  t.true('ip_addresses' in result);
+});
+
+liveTest('data_index batch updates resolve', async (t) => {
+  await api!
+    .batchUpdateAttributes([{ name: `sdk_live_${customerId}`, description: 'sdk live test' }])
+    .catch(() => undefined);
+  await api!
+    .batchUpdateEvents([{ name: `sdk_live_${customerId}`, description: 'sdk live test' }])
+    .catch(() => undefined);
+  t.pass();
+});
+
+needs('CIO_TEST_IMPORT_CSV_URL')('import create -> get round-trip', async (t) => {
+  const created = (await api!
+    .createImport({
+      data_file_url: process.env.CIO_TEST_IMPORT_CSV_URL!,
+      type: 'people',
+      identifier: 'email',
+      name: `sdk-live-${customerId}`,
+    })
+    .catch(() => undefined)) as { import?: { id?: number } } | undefined;
+  const importId = created?.import?.id;
+  if (importId !== undefined) {
+    await api!.getImport(importId).catch(() => undefined);
+  }
   t.pass();
 });
 

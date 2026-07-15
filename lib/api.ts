@@ -493,6 +493,191 @@ export type AssetFolderUpdate = {
   parent_folder_id?: number | null;
 };
 
+/** A single row of collection data — an arbitrary flat object. */
+export type CollectionRow = Record<string, any>;
+
+/**
+ * Definition for creating a collection via {@link APIClient.createCollection}.
+ * Provide inline `data` **or** a source `url`, not both.
+ */
+export type CollectionInput = {
+  /** The collection's name (required). */
+  name: string;
+  /** Inline row data. Mutually exclusive with `url`. */
+  data?: CollectionRow[];
+  /** Source URL to import rows from (CSV/JSON/Google Sheet). Mutually exclusive with `data`. */
+  url?: string;
+};
+
+/**
+ * Fields for updating a collection via {@link APIClient.updateCollection}. Any subset may be
+ * provided; `data` and `url` are mutually exclusive.
+ */
+export type CollectionUpdate = {
+  name?: string;
+  data?: CollectionRow[];
+  url?: string;
+};
+
+/** An email-suppression category for the ESP (deliverability) endpoints. */
+export type SuppressionType = 'blocks' | 'bounces' | 'spam_reports' | 'invalid_emails';
+
+/** Options for {@link APIClient.getSuppressions} (offset-based). */
+export type SuppressionsOptions = {
+  /** Page size, 1–1000. Defaults to 100. */
+  limit?: number;
+  /** Number of records to skip. Defaults to 0. */
+  offset?: number;
+  /** Filter to a single email address. */
+  email?: string;
+  /** Filter to a single sending domain. */
+  domain?: string;
+};
+
+/** Options for {@link APIClient.getDomainSuppressions} (cursor-based). */
+export type DomainSuppressionsOptions = {
+  /** Page size, 1–1000. Defaults to 100. */
+  limit?: number;
+  /** Filter to a single email address. */
+  email?: string;
+  /** Pagination cursor returned as `next` by a previous page. */
+  start?: string;
+};
+
+/** Definition for creating a reporting webhook via {@link APIClient.createReportingWebhook}. */
+export type ReportingWebhookInput = {
+  /** The destination URL that events are POSTed to (required). */
+  endpoint: string;
+  /** The event types to send (e.g. `drafted`, `sent`, `delivered`, `opened`, `clicked`, `bounced`). */
+  events: string[];
+  /** Display name (≤190 characters). */
+  name?: string;
+  /** When `true`, send an event for every occurrence rather than de-duplicating. */
+  full_resolution?: boolean;
+  /** When `true`, include message content in the event payloads. */
+  with_content?: boolean;
+  /** When `true`, create the webhook in a disabled state. */
+  disabled?: boolean;
+};
+
+/** Fields for updating a reporting webhook via {@link APIClient.updateReportingWebhook}. Any subset may be provided. */
+export type ReportingWebhookUpdate = {
+  endpoint?: string;
+  events?: string[];
+  name?: string;
+  full_resolution?: boolean;
+  with_content?: boolean;
+  disabled?: boolean;
+};
+
+/** A snippet definition for {@link APIClient.createSnippet} / {@link APIClient.updateSnippet}. */
+export type SnippetInput = {
+  /** The snippet's unique name/key. */
+  name: string;
+  /** The snippet's value (may contain Liquid). */
+  value: string;
+};
+
+/** Options for {@link APIClient.getSenderIdentities}. */
+export type SenderIdentitiesOptions = PaginationOptions & {
+  /** Sort direction. Defaults to `asc`. */
+  sort?: SortDirection;
+  /** Filter by hidden status. Omit to return all; `true`/`false` to filter. */
+  hidden?: boolean;
+};
+
+/** Options for {@link APIClient.getMessages}. */
+export type MessagesOptions = PaginationOptions & {
+  /** Return only drafts (`true`) or exclude them (default). */
+  drafts?: boolean;
+  /** Filter to deliveries with this metric (e.g. `delivered`, `opened`, `bounced`). */
+  metric?: string;
+  /** Scope to a single channel. */
+  type?: MetricType;
+  /** Scope to a single campaign. */
+  campaign_id?: string | number;
+  /** Scope to a single campaign action. */
+  action_id?: string | number;
+  /** Scope to a single newsletter. */
+  newsletter_id?: string | number;
+  /** Scope to a single transactional message. */
+  transactional_id?: string | number;
+  /** Scope to a single broadcast trigger (requires `campaign_id`). */
+  trigger_id?: string | number;
+  /** Scope to a single template. */
+  template_id?: string | number;
+  /** Scope to a single content id. */
+  content_id?: string | number;
+  /** Only include deliveries after this Unix timestamp (seconds). */
+  start_ts?: number;
+  /** Only include deliveries before this Unix timestamp (seconds). */
+  end_ts?: number;
+  /** Include the related campaigns/actions/newsletters/contents in the response. */
+  associations?: boolean;
+  /** Include tracked responses on each delivery. */
+  get_tracked_responses?: boolean;
+};
+
+/** Options for {@link APIClient.getMessage}. */
+export type MessageOptions = {
+  /** Include the archived message content (rate-limited). */
+  archived_message?: boolean;
+  /** Include the related campaign/action/newsletter/content in the response. */
+  associations?: boolean;
+  /** Include tracked responses on the delivery. */
+  get_tracked_responses?: boolean;
+};
+
+/** What a CSV import loads. */
+export type ImportType = 'people' | 'event' | 'object' | 'relationship';
+
+/** Which records an import processes. */
+export type ImportProcessScope = 'all' | 'only_existing' | 'only_new';
+
+/** Definition for creating a CSV import via {@link APIClient.createImport}. */
+export type ImportInput = {
+  /** URL of the CSV file to import (required). */
+  data_file_url: string;
+  /** What the CSV loads (required). */
+  type: ImportType;
+  /** Which identifier the CSV keys rows by. `id`/`email` for people & events; `id`/`email`/`cio_id` for relationships. */
+  identifier?: 'id' | 'email' | 'cio_id';
+  /** Object type id — required when `type` is `object`. */
+  object_type_id?: string | number;
+  /** Display name (defaults to the filename). */
+  name?: string;
+  /** Description of the import. */
+  description?: string;
+  /** For people imports: which profiles to process. Mutually exclusive with `data_to_process`. */
+  people_to_process?: ImportProcessScope;
+  /** For object/relationship imports: which records to process. Mutually exclusive with `people_to_process`. */
+  data_to_process?: ImportProcessScope;
+};
+
+/** A single attribute-metadata update for {@link APIClient.batchUpdateAttributes}. */
+export type DataIndexAttribute = {
+  /** The attribute name (required). */
+  name: string;
+  /** A human-readable description. */
+  description?: string;
+  /** Scope the attribute to an object type. */
+  object_type_id?: number;
+  /** Whether the attribute is a relationship attribute. */
+  is_relationship?: boolean;
+  /** Scope the attribute to an event. */
+  event_name?: string;
+  /** Privacy level (requires the sensitive-attributes feature). */
+  privacy_level?: number;
+};
+
+/** A single event-metadata update for {@link APIClient.batchUpdateEvents}. */
+export type DataIndexEvent = {
+  /** The event name (required). */
+  name: string;
+  /** A human-readable description. */
+  description?: string;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -3186,6 +3371,582 @@ export class APIClient {
     }
 
     return this.request.destroy(`${this.apiRoot}/assets/folders/${encodeURIComponent(folderId)}`);
+  }
+
+  /**
+   * List the collections in your workspace.
+   *
+   * @returns The parsed JSON response body (`{ collections: [...] }`).
+   */
+  listCollections() {
+    return this.request.get(`${this.apiRoot}/collections`);
+  }
+
+  /**
+   * Create a collection. Provide inline `data` or a source `url`, not both.
+   *
+   * @param collection The collection definition. `name` is required. See {@link CollectionInput}.
+   * @returns The parsed JSON response body (`{ collection: {...} }`).
+   * @throws {MissingParamError} If `collection` is missing/not an object, or `collection.name` is empty.
+   */
+  createCollection(collection: CollectionInput) {
+    if (collection == null || typeof collection !== 'object') {
+      throw new MissingParamError('collection');
+    }
+
+    if (isEmpty(collection.name)) {
+      throw new MissingParamError('collection.name');
+    }
+
+    return this.request.post(`${this.apiRoot}/collections`, collection);
+  }
+
+  /**
+   * Get a single collection's metadata (name, schema, row count, size).
+   *
+   * @param collectionId The collection's numeric id.
+   * @returns The parsed JSON response body (`{ collection: {...} }`).
+   * @throws {MissingParamError} If `collectionId` is empty.
+   */
+  getCollection(collectionId: string | number) {
+    if (isEmpty(collectionId)) {
+      throw new MissingParamError('collectionId');
+    }
+
+    return this.request.get(`${this.apiRoot}/collections/${encodeURIComponent(collectionId)}`);
+  }
+
+  /**
+   * Update a collection. Any subset of fields may be provided; `data` and `url` are mutually exclusive.
+   *
+   * @param collectionId The collection's numeric id.
+   * @param updates The fields to change. See {@link CollectionUpdate}.
+   * @returns The parsed JSON response body (`{ collection: {...} }`).
+   * @throws {MissingParamError} If `collectionId` is empty or `updates` is missing/not an object.
+   */
+  updateCollection(collectionId: string | number, updates: CollectionUpdate) {
+    if (isEmpty(collectionId)) {
+      throw new MissingParamError('collectionId');
+    }
+
+    if (updates == null || typeof updates !== 'object') {
+      throw new MissingParamError('updates');
+    }
+
+    return this.request.put(`${this.apiRoot}/collections/${encodeURIComponent(collectionId)}`, updates);
+  }
+
+  /**
+   * Delete a collection. Fails if the collection is still referenced by a campaign.
+   *
+   * @param collectionId The collection's numeric id.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `collectionId` is empty.
+   */
+  deleteCollection(collectionId: string | number) {
+    if (isEmpty(collectionId)) {
+      throw new MissingParamError('collectionId');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/collections/${encodeURIComponent(collectionId)}`);
+  }
+
+  /**
+   * Get a collection's content — the full array of data rows.
+   *
+   * @param collectionId The collection's numeric id.
+   * @returns The parsed JSON response body: an array of row objects.
+   * @throws {MissingParamError} If `collectionId` is empty.
+   */
+  getCollectionContent(collectionId: string | number) {
+    if (isEmpty(collectionId)) {
+      throw new MissingParamError('collectionId');
+    }
+
+    return this.request.get(`${this.apiRoot}/collections/${encodeURIComponent(collectionId)}/content`);
+  }
+
+  /**
+   * Replace a collection's content with a new array of data rows.
+   *
+   * @param collectionId The collection's numeric id.
+   * @param content The full array of row objects to store.
+   * @returns The parsed JSON response body (`{ collection: {...} }`).
+   * @throws {MissingParamError} If `collectionId` is empty or `content` is not an array.
+   */
+  updateCollectionContent(collectionId: string | number, content: CollectionRow[]) {
+    if (isEmpty(collectionId)) {
+      throw new MissingParamError('collectionId');
+    }
+
+    if (!Array.isArray(content)) {
+      throw new MissingParamError('content');
+    }
+
+    // This endpoint takes a top-level JSON array; the transport serializes it
+    // as-is. The cast keeps `RequestData` object-shaped for its other callers.
+    return this.request.put(
+      `${this.apiRoot}/collections/${encodeURIComponent(collectionId)}/content`,
+      content as unknown as Record<string, any>,
+    );
+  }
+
+  /**
+   * Search every suppression category for an email address.
+   *
+   * @param email The email address to search for.
+   * @returns The parsed JSON response body (`{ category, suppressions: [...] }`).
+   * @throws {MissingParamError} If `email` is empty.
+   */
+  searchSuppression(email: string) {
+    if (isEmpty(email)) {
+      throw new MissingParamError('email');
+    }
+
+    return this.request.get(`${this.apiRoot}/esp/search_suppression/${encodeURIComponent(email)}`);
+  }
+
+  /**
+   * List suppressions in a category (offset-based pagination).
+   *
+   * @param suppressionType One of `blocks`, `bounces`, `spam_reports`, `invalid_emails`.
+   * @param options Optional filters and pagination. See {@link SuppressionsOptions}.
+   * @returns The parsed JSON response body (`{ category, suppressions: [...] }`).
+   * @throws {MissingParamError} If `suppressionType` is empty.
+   */
+  getSuppressions(suppressionType: SuppressionType, options: SuppressionsOptions = {}) {
+    if (isEmpty(suppressionType)) {
+      throw new MissingParamError('suppressionType');
+    }
+
+    const query = buildQueryString({
+      limit: options.limit,
+      offset: options.offset,
+      email: options.email,
+      domain: options.domain,
+    });
+
+    return this.request.get(`${this.apiRoot}/esp/suppression/${encodeURIComponent(suppressionType)}${query}`);
+  }
+
+  /**
+   * List suppressions in a category for a single sending domain (cursor-based pagination).
+   *
+   * @param domainName The sending domain.
+   * @param suppressionType One of `blocks`, `bounces`, `spam_reports`, `invalid_emails`.
+   * @param options Optional filter and pagination. See {@link DomainSuppressionsOptions}.
+   * @returns The parsed JSON response body (`{ category, suppressions: [...], next }`).
+   * @throws {MissingParamError} If `domainName` or `suppressionType` is empty.
+   */
+  getDomainSuppressions(domainName: string, suppressionType: SuppressionType, options: DomainSuppressionsOptions = {}) {
+    if (isEmpty(domainName)) {
+      throw new MissingParamError('domainName');
+    }
+
+    if (isEmpty(suppressionType)) {
+      throw new MissingParamError('suppressionType');
+    }
+
+    const query = buildQueryString({
+      limit: options.limit,
+      email: options.email,
+      start: options.start,
+    });
+
+    return this.request.get(
+      `${this.apiRoot}/esp/domains/${encodeURIComponent(domainName)}/suppression/${encodeURIComponent(suppressionType)}${query}`,
+    );
+  }
+
+  /**
+   * Add an email address to a suppression category.
+   *
+   * @param suppressionType One of `blocks`, `bounces`, `spam_reports`, `invalid_emails`.
+   * @param email The email address to suppress.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `suppressionType` or `email` is empty.
+   */
+  createSuppression(suppressionType: SuppressionType, email: string) {
+    if (isEmpty(suppressionType)) {
+      throw new MissingParamError('suppressionType');
+    }
+
+    if (isEmpty(email)) {
+      throw new MissingParamError('email');
+    }
+
+    return this.request.post(
+      `${this.apiRoot}/esp/suppression/${encodeURIComponent(suppressionType)}/${encodeURIComponent(email)}`,
+    );
+  }
+
+  /**
+   * Remove an email address from a suppression category.
+   *
+   * @param suppressionType One of `blocks`, `bounces`, `spam_reports`, `invalid_emails`.
+   * @param email The email address to unsuppress.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `suppressionType` or `email` is empty.
+   */
+  deleteSuppression(suppressionType: SuppressionType, email: string) {
+    if (isEmpty(suppressionType)) {
+      throw new MissingParamError('suppressionType');
+    }
+
+    if (isEmpty(email)) {
+      throw new MissingParamError('email');
+    }
+
+    return this.request.destroy(
+      `${this.apiRoot}/esp/suppression/${encodeURIComponent(suppressionType)}/${encodeURIComponent(email)}`,
+    );
+  }
+
+  /**
+   * List the reporting webhooks in your workspace.
+   *
+   * @returns The parsed JSON response body (`{ reporting_webhooks: [...] }`).
+   */
+  listReportingWebhooks() {
+    return this.request.get(`${this.apiRoot}/reporting_webhooks`);
+  }
+
+  /**
+   * Create a reporting webhook.
+   *
+   * @param webhook The webhook definition. `endpoint` is required. See {@link ReportingWebhookInput}.
+   * @returns The parsed JSON response body (the created webhook).
+   * @throws {MissingParamError} If `webhook` is missing/not an object, or `webhook.endpoint` is empty.
+   */
+  createReportingWebhook(webhook: ReportingWebhookInput) {
+    if (webhook == null || typeof webhook !== 'object') {
+      throw new MissingParamError('webhook');
+    }
+
+    if (isEmpty(webhook.endpoint)) {
+      throw new MissingParamError('webhook.endpoint');
+    }
+
+    return this.request.post(`${this.apiRoot}/reporting_webhooks`, webhook);
+  }
+
+  /**
+   * Get a single reporting webhook.
+   *
+   * @param webhookId The webhook's numeric id.
+   * @returns The parsed JSON response body (the webhook).
+   * @throws {MissingParamError} If `webhookId` is empty.
+   */
+  getReportingWebhook(webhookId: string | number) {
+    if (isEmpty(webhookId)) {
+      throw new MissingParamError('webhookId');
+    }
+
+    return this.request.get(`${this.apiRoot}/reporting_webhooks/${encodeURIComponent(webhookId)}`);
+  }
+
+  /**
+   * Update a reporting webhook. Any subset of fields may be provided.
+   *
+   * @param webhookId The webhook's numeric id.
+   * @param updates The fields to change. See {@link ReportingWebhookUpdate}.
+   * @returns The parsed JSON response body (the updated webhook).
+   * @throws {MissingParamError} If `webhookId` is empty or `updates` is missing/not an object.
+   */
+  updateReportingWebhook(webhookId: string | number, updates: ReportingWebhookUpdate) {
+    if (isEmpty(webhookId)) {
+      throw new MissingParamError('webhookId');
+    }
+
+    if (updates == null || typeof updates !== 'object') {
+      throw new MissingParamError('updates');
+    }
+
+    return this.request.put(`${this.apiRoot}/reporting_webhooks/${encodeURIComponent(webhookId)}`, updates);
+  }
+
+  /**
+   * Delete a reporting webhook.
+   *
+   * @param webhookId The webhook's numeric id.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `webhookId` is empty.
+   */
+  deleteReportingWebhook(webhookId: string | number) {
+    if (isEmpty(webhookId)) {
+      throw new MissingParamError('webhookId');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/reporting_webhooks/${encodeURIComponent(webhookId)}`);
+  }
+
+  /**
+   * List the snippets in your workspace.
+   *
+   * @returns The parsed JSON response body (`{ snippets: [...] }`).
+   */
+  getSnippets() {
+    return this.request.get(`${this.apiRoot}/snippets`);
+  }
+
+  /**
+   * Create a snippet.
+   *
+   * @param snippet The snippet definition. `name` and `value` are required. See {@link SnippetInput}.
+   * @returns The parsed JSON response body (`{ snippet: {...} }`).
+   * @throws {MissingParamError} If `snippet` is missing/not an object, or `snippet.name`/`snippet.value` is empty.
+   */
+  createSnippet(snippet: SnippetInput) {
+    if (snippet == null || typeof snippet !== 'object') {
+      throw new MissingParamError('snippet');
+    }
+
+    if (isEmpty(snippet.name)) {
+      throw new MissingParamError('snippet.name');
+    }
+
+    if (isEmpty(snippet.value)) {
+      throw new MissingParamError('snippet.value');
+    }
+
+    return this.request.post(`${this.apiRoot}/snippets`, snippet);
+  }
+
+  /**
+   * Create or update a snippet (upsert by name).
+   *
+   * @param snippet The snippet definition. `name` and `value` are required. See {@link SnippetInput}.
+   * @returns The parsed JSON response body (`{ snippet: {...} }`).
+   * @throws {MissingParamError} If `snippet` is missing/not an object, or `snippet.name`/`snippet.value` is empty.
+   */
+  updateSnippet(snippet: SnippetInput) {
+    if (snippet == null || typeof snippet !== 'object') {
+      throw new MissingParamError('snippet');
+    }
+
+    if (isEmpty(snippet.name)) {
+      throw new MissingParamError('snippet.name');
+    }
+
+    if (isEmpty(snippet.value)) {
+      throw new MissingParamError('snippet.value');
+    }
+
+    return this.request.put(`${this.apiRoot}/snippets`, snippet);
+  }
+
+  /**
+   * Delete a snippet by name. Fails if the snippet is still in use.
+   *
+   * @param name The snippet's name.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `name` is empty.
+   */
+  deleteSnippet(name: string) {
+    if (isEmpty(name)) {
+      throw new MissingParamError('name');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/snippets/${encodeURIComponent(name)}`);
+  }
+
+  /**
+   * List the sender identities in your workspace.
+   *
+   * @param options Optional sort, pagination, and hidden filter. See {@link SenderIdentitiesOptions}.
+   * @returns The parsed JSON response body (`{ sender_identities: [...], next }`).
+   */
+  getSenderIdentities(options: SenderIdentitiesOptions = {}) {
+    const query = buildQueryString({
+      start: options.start,
+      limit: options.limit,
+      sort: options.sort,
+      hidden: options.hidden,
+    });
+
+    return this.request.get(`${this.apiRoot}/sender_identities${query}`);
+  }
+
+  /**
+   * Get a single sender identity.
+   *
+   * @param senderId The sender identity's numeric id.
+   * @returns The parsed JSON response body (`{ sender_identity: {...} }`).
+   * @throws {MissingParamError} If `senderId` is empty.
+   */
+  getSenderIdentity(senderId: string | number) {
+    if (isEmpty(senderId)) {
+      throw new MissingParamError('senderId');
+    }
+
+    return this.request.get(`${this.apiRoot}/sender_identities/${encodeURIComponent(senderId)}`);
+  }
+
+  /**
+   * List the campaigns and newsletters that use a sender identity.
+   *
+   * @param senderId The sender identity's numeric id.
+   * @returns The parsed JSON response body (`{ campaigns, sent_newsletters, draft_newsletters }`).
+   * @throws {MissingParamError} If `senderId` is empty.
+   */
+  getSenderIdentityUsedBy(senderId: string | number) {
+    if (isEmpty(senderId)) {
+      throw new MissingParamError('senderId');
+    }
+
+    return this.request.get(`${this.apiRoot}/sender_identities/${encodeURIComponent(senderId)}/used_by`);
+  }
+
+  /**
+   * List sent messages (deliveries) across your workspace.
+   *
+   * @param options Optional filters and pagination. See {@link MessagesOptions}.
+   * @returns The parsed JSON response body (`{ messages: [...], next, ... }`).
+   */
+  getMessages(options: MessagesOptions = {}) {
+    const query = buildQueryString({
+      start: options.start,
+      limit: options.limit,
+      drafts: options.drafts,
+      metric: options.metric,
+      type: options.type,
+      campaign_id: options.campaign_id,
+      action_id: options.action_id,
+      newsletter_id: options.newsletter_id,
+      transactional_id: options.transactional_id,
+      trigger_id: options.trigger_id,
+      template_id: options.template_id,
+      content_id: options.content_id,
+      start_ts: options.start_ts,
+      end_ts: options.end_ts,
+      associations: options.associations,
+      get_tracked_responses: options.get_tracked_responses,
+    });
+
+    return this.request.get(`${this.apiRoot}/messages${query}`);
+  }
+
+  /**
+   * Get a single sent message (delivery).
+   *
+   * @param messageId The delivery id (`CIO-Delivery-ID`).
+   * @param options Optional response expansions. See {@link MessageOptions}.
+   * @returns The parsed JSON response body (`{ message: {...}, ... }`).
+   * @throws {MissingParamError} If `messageId` is empty.
+   */
+  getMessage(messageId: string, options: MessageOptions = {}) {
+    if (isEmpty(messageId)) {
+      throw new MissingParamError('messageId');
+    }
+
+    const query = buildQueryString({
+      archived_message: options.archived_message,
+      associations: options.associations,
+      get_tracked_responses: options.get_tracked_responses,
+    });
+
+    return this.request.get(`${this.apiRoot}/messages/${encodeURIComponent(messageId)}${query}`);
+  }
+
+  /**
+   * Get the archived content of a single sent message.
+   *
+   * @param messageId The delivery id (`CIO-Delivery-ID`).
+   * @returns The parsed JSON response body (`{ archived_message: {...} }`).
+   * @throws {MissingParamError} If `messageId` is empty.
+   */
+  getArchivedMessage(messageId: string) {
+    if (isEmpty(messageId)) {
+      throw new MissingParamError('messageId');
+    }
+
+    return this.request.get(`${this.apiRoot}/messages/${encodeURIComponent(messageId)}/archived_message`);
+  }
+
+  /**
+   * Start a CSV import.
+   *
+   * @param importData The import definition. `data_file_url` and `type` are required. See {@link ImportInput}.
+   * @returns The parsed JSON response body (`{ import: {...} }`).
+   * @throws {MissingParamError} If `importData` is missing/not an object, or `data_file_url`/`type` is empty.
+   */
+  createImport(importData: ImportInput) {
+    if (importData == null || typeof importData !== 'object') {
+      throw new MissingParamError('importData');
+    }
+
+    if (isEmpty(importData.data_file_url)) {
+      throw new MissingParamError('importData.data_file_url');
+    }
+
+    if (isEmpty(importData.type)) {
+      throw new MissingParamError('importData.type');
+    }
+
+    return this.request.post(`${this.apiRoot}/imports`, { import: importData });
+  }
+
+  /**
+   * Get the status of an import.
+   *
+   * @param importId The import's numeric id.
+   * @returns The parsed JSON response body (`{ import: {...} }`).
+   * @throws {MissingParamError} If `importId` is empty.
+   */
+  getImport(importId: string | number) {
+    if (isEmpty(importId)) {
+      throw new MissingParamError('importId');
+    }
+
+    return this.request.get(`${this.apiRoot}/imports/${encodeURIComponent(importId)}`);
+  }
+
+  /**
+   * Batch-update attribute metadata (up to 100 at a time).
+   *
+   * @param attributes The attribute updates. Each requires a `name`. See {@link DataIndexAttribute}.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `attributes` is not a non-empty array.
+   */
+  batchUpdateAttributes(attributes: DataIndexAttribute[]) {
+    if (!Array.isArray(attributes) || attributes.length === 0) {
+      throw new MissingParamError('attributes');
+    }
+
+    return this.request.post(`${this.apiRoot}/data_index/attributes`, { attributes });
+  }
+
+  /**
+   * Batch-update event metadata (up to 100 at a time).
+   *
+   * @param events The event updates. Each requires a `name`. See {@link DataIndexEvent}.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `events` is not a non-empty array.
+   */
+  batchUpdateEvents(events: DataIndexEvent[]) {
+    if (!Array.isArray(events) || events.length === 0) {
+      throw new MissingParamError('events');
+    }
+
+    return this.request.post(`${this.apiRoot}/data_index/events`, { events });
+  }
+
+  /**
+   * List the workspaces (environments) in your account, with usage counts.
+   *
+   * @returns The parsed JSON response body (`{ workspaces: [...] }`).
+   */
+  listWorkspaces() {
+    return this.request.get(`${this.apiRoot}/workspaces`);
+  }
+
+  /**
+   * List the Customer.io egress IP addresses (for allowlisting).
+   *
+   * @returns The parsed JSON response body (`{ ip_addresses: [...] }`).
+   */
+  getIpAddresses() {
+    return this.request.get(`${this.apiRoot}/info/ip_addresses`);
   }
 }
 

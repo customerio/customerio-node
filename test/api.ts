@@ -2111,3 +2111,319 @@ test('#deleteAssetFolder: deletes a folder and validates', (t) => {
   t.context.client.deleteAssetFolder(2);
   t.true(destroy.calledWith(`${API}/assets/folders/2`));
 });
+
+// Collections
+
+test('#listCollections: gets the collections endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listCollections();
+  t.true(get.calledWith(`${API}/collections`));
+});
+
+test('#createCollection: posts the collection body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createCollection as any)(null), { message: 'collection is required' });
+  t.throws(() => (t.context.client.createCollection as any)('nope'), { message: 'collection is required' });
+  t.throws(() => (t.context.client.createCollection as any)({}), { message: 'collection.name is required' });
+  const collection = { name: 'Plans', data: [{ tier: 'pro', price: 20 }] };
+  t.context.client.createCollection(collection);
+  t.true(post.calledWith(`${API}/collections`, collection));
+});
+
+test('#getCollection: gets a single collection and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCollection(''), { message: 'collectionId is required' });
+  t.context.client.getCollection(9);
+  t.true(get.calledWith(`${API}/collections/9`));
+});
+
+test('#updateCollection: puts the updates and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateCollection('', { name: 'x' }), { message: 'collectionId is required' });
+  t.throws(() => (t.context.client.updateCollection as any)(9, null), { message: 'updates is required' });
+  t.context.client.updateCollection(9, { name: 'Renamed', url: 'https://example.com/data.csv' });
+  t.true(put.calledWith(`${API}/collections/9`, { name: 'Renamed', url: 'https://example.com/data.csv' }));
+});
+
+test('#deleteCollection: deletes a collection and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteCollection(''), { message: 'collectionId is required' });
+  t.context.client.deleteCollection(9);
+  t.true(destroy.calledWith(`${API}/collections/9`));
+});
+
+test('#getCollectionContent: gets the content endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getCollectionContent(''), { message: 'collectionId is required' });
+  t.context.client.getCollectionContent(9);
+  t.true(get.calledWith(`${API}/collections/9/content`));
+});
+
+test('#updateCollectionContent: puts the raw row array and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateCollectionContent('', [{ a: 1 }]), { message: 'collectionId is required' });
+  t.throws(() => (t.context.client.updateCollectionContent as any)(9, { a: 1 }), { message: 'content is required' });
+  const rows = [{ tier: 'pro' }, { tier: 'free' }];
+  t.context.client.updateCollectionContent(9, rows);
+  t.true(put.calledWith(`${API}/collections/9/content`, rows));
+});
+
+// Deliverability: ESP suppressions
+
+test('#searchSuppression: gets the search endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.searchSuppression(''), { message: 'email is required' });
+  t.context.client.searchSuppression('user+tag@example.com');
+  t.true(get.calledWith(`${API}/esp/search_suppression/user%2Btag%40example.com`));
+});
+
+test('#getSuppressions: gets the category endpoint with filters and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => (t.context.client.getSuppressions as any)(''), { message: 'suppressionType is required' });
+  t.context.client.getSuppressions('bounces');
+  t.true(get.calledWith(`${API}/esp/suppression/bounces`));
+  t.context.client.getSuppressions('spam_reports', { limit: 50, offset: 100, email: 'a@b.com', domain: 'b.com' });
+  t.true(get.calledWith(`${API}/esp/suppression/spam_reports?limit=50&offset=100&email=a%40b.com&domain=b.com`));
+});
+
+test('#getDomainSuppressions: gets the domain endpoint with cursor and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => (t.context.client.getDomainSuppressions as any)('', 'bounces'), { message: 'domainName is required' });
+  t.throws(() => (t.context.client.getDomainSuppressions as any)('b.com', ''), {
+    message: 'suppressionType is required',
+  });
+  t.context.client.getDomainSuppressions('mail.example.com', 'bounces', { limit: 10, start: 'abc' });
+  t.true(get.calledWith(`${API}/esp/domains/mail.example.com/suppression/bounces?limit=10&start=abc`));
+});
+
+test('#createSuppression: posts to the suppression endpoint and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createSuppression as any)('', 'a@b.com'), {
+    message: 'suppressionType is required',
+  });
+  t.throws(() => t.context.client.createSuppression('bounces', ''), { message: 'email is required' });
+  t.context.client.createSuppression('bounces', 'a@b.com');
+  t.true(post.calledWith(`${API}/esp/suppression/bounces/a%40b.com`));
+});
+
+test('#deleteSuppression: deletes the suppression and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => (t.context.client.deleteSuppression as any)('', 'a@b.com'), {
+    message: 'suppressionType is required',
+  });
+  t.throws(() => t.context.client.deleteSuppression('bounces', ''), { message: 'email is required' });
+  t.context.client.deleteSuppression('bounces', 'a@b.com');
+  t.true(destroy.calledWith(`${API}/esp/suppression/bounces/a%40b.com`));
+});
+
+// Deliverability: reporting webhooks
+
+test('#listReportingWebhooks: gets the reporting webhooks endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listReportingWebhooks();
+  t.true(get.calledWith(`${API}/reporting_webhooks`));
+});
+
+test('#createReportingWebhook: posts the webhook body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createReportingWebhook as any)(null), { message: 'webhook is required' });
+  t.throws(() => (t.context.client.createReportingWebhook as any)({ events: ['sent'] }), {
+    message: 'webhook.endpoint is required',
+  });
+  const webhook = { endpoint: 'https://example.com/hook', events: ['sent', 'delivered'], name: 'Prod' };
+  t.context.client.createReportingWebhook(webhook);
+  t.true(post.calledWith(`${API}/reporting_webhooks`, webhook));
+});
+
+test('#getReportingWebhook: gets a single webhook and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getReportingWebhook(''), { message: 'webhookId is required' });
+  t.context.client.getReportingWebhook(4);
+  t.true(get.calledWith(`${API}/reporting_webhooks/4`));
+});
+
+test('#updateReportingWebhook: puts the updates and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateReportingWebhook('', { disabled: true }), { message: 'webhookId is required' });
+  t.throws(() => (t.context.client.updateReportingWebhook as any)(4, null), { message: 'updates is required' });
+  t.context.client.updateReportingWebhook(4, { disabled: true, events: ['sent'] });
+  t.true(put.calledWith(`${API}/reporting_webhooks/4`, { disabled: true, events: ['sent'] }));
+});
+
+test('#deleteReportingWebhook: deletes a webhook and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteReportingWebhook(''), { message: 'webhookId is required' });
+  t.context.client.deleteReportingWebhook(4);
+  t.true(destroy.calledWith(`${API}/reporting_webhooks/4`));
+});
+
+// Snippets
+
+test('#getSnippets: gets the snippets endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getSnippets();
+  t.true(get.calledWith(`${API}/snippets`));
+});
+
+test('#createSnippet: posts the snippet body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createSnippet as any)(null), { message: 'snippet is required' });
+  t.throws(() => (t.context.client.createSnippet as any)({ value: 'v' }), { message: 'snippet.name is required' });
+  t.throws(() => (t.context.client.createSnippet as any)({ name: 'n' }), { message: 'snippet.value is required' });
+  const snippet = { name: 'footer', value: '<p>© 2026</p>' };
+  t.context.client.createSnippet(snippet);
+  t.true(post.calledWith(`${API}/snippets`, snippet));
+});
+
+test('#updateSnippet: puts the snippet body (upsert) and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => (t.context.client.updateSnippet as any)(null), { message: 'snippet is required' });
+  t.throws(() => (t.context.client.updateSnippet as any)({ value: 'v' }), { message: 'snippet.name is required' });
+  t.throws(() => (t.context.client.updateSnippet as any)({ name: 'n' }), { message: 'snippet.value is required' });
+  const snippet = { name: 'footer', value: '<p>updated</p>' };
+  t.context.client.updateSnippet(snippet);
+  t.true(put.calledWith(`${API}/snippets`, snippet));
+});
+
+test('#deleteSnippet: deletes a snippet by name and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteSnippet(''), { message: 'name is required' });
+  t.context.client.deleteSnippet('foo bar');
+  t.true(destroy.calledWith(`${API}/snippets/foo%20bar`));
+});
+
+// Sender identities
+
+test('#getSenderIdentities: gets the endpoint with sort/pagination/hidden', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getSenderIdentities();
+  t.true(get.calledWith(`${API}/sender_identities`));
+  t.context.client.getSenderIdentities({ start: 'cur', limit: 10, sort: 'desc', hidden: false });
+  t.true(get.calledWith(`${API}/sender_identities?start=cur&limit=10&sort=desc&hidden=false`));
+});
+
+test('#getSenderIdentity: gets a single identity and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getSenderIdentity(''), { message: 'senderId is required' });
+  t.context.client.getSenderIdentity(12);
+  t.true(get.calledWith(`${API}/sender_identities/12`));
+});
+
+test('#getSenderIdentityUsedBy: gets the used_by endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getSenderIdentityUsedBy(''), { message: 'senderId is required' });
+  t.context.client.getSenderIdentityUsedBy(12);
+  t.true(get.calledWith(`${API}/sender_identities/12/used_by`));
+});
+
+// Messages
+
+test('#getMessages: gets the messages endpoint with no query by default', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getMessages();
+  t.true(get.calledWith(`${API}/messages`));
+});
+
+test('#getMessages: forwards filters and pagination', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getMessages({
+    start: 'cur',
+    limit: 20,
+    drafts: false,
+    metric: 'delivered',
+    type: 'email',
+    campaign_id: 3,
+    action_id: 4,
+    newsletter_id: 5,
+    transactional_id: 6,
+    trigger_id: 7,
+    template_id: 8,
+    content_id: 9,
+    start_ts: 100,
+    end_ts: 200,
+    associations: true,
+    get_tracked_responses: true,
+  });
+  t.true(
+    get.calledWith(
+      `${API}/messages?start=cur&limit=20&drafts=false&metric=delivered&type=email&campaign_id=3&action_id=4&newsletter_id=5&transactional_id=6&trigger_id=7&template_id=8&content_id=9&start_ts=100&end_ts=200&associations=true&get_tracked_responses=true`,
+    ),
+  );
+});
+
+test('#getMessage: gets a single message with expansions and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getMessage(''), { message: 'messageId is required' });
+  t.context.client.getMessage('abc-123');
+  t.true(get.calledWith(`${API}/messages/abc-123`));
+  t.context.client.getMessage('abc-123', { archived_message: true, associations: true });
+  t.true(get.calledWith(`${API}/messages/abc-123?archived_message=true&associations=true`));
+});
+
+test('#getArchivedMessage: gets the archived_message endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getArchivedMessage(''), { message: 'messageId is required' });
+  t.context.client.getArchivedMessage('abc-123');
+  t.true(get.calledWith(`${API}/messages/abc-123/archived_message`));
+});
+
+// Imports
+
+test('#createImport: posts the wrapped import body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createImport as any)(null), { message: 'importData is required' });
+  t.throws(() => (t.context.client.createImport as any)({ type: 'people' }), {
+    message: 'importData.data_file_url is required',
+  });
+  t.throws(() => (t.context.client.createImport as any)({ data_file_url: 'https://x/f.csv' }), {
+    message: 'importData.type is required',
+  });
+  const imp = {
+    data_file_url: 'https://example.com/people.csv',
+    type: 'people' as const,
+    identifier: 'email' as const,
+  };
+  t.context.client.createImport(imp);
+  t.true(post.calledWith(`${API}/imports`, { import: imp }));
+});
+
+test('#getImport: gets a single import and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getImport(''), { message: 'importId is required' });
+  t.context.client.getImport(15);
+  t.true(get.calledWith(`${API}/imports/15`));
+});
+
+// Data index
+
+test('#batchUpdateAttributes: posts the wrapped attributes and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.batchUpdateAttributes as any)(null), { message: 'attributes is required' });
+  t.throws(() => t.context.client.batchUpdateAttributes([]), { message: 'attributes is required' });
+  const attributes = [{ name: 'plan', description: 'Subscription plan' }];
+  t.context.client.batchUpdateAttributes(attributes);
+  t.true(post.calledWith(`${API}/data_index/attributes`, { attributes }));
+});
+
+test('#batchUpdateEvents: posts the wrapped events and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.batchUpdateEvents as any)(null), { message: 'events is required' });
+  t.throws(() => t.context.client.batchUpdateEvents([]), { message: 'events is required' });
+  const events = [{ name: 'purchase', description: 'Completed a purchase' }];
+  t.context.client.batchUpdateEvents(events);
+  t.true(post.calledWith(`${API}/data_index/events`, { events }));
+});
+
+// Misc
+
+test('#listWorkspaces: gets the workspaces endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listWorkspaces();
+  t.true(get.calledWith(`${API}/workspaces`));
+});
+
+test('#getIpAddresses: gets the ip_addresses endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getIpAddresses();
+  t.true(get.calledWith(`${API}/info/ip_addresses`));
+});
