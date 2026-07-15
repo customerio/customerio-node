@@ -570,6 +570,64 @@ export type ReportingWebhookUpdate = {
   disabled?: boolean;
 };
 
+/** A snippet definition for {@link APIClient.createSnippet} / {@link APIClient.updateSnippet}. */
+export type SnippetInput = {
+  /** The snippet's unique name/key. */
+  name: string;
+  /** The snippet's value (may contain Liquid). */
+  value: string;
+};
+
+/** Options for {@link APIClient.getSenderIdentities}. */
+export type SenderIdentitiesOptions = PaginationOptions & {
+  /** Sort direction. Defaults to `asc`. */
+  sort?: SortDirection;
+  /** Filter by hidden status. Omit to return all; `true`/`false` to filter. */
+  hidden?: boolean;
+};
+
+/** Options for {@link APIClient.getMessages}. */
+export type MessagesOptions = PaginationOptions & {
+  /** Return only drafts (`true`) or exclude them (default). */
+  drafts?: boolean;
+  /** Filter to deliveries with this metric (e.g. `delivered`, `opened`, `bounced`). */
+  metric?: string;
+  /** Scope to a single channel. */
+  type?: MetricType;
+  /** Scope to a single campaign. */
+  campaign_id?: string | number;
+  /** Scope to a single campaign action. */
+  action_id?: string | number;
+  /** Scope to a single newsletter. */
+  newsletter_id?: string | number;
+  /** Scope to a single transactional message. */
+  transactional_id?: string | number;
+  /** Scope to a single broadcast trigger (requires `campaign_id`). */
+  trigger_id?: string | number;
+  /** Scope to a single template. */
+  template_id?: string | number;
+  /** Scope to a single content id. */
+  content_id?: string | number;
+  /** Only include deliveries after this Unix timestamp (seconds). */
+  start_ts?: number;
+  /** Only include deliveries before this Unix timestamp (seconds). */
+  end_ts?: number;
+  /** Include the related campaigns/actions/newsletters/contents in the response. */
+  associations?: boolean;
+  /** Include tracked responses on each delivery. */
+  get_tracked_responses?: boolean;
+};
+
+/** Options for {@link APIClient.getMessage}. */
+export type MessageOptions = {
+  /** Include the archived message content (rate-limited). */
+  archived_message?: boolean;
+  /** Include the related campaign/action/newsletter/content in the response. */
+  associations?: boolean;
+  /** Include tracked responses on the delivery. */
+  get_tracked_responses?: boolean;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -3570,6 +3628,189 @@ export class APIClient {
     }
 
     return this.request.destroy(`${this.apiRoot}/reporting_webhooks/${encodeURIComponent(webhookId)}`);
+  }
+
+  /**
+   * List the snippets in your workspace.
+   *
+   * @returns The parsed JSON response body (`{ snippets: [...] }`).
+   */
+  getSnippets() {
+    return this.request.get(`${this.apiRoot}/snippets`);
+  }
+
+  /**
+   * Create a snippet.
+   *
+   * @param snippet The snippet definition. `name` and `value` are required. See {@link SnippetInput}.
+   * @returns The parsed JSON response body (`{ snippet: {...} }`).
+   * @throws {MissingParamError} If `snippet` is missing/not an object, or `snippet.name`/`snippet.value` is empty.
+   */
+  createSnippet(snippet: SnippetInput) {
+    if (snippet == null || typeof snippet !== 'object') {
+      throw new MissingParamError('snippet');
+    }
+
+    if (isEmpty(snippet.name)) {
+      throw new MissingParamError('snippet.name');
+    }
+
+    if (isEmpty(snippet.value)) {
+      throw new MissingParamError('snippet.value');
+    }
+
+    return this.request.post(`${this.apiRoot}/snippets`, snippet);
+  }
+
+  /**
+   * Create or update a snippet (upsert by name).
+   *
+   * @param snippet The snippet definition. `name` and `value` are required. See {@link SnippetInput}.
+   * @returns The parsed JSON response body (`{ snippet: {...} }`).
+   * @throws {MissingParamError} If `snippet` is missing/not an object, or `snippet.name`/`snippet.value` is empty.
+   */
+  updateSnippet(snippet: SnippetInput) {
+    if (snippet == null || typeof snippet !== 'object') {
+      throw new MissingParamError('snippet');
+    }
+
+    if (isEmpty(snippet.name)) {
+      throw new MissingParamError('snippet.name');
+    }
+
+    if (isEmpty(snippet.value)) {
+      throw new MissingParamError('snippet.value');
+    }
+
+    return this.request.put(`${this.apiRoot}/snippets`, snippet);
+  }
+
+  /**
+   * Delete a snippet by name. Fails if the snippet is still in use.
+   *
+   * @param name The snippet's name.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `name` is empty.
+   */
+  deleteSnippet(name: string) {
+    if (isEmpty(name)) {
+      throw new MissingParamError('name');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/snippets/${encodeURIComponent(name)}`);
+  }
+
+  /**
+   * List the sender identities in your workspace.
+   *
+   * @param options Optional sort, pagination, and hidden filter. See {@link SenderIdentitiesOptions}.
+   * @returns The parsed JSON response body (`{ sender_identities: [...], next }`).
+   */
+  getSenderIdentities(options: SenderIdentitiesOptions = {}) {
+    const query = buildQueryString({
+      start: options.start,
+      limit: options.limit,
+      sort: options.sort,
+      hidden: options.hidden,
+    });
+
+    return this.request.get(`${this.apiRoot}/sender_identities${query}`);
+  }
+
+  /**
+   * Get a single sender identity.
+   *
+   * @param senderId The sender identity's numeric id.
+   * @returns The parsed JSON response body (`{ sender_identity: {...} }`).
+   * @throws {MissingParamError} If `senderId` is empty.
+   */
+  getSenderIdentity(senderId: string | number) {
+    if (isEmpty(senderId)) {
+      throw new MissingParamError('senderId');
+    }
+
+    return this.request.get(`${this.apiRoot}/sender_identities/${encodeURIComponent(senderId)}`);
+  }
+
+  /**
+   * List the campaigns and newsletters that use a sender identity.
+   *
+   * @param senderId The sender identity's numeric id.
+   * @returns The parsed JSON response body (`{ campaigns, sent_newsletters, draft_newsletters }`).
+   * @throws {MissingParamError} If `senderId` is empty.
+   */
+  getSenderIdentityUsedBy(senderId: string | number) {
+    if (isEmpty(senderId)) {
+      throw new MissingParamError('senderId');
+    }
+
+    return this.request.get(`${this.apiRoot}/sender_identities/${encodeURIComponent(senderId)}/used_by`);
+  }
+
+  /**
+   * List sent messages (deliveries) across your workspace.
+   *
+   * @param options Optional filters and pagination. See {@link MessagesOptions}.
+   * @returns The parsed JSON response body (`{ messages: [...], next, ... }`).
+   */
+  getMessages(options: MessagesOptions = {}) {
+    const query = buildQueryString({
+      start: options.start,
+      limit: options.limit,
+      drafts: options.drafts,
+      metric: options.metric,
+      type: options.type,
+      campaign_id: options.campaign_id,
+      action_id: options.action_id,
+      newsletter_id: options.newsletter_id,
+      transactional_id: options.transactional_id,
+      trigger_id: options.trigger_id,
+      template_id: options.template_id,
+      content_id: options.content_id,
+      start_ts: options.start_ts,
+      end_ts: options.end_ts,
+      associations: options.associations,
+      get_tracked_responses: options.get_tracked_responses,
+    });
+
+    return this.request.get(`${this.apiRoot}/messages${query}`);
+  }
+
+  /**
+   * Get a single sent message (delivery).
+   *
+   * @param messageId The delivery id (`CIO-Delivery-ID`).
+   * @param options Optional response expansions. See {@link MessageOptions}.
+   * @returns The parsed JSON response body (`{ message: {...}, ... }`).
+   * @throws {MissingParamError} If `messageId` is empty.
+   */
+  getMessage(messageId: string, options: MessageOptions = {}) {
+    if (isEmpty(messageId)) {
+      throw new MissingParamError('messageId');
+    }
+
+    const query = buildQueryString({
+      archived_message: options.archived_message,
+      associations: options.associations,
+      get_tracked_responses: options.get_tracked_responses,
+    });
+
+    return this.request.get(`${this.apiRoot}/messages/${encodeURIComponent(messageId)}${query}`);
+  }
+
+  /**
+   * Get the archived content of a single sent message.
+   *
+   * @param messageId The delivery id (`CIO-Delivery-ID`).
+   * @returns The parsed JSON response body (`{ archived_message: {...} }`).
+   * @throws {MissingParamError} If `messageId` is empty.
+   */
+  getArchivedMessage(messageId: string) {
+    if (isEmpty(messageId)) {
+      throw new MissingParamError('messageId');
+    }
+
+    return this.request.get(`${this.apiRoot}/messages/${encodeURIComponent(messageId)}/archived_message`);
   }
 }
 

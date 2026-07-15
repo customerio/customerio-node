@@ -2006,3 +2006,143 @@ api.deleteReportingWebhook(4);
 #### Options
 
 - **webhookId**: The webhook's numeric id (required)
+
+## Content & sender utilities
+
+### Snippets
+
+Manage [snippets](https://customer.io/docs/journeys/snippets/) — reusable content blocks referenced from messages. Snippets are identified by `name`.
+
+### api.getSnippets()
+
+List the snippets in your workspace.
+
+```javascript
+api.getSnippets();
+```
+
+### api.createSnippet(snippet)
+
+Create a snippet.
+
+```javascript
+api.createSnippet({ name: "footer", value: "<p>© 2026 Example</p>" });
+```
+
+#### Options
+
+- **snippet**: The snippet definition
+  - _name_: The snippet's unique name/key (required)
+  - _value_: The snippet's value; may contain Liquid (required)
+
+### api.updateSnippet(snippet)
+
+Create or update a snippet (upsert by name).
+
+```javascript
+api.updateSnippet({ name: "footer", value: "<p>© 2027 Example</p>" });
+```
+
+#### Options
+
+- **snippet**: The snippet definition — `name` and `value` (both required)
+
+### api.deleteSnippet(name)
+
+Delete a snippet by name. Returns no content on success. Fails if the snippet is still in use.
+
+```javascript
+api.deleteSnippet("footer");
+```
+
+#### Options
+
+- **name**: The snippet's name (required)
+
+### Sender identities
+
+### api.getSenderIdentities(options)
+
+List the sender identities in your workspace.
+
+```javascript
+api.getSenderIdentities({ limit: 50, sort: "asc" });
+```
+
+#### Options
+
+- **options**: Object (optional) — `start`, `limit`, `sort` ("asc" / "desc"), `hidden` (omit for all, `true`/`false` to filter)
+
+### api.getSenderIdentity(senderId)
+
+Get a single sender identity.
+
+```javascript
+api.getSenderIdentity(12);
+```
+
+#### Options
+
+- **senderId**: The sender identity's numeric id (required)
+
+### api.getSenderIdentityUsedBy(senderId)
+
+List the campaigns and newsletters that use a sender identity.
+
+```javascript
+api.getSenderIdentityUsedBy(12);
+```
+
+#### Options
+
+- **senderId**: The sender identity's numeric id (required)
+
+### Messages
+
+Look up sent messages (deliveries) across your workspace. For a single person's messages, use [`getCustomerMessages`](#apigetcustomermessagescustomerid-options).
+
+### api.getMessages(options)
+
+List sent messages.
+
+```javascript
+api.getMessages({ metric: "delivered", type: "email", limit: 50 });
+```
+
+#### Options
+
+- **options**: Object (optional)
+  - _start_: Pagination cursor from a previous page's `next`
+  - _limit_: Maximum number of results
+  - _drafts_: Return only drafts (`true`) or exclude them (default)
+  - _metric_: Filter to a delivery metric (e.g. `delivered`, `opened`, `bounced`)
+  - _type_: Scope to a channel ("email" / "webhook" / "twilio" / "whatsapp" / "slack" / "push" / "in_app")
+  - _campaign_id_ / _action_id_ / _newsletter_id_ / _transactional_id_ / _trigger_id_ / _template_id_ / _content_id_: Scope to a single resource
+  - _start_ts_ / _end_ts_: Unix timestamp bounds (seconds)
+  - _associations_: Include related campaigns/actions/newsletters/contents
+  - _get_tracked_responses_: Include tracked responses on each delivery
+
+### api.getMessage(messageId, options)
+
+Get a single sent message.
+
+```javascript
+api.getMessage("RPCImftJDcAAAAd...", { archived_message: true });
+```
+
+#### Options
+
+- **messageId**: The delivery id (`CIO-Delivery-ID`) (required)
+- **options**: Object (optional) — `archived_message`, `associations`, `get_tracked_responses`
+
+### api.getArchivedMessage(messageId)
+
+Get the archived content of a single sent message.
+
+```javascript
+api.getArchivedMessage("RPCImftJDcAAAAd...");
+```
+
+#### Options
+
+- **messageId**: The delivery id (`CIO-Delivery-ID`) (required)

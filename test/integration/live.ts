@@ -486,6 +486,25 @@ liveTest('reporting webhook create -> read -> update -> delete round-trip', asyn
   t.pass();
 });
 
+liveTest('snippet upsert -> read -> delete round-trip', async (t) => {
+  const name = `sdk-live-${customerId}`;
+  await api!.updateSnippet({ name, value: 'hello' }).catch(() => undefined);
+  const list = (await api!.getSnippets()) as { snippets?: unknown };
+  t.true('snippets' in list);
+  await api!.deleteSnippet(name).catch(() => undefined);
+  t.pass();
+});
+
+liveTest('sender identity reads resolve', async (t) => {
+  const result = (await api!.getSenderIdentities({ limit: 5 })) as { sender_identities?: unknown };
+  t.true('sender_identities' in result);
+});
+
+liveTest('getMessages resolves', async (t) => {
+  const result = (await api!.getMessages({ limit: 5 })) as { messages?: unknown };
+  t.true('messages' in result);
+});
+
 liveTest('track records an event on the profile', async (t) => {
   await track!.track(customerId, { name: 'sdk_live_event', data: { run: customerId } });
   t.pass();

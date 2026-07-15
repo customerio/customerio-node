@@ -2256,3 +2256,113 @@ test('#deleteReportingWebhook: deletes a webhook and validates', (t) => {
   t.context.client.deleteReportingWebhook(4);
   t.true(destroy.calledWith(`${API}/reporting_webhooks/4`));
 });
+
+// Snippets
+
+test('#getSnippets: gets the snippets endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getSnippets();
+  t.true(get.calledWith(`${API}/snippets`));
+});
+
+test('#createSnippet: posts the snippet body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createSnippet as any)(null), { message: 'snippet is required' });
+  t.throws(() => (t.context.client.createSnippet as any)({ value: 'v' }), { message: 'snippet.name is required' });
+  t.throws(() => (t.context.client.createSnippet as any)({ name: 'n' }), { message: 'snippet.value is required' });
+  const snippet = { name: 'footer', value: '<p>© 2026</p>' };
+  t.context.client.createSnippet(snippet);
+  t.true(post.calledWith(`${API}/snippets`, snippet));
+});
+
+test('#updateSnippet: puts the snippet body (upsert) and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => (t.context.client.updateSnippet as any)(null), { message: 'snippet is required' });
+  t.throws(() => (t.context.client.updateSnippet as any)({ value: 'v' }), { message: 'snippet.name is required' });
+  t.throws(() => (t.context.client.updateSnippet as any)({ name: 'n' }), { message: 'snippet.value is required' });
+  const snippet = { name: 'footer', value: '<p>updated</p>' };
+  t.context.client.updateSnippet(snippet);
+  t.true(put.calledWith(`${API}/snippets`, snippet));
+});
+
+test('#deleteSnippet: deletes a snippet by name and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteSnippet(''), { message: 'name is required' });
+  t.context.client.deleteSnippet('foo bar');
+  t.true(destroy.calledWith(`${API}/snippets/foo%20bar`));
+});
+
+// Sender identities
+
+test('#getSenderIdentities: gets the endpoint with sort/pagination/hidden', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getSenderIdentities();
+  t.true(get.calledWith(`${API}/sender_identities`));
+  t.context.client.getSenderIdentities({ start: 'cur', limit: 10, sort: 'desc', hidden: false });
+  t.true(get.calledWith(`${API}/sender_identities?start=cur&limit=10&sort=desc&hidden=false`));
+});
+
+test('#getSenderIdentity: gets a single identity and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getSenderIdentity(''), { message: 'senderId is required' });
+  t.context.client.getSenderIdentity(12);
+  t.true(get.calledWith(`${API}/sender_identities/12`));
+});
+
+test('#getSenderIdentityUsedBy: gets the used_by endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getSenderIdentityUsedBy(''), { message: 'senderId is required' });
+  t.context.client.getSenderIdentityUsedBy(12);
+  t.true(get.calledWith(`${API}/sender_identities/12/used_by`));
+});
+
+// Messages
+
+test('#getMessages: gets the messages endpoint with no query by default', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getMessages();
+  t.true(get.calledWith(`${API}/messages`));
+});
+
+test('#getMessages: forwards filters and pagination', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getMessages({
+    start: 'cur',
+    limit: 20,
+    drafts: false,
+    metric: 'delivered',
+    type: 'email',
+    campaign_id: 3,
+    action_id: 4,
+    newsletter_id: 5,
+    transactional_id: 6,
+    trigger_id: 7,
+    template_id: 8,
+    content_id: 9,
+    start_ts: 100,
+    end_ts: 200,
+    associations: true,
+    get_tracked_responses: true,
+  });
+  t.true(
+    get.calledWith(
+      `${API}/messages?start=cur&limit=20&drafts=false&metric=delivered&type=email&campaign_id=3&action_id=4&newsletter_id=5&transactional_id=6&trigger_id=7&template_id=8&content_id=9&start_ts=100&end_ts=200&associations=true&get_tracked_responses=true`,
+    ),
+  );
+});
+
+test('#getMessage: gets a single message with expansions and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getMessage(''), { message: 'messageId is required' });
+  t.context.client.getMessage('abc-123');
+  t.true(get.calledWith(`${API}/messages/abc-123`));
+  t.context.client.getMessage('abc-123', { archived_message: true, associations: true });
+  t.true(get.calledWith(`${API}/messages/abc-123?archived_message=true&associations=true`));
+});
+
+test('#getArchivedMessage: gets the archived_message endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getArchivedMessage(''), { message: 'messageId is required' });
+  t.context.client.getArchivedMessage('abc-123');
+  t.true(get.calledWith(`${API}/messages/abc-123/archived_message`));
+});
