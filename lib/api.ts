@@ -519,6 +519,57 @@ export type CollectionUpdate = {
   url?: string;
 };
 
+/** An email-suppression category for the ESP (deliverability) endpoints. */
+export type SuppressionType = 'blocks' | 'bounces' | 'spam_reports' | 'invalid_emails';
+
+/** Options for {@link APIClient.getSuppressions} (offset-based). */
+export type SuppressionsOptions = {
+  /** Page size, 1–1000. Defaults to 100. */
+  limit?: number;
+  /** Number of records to skip. Defaults to 0. */
+  offset?: number;
+  /** Filter to a single email address. */
+  email?: string;
+  /** Filter to a single sending domain. */
+  domain?: string;
+};
+
+/** Options for {@link APIClient.getDomainSuppressions} (cursor-based). */
+export type DomainSuppressionsOptions = {
+  /** Page size, 1–1000. Defaults to 100. */
+  limit?: number;
+  /** Filter to a single email address. */
+  email?: string;
+  /** Pagination cursor returned as `next` by a previous page. */
+  start?: string;
+};
+
+/** Definition for creating a reporting webhook via {@link APIClient.createReportingWebhook}. */
+export type ReportingWebhookInput = {
+  /** The destination URL that events are POSTed to (required). */
+  endpoint: string;
+  /** The event types to send (e.g. `drafted`, `sent`, `delivered`, `opened`, `clicked`, `bounced`). */
+  events: string[];
+  /** Display name (≤190 characters). */
+  name?: string;
+  /** When `true`, send an event for every occurrence rather than de-duplicating. */
+  full_resolution?: boolean;
+  /** When `true`, include message content in the event payloads. */
+  with_content?: boolean;
+  /** When `true`, create the webhook in a disabled state. */
+  disabled?: boolean;
+};
+
+/** Fields for updating a reporting webhook via {@link APIClient.updateReportingWebhook}. Any subset may be provided. */
+export type ReportingWebhookUpdate = {
+  endpoint?: string;
+  events?: string[];
+  name?: string;
+  full_resolution?: boolean;
+  with_content?: boolean;
+  disabled?: boolean;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -3330,6 +3381,195 @@ export class APIClient {
       `${this.apiRoot}/collections/${encodeURIComponent(collectionId)}/content`,
       content as unknown as Record<string, any>,
     );
+  }
+
+  /**
+   * Search every suppression category for an email address.
+   *
+   * @param email The email address to search for.
+   * @returns The parsed JSON response body (`{ category, suppressions: [...] }`).
+   * @throws {MissingParamError} If `email` is empty.
+   */
+  searchSuppression(email: string) {
+    if (isEmpty(email)) {
+      throw new MissingParamError('email');
+    }
+
+    return this.request.get(`${this.apiRoot}/esp/search_suppression/${encodeURIComponent(email)}`);
+  }
+
+  /**
+   * List suppressions in a category (offset-based pagination).
+   *
+   * @param suppressionType One of `blocks`, `bounces`, `spam_reports`, `invalid_emails`.
+   * @param options Optional filters and pagination. See {@link SuppressionsOptions}.
+   * @returns The parsed JSON response body (`{ category, suppressions: [...] }`).
+   * @throws {MissingParamError} If `suppressionType` is empty.
+   */
+  getSuppressions(suppressionType: SuppressionType, options: SuppressionsOptions = {}) {
+    if (isEmpty(suppressionType)) {
+      throw new MissingParamError('suppressionType');
+    }
+
+    const query = buildQueryString({
+      limit: options.limit,
+      offset: options.offset,
+      email: options.email,
+      domain: options.domain,
+    });
+
+    return this.request.get(`${this.apiRoot}/esp/suppression/${encodeURIComponent(suppressionType)}${query}`);
+  }
+
+  /**
+   * List suppressions in a category for a single sending domain (cursor-based pagination).
+   *
+   * @param domainName The sending domain.
+   * @param suppressionType One of `blocks`, `bounces`, `spam_reports`, `invalid_emails`.
+   * @param options Optional filter and pagination. See {@link DomainSuppressionsOptions}.
+   * @returns The parsed JSON response body (`{ category, suppressions: [...], next }`).
+   * @throws {MissingParamError} If `domainName` or `suppressionType` is empty.
+   */
+  getDomainSuppressions(domainName: string, suppressionType: SuppressionType, options: DomainSuppressionsOptions = {}) {
+    if (isEmpty(domainName)) {
+      throw new MissingParamError('domainName');
+    }
+
+    if (isEmpty(suppressionType)) {
+      throw new MissingParamError('suppressionType');
+    }
+
+    const query = buildQueryString({
+      limit: options.limit,
+      email: options.email,
+      start: options.start,
+    });
+
+    return this.request.get(
+      `${this.apiRoot}/esp/domains/${encodeURIComponent(domainName)}/suppression/${encodeURIComponent(suppressionType)}${query}`,
+    );
+  }
+
+  /**
+   * Add an email address to a suppression category.
+   *
+   * @param suppressionType One of `blocks`, `bounces`, `spam_reports`, `invalid_emails`.
+   * @param email The email address to suppress.
+   * @returns The parsed JSON response body.
+   * @throws {MissingParamError} If `suppressionType` or `email` is empty.
+   */
+  createSuppression(suppressionType: SuppressionType, email: string) {
+    if (isEmpty(suppressionType)) {
+      throw new MissingParamError('suppressionType');
+    }
+
+    if (isEmpty(email)) {
+      throw new MissingParamError('email');
+    }
+
+    return this.request.post(
+      `${this.apiRoot}/esp/suppression/${encodeURIComponent(suppressionType)}/${encodeURIComponent(email)}`,
+    );
+  }
+
+  /**
+   * Remove an email address from a suppression category.
+   *
+   * @param suppressionType One of `blocks`, `bounces`, `spam_reports`, `invalid_emails`.
+   * @param email The email address to unsuppress.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `suppressionType` or `email` is empty.
+   */
+  deleteSuppression(suppressionType: SuppressionType, email: string) {
+    if (isEmpty(suppressionType)) {
+      throw new MissingParamError('suppressionType');
+    }
+
+    if (isEmpty(email)) {
+      throw new MissingParamError('email');
+    }
+
+    return this.request.destroy(
+      `${this.apiRoot}/esp/suppression/${encodeURIComponent(suppressionType)}/${encodeURIComponent(email)}`,
+    );
+  }
+
+  /**
+   * List the reporting webhooks in your workspace.
+   *
+   * @returns The parsed JSON response body (`{ reporting_webhooks: [...] }`).
+   */
+  listReportingWebhooks() {
+    return this.request.get(`${this.apiRoot}/reporting_webhooks`);
+  }
+
+  /**
+   * Create a reporting webhook.
+   *
+   * @param webhook The webhook definition. `endpoint` is required. See {@link ReportingWebhookInput}.
+   * @returns The parsed JSON response body (the created webhook).
+   * @throws {MissingParamError} If `webhook` is missing/not an object, or `webhook.endpoint` is empty.
+   */
+  createReportingWebhook(webhook: ReportingWebhookInput) {
+    if (webhook == null || typeof webhook !== 'object') {
+      throw new MissingParamError('webhook');
+    }
+
+    if (isEmpty(webhook.endpoint)) {
+      throw new MissingParamError('webhook.endpoint');
+    }
+
+    return this.request.post(`${this.apiRoot}/reporting_webhooks`, webhook);
+  }
+
+  /**
+   * Get a single reporting webhook.
+   *
+   * @param webhookId The webhook's numeric id.
+   * @returns The parsed JSON response body (the webhook).
+   * @throws {MissingParamError} If `webhookId` is empty.
+   */
+  getReportingWebhook(webhookId: string | number) {
+    if (isEmpty(webhookId)) {
+      throw new MissingParamError('webhookId');
+    }
+
+    return this.request.get(`${this.apiRoot}/reporting_webhooks/${encodeURIComponent(webhookId)}`);
+  }
+
+  /**
+   * Update a reporting webhook. Any subset of fields may be provided.
+   *
+   * @param webhookId The webhook's numeric id.
+   * @param updates The fields to change. See {@link ReportingWebhookUpdate}.
+   * @returns The parsed JSON response body (the updated webhook).
+   * @throws {MissingParamError} If `webhookId` is empty or `updates` is missing/not an object.
+   */
+  updateReportingWebhook(webhookId: string | number, updates: ReportingWebhookUpdate) {
+    if (isEmpty(webhookId)) {
+      throw new MissingParamError('webhookId');
+    }
+
+    if (updates == null || typeof updates !== 'object') {
+      throw new MissingParamError('updates');
+    }
+
+    return this.request.put(`${this.apiRoot}/reporting_webhooks/${encodeURIComponent(webhookId)}`, updates);
+  }
+
+  /**
+   * Delete a reporting webhook.
+   *
+   * @param webhookId The webhook's numeric id.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `webhookId` is empty.
+   */
+  deleteReportingWebhook(webhookId: string | number) {
+    if (isEmpty(webhookId)) {
+      throw new MissingParamError('webhookId');
+    }
+
+    return this.request.destroy(`${this.apiRoot}/reporting_webhooks/${encodeURIComponent(webhookId)}`);
   }
 }
 

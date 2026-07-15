@@ -1863,3 +1863,146 @@ api.updateCollectionContent(9, [
 
 - **collectionId**: The collection's numeric id (required)
 - **content**: An array of row objects (required)
+
+## Deliverability
+
+### ESP suppressions
+
+Manage the email-provider suppression lists. `suppressionType` is one of `"blocks"`, `"bounces"`, `"spam_reports"`, or `"invalid_emails"`.
+
+### api.searchSuppression(email)
+
+Search every suppression category for an email address.
+
+```javascript
+api.searchSuppression("person@example.com");
+```
+
+#### Options
+
+- **email**: The email address to search for (required)
+
+### api.getSuppressions(suppressionType, options)
+
+List suppressions in a category (offset-based pagination).
+
+```javascript
+api.getSuppressions("bounces", { limit: 50, offset: 0 });
+```
+
+#### Options
+
+- **suppressionType**: One of `"blocks"` / `"bounces"` / `"spam_reports"` / `"invalid_emails"` (required)
+- **options**: Object (optional) — `limit` (1–1000, default 100), `offset` (default 0), `email`, `domain`
+
+### api.getDomainSuppressions(domainName, suppressionType, options)
+
+List suppressions in a category for a single sending domain (cursor-based pagination — preferred for large volumes).
+
+```javascript
+api.getDomainSuppressions("mail.example.com", "bounces", { limit: 100, start: cursor });
+```
+
+#### Options
+
+- **domainName**: The sending domain (required)
+- **suppressionType**: One of `"blocks"` / `"bounces"` / `"spam_reports"` / `"invalid_emails"` (required)
+- **options**: Object (optional) — `limit` (1–1000, default 100), `email`, `start` (pagination cursor from a previous page's `next`)
+
+### api.createSuppression(suppressionType, email)
+
+Add an email address to a suppression category.
+
+```javascript
+api.createSuppression("bounces", "person@example.com");
+```
+
+#### Options
+
+- **suppressionType**: One of `"blocks"` / `"bounces"` / `"spam_reports"` / `"invalid_emails"` (required)
+- **email**: The email address to suppress (required)
+
+### api.deleteSuppression(suppressionType, email)
+
+Remove an email address from a suppression category. Returns no content on success.
+
+```javascript
+api.deleteSuppression("bounces", "person@example.com");
+```
+
+#### Options
+
+- **suppressionType**: One of `"blocks"` / `"bounces"` / `"spam_reports"` / `"invalid_emails"` (required)
+- **email**: The email address to unsuppress (required)
+
+### Reporting webhooks
+
+Manage [reporting webhooks](https://customer.io/docs/journeys/webhooks/) that POST message events to your endpoint. Webhook ids are **integers**.
+
+### api.listReportingWebhooks()
+
+List the reporting webhooks in your workspace.
+
+```javascript
+api.listReportingWebhooks();
+```
+
+### api.createReportingWebhook(webhook)
+
+Create a reporting webhook.
+
+```javascript
+api.createReportingWebhook({
+  endpoint: "https://example.com/cio-events",
+  events: ["sent", "delivered", "opened", "clicked", "bounced"],
+  name: "Production events",
+  with_content: false,
+});
+```
+
+#### Options
+
+- **webhook**: The webhook definition
+  - _endpoint_: The destination URL that events are POSTed to (required)
+  - _events_: The event types to send (e.g. `drafted`, `sent`, `delivered`, `opened`, `clicked`, `bounced`, `converted`)
+  - _name_: Display name, ≤190 characters
+  - _full_resolution_: Send an event for every occurrence rather than de-duplicating
+  - _with_content_: Include message content in the payloads
+  - _disabled_: Create the webhook in a disabled state
+
+### api.getReportingWebhook(webhookId)
+
+Get a single reporting webhook.
+
+```javascript
+api.getReportingWebhook(4);
+```
+
+#### Options
+
+- **webhookId**: The webhook's numeric id (required)
+
+### api.updateReportingWebhook(webhookId, updates)
+
+Update a reporting webhook. Any subset of fields may be provided.
+
+```javascript
+api.updateReportingWebhook(4, { disabled: true });
+```
+
+#### Options
+
+- **webhookId**: The webhook's numeric id (required)
+- **updates**: Object with any of `endpoint`, `events`, `name`, `full_resolution`, `with_content`, `disabled`
+
+### api.deleteReportingWebhook(webhookId)
+
+Delete a reporting webhook. Returns no content on success.
+
+```javascript
+api.deleteReportingWebhook(4);
+```
+
+#### Options
+
+- **webhookId**: The webhook's numeric id (required)

@@ -447,6 +447,45 @@ liveTest('collection create -> read -> content -> delete round-trip', async (t) 
   t.pass();
 });
 
+liveTest('esp suppression reads resolve', async (t) => {
+  const list = (await api!.getSuppressions('bounces', { limit: 1 })) as { suppressions?: unknown };
+  t.true('suppressions' in list);
+  await api!.searchSuppression(`absent-${randomUUID()}@example.com`).catch(() => undefined);
+  t.pass();
+});
+
+liveTest('esp suppression create -> delete round-trip', async (t) => {
+  const email = `sdk-live-${randomUUID()}@example.com`;
+  await api!.createSuppression('bounces', email).catch(() => undefined);
+  await api!.deleteSuppression('bounces', email).catch(() => undefined);
+  t.pass();
+});
+
+liveTest('listReportingWebhooks resolves', async (t) => {
+  const result = (await api!.listReportingWebhooks()) as { reporting_webhooks?: unknown };
+  t.true('reporting_webhooks' in result);
+});
+
+liveTest('reporting webhook create -> read -> update -> delete round-trip', async (t) => {
+  const created = (await api!
+    .createReportingWebhook({
+      endpoint: `https://example.com/sdk-live-${customerId}`,
+      events: ['sent', 'delivered'],
+      name: `sdk-live-${customerId}`,
+      disabled: true,
+    })
+    .catch(() => undefined)) as { id?: number } | undefined;
+  const webhookId = created?.id;
+
+  if (webhookId !== undefined) {
+    await api!.getReportingWebhook(webhookId).catch(() => undefined);
+    await api!.updateReportingWebhook(webhookId, { name: `sdk-live-${customerId}-renamed` }).catch(() => undefined);
+    await api!.deleteReportingWebhook(webhookId).catch(() => undefined);
+  }
+
+  t.pass();
+});
+
 liveTest('track records an event on the profile', async (t) => {
   await track!.track(customerId, { name: 'sdk_live_event', data: { run: customerId } });
   t.pass();

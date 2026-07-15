@@ -2167,3 +2167,92 @@ test('#updateCollectionContent: puts the raw row array and validates', (t) => {
   t.context.client.updateCollectionContent(9, rows);
   t.true(put.calledWith(`${API}/collections/9/content`, rows));
 });
+
+// Deliverability: ESP suppressions
+
+test('#searchSuppression: gets the search endpoint and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.searchSuppression(''), { message: 'email is required' });
+  t.context.client.searchSuppression('user+tag@example.com');
+  t.true(get.calledWith(`${API}/esp/search_suppression/user%2Btag%40example.com`));
+});
+
+test('#getSuppressions: gets the category endpoint with filters and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => (t.context.client.getSuppressions as any)(''), { message: 'suppressionType is required' });
+  t.context.client.getSuppressions('bounces');
+  t.true(get.calledWith(`${API}/esp/suppression/bounces`));
+  t.context.client.getSuppressions('spam_reports', { limit: 50, offset: 100, email: 'a@b.com', domain: 'b.com' });
+  t.true(get.calledWith(`${API}/esp/suppression/spam_reports?limit=50&offset=100&email=a%40b.com&domain=b.com`));
+});
+
+test('#getDomainSuppressions: gets the domain endpoint with cursor and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => (t.context.client.getDomainSuppressions as any)('', 'bounces'), { message: 'domainName is required' });
+  t.throws(() => (t.context.client.getDomainSuppressions as any)('b.com', ''), {
+    message: 'suppressionType is required',
+  });
+  t.context.client.getDomainSuppressions('mail.example.com', 'bounces', { limit: 10, start: 'abc' });
+  t.true(get.calledWith(`${API}/esp/domains/mail.example.com/suppression/bounces?limit=10&start=abc`));
+});
+
+test('#createSuppression: posts to the suppression endpoint and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createSuppression as any)('', 'a@b.com'), {
+    message: 'suppressionType is required',
+  });
+  t.throws(() => t.context.client.createSuppression('bounces', ''), { message: 'email is required' });
+  t.context.client.createSuppression('bounces', 'a@b.com');
+  t.true(post.calledWith(`${API}/esp/suppression/bounces/a%40b.com`));
+});
+
+test('#deleteSuppression: deletes the suppression and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => (t.context.client.deleteSuppression as any)('', 'a@b.com'), {
+    message: 'suppressionType is required',
+  });
+  t.throws(() => t.context.client.deleteSuppression('bounces', ''), { message: 'email is required' });
+  t.context.client.deleteSuppression('bounces', 'a@b.com');
+  t.true(destroy.calledWith(`${API}/esp/suppression/bounces/a%40b.com`));
+});
+
+// Deliverability: reporting webhooks
+
+test('#listReportingWebhooks: gets the reporting webhooks endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listReportingWebhooks();
+  t.true(get.calledWith(`${API}/reporting_webhooks`));
+});
+
+test('#createReportingWebhook: posts the webhook body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createReportingWebhook as any)(null), { message: 'webhook is required' });
+  t.throws(() => (t.context.client.createReportingWebhook as any)({ events: ['sent'] }), {
+    message: 'webhook.endpoint is required',
+  });
+  const webhook = { endpoint: 'https://example.com/hook', events: ['sent', 'delivered'], name: 'Prod' };
+  t.context.client.createReportingWebhook(webhook);
+  t.true(post.calledWith(`${API}/reporting_webhooks`, webhook));
+});
+
+test('#getReportingWebhook: gets a single webhook and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getReportingWebhook(''), { message: 'webhookId is required' });
+  t.context.client.getReportingWebhook(4);
+  t.true(get.calledWith(`${API}/reporting_webhooks/4`));
+});
+
+test('#updateReportingWebhook: puts the updates and validates', (t) => {
+  const put = sinon.stub(t.context.client.request, 'put');
+  t.throws(() => t.context.client.updateReportingWebhook('', { disabled: true }), { message: 'webhookId is required' });
+  t.throws(() => (t.context.client.updateReportingWebhook as any)(4, null), { message: 'updates is required' });
+  t.context.client.updateReportingWebhook(4, { disabled: true, events: ['sent'] });
+  t.true(put.calledWith(`${API}/reporting_webhooks/4`, { disabled: true, events: ['sent'] }));
+});
+
+test('#deleteReportingWebhook: deletes a webhook and validates', (t) => {
+  const destroy = sinon.stub(t.context.client.request, 'destroy');
+  t.throws(() => t.context.client.deleteReportingWebhook(''), { message: 'webhookId is required' });
+  t.context.client.deleteReportingWebhook(4);
+  t.true(destroy.calledWith(`${API}/reporting_webhooks/4`));
+});
