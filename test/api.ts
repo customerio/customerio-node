@@ -2366,3 +2366,64 @@ test('#getArchivedMessage: gets the archived_message endpoint and validates', (t
   t.context.client.getArchivedMessage('abc-123');
   t.true(get.calledWith(`${API}/messages/abc-123/archived_message`));
 });
+
+// Imports
+
+test('#createImport: posts the wrapped import body and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.createImport as any)(null), { message: 'importData is required' });
+  t.throws(() => (t.context.client.createImport as any)({ type: 'people' }), {
+    message: 'importData.data_file_url is required',
+  });
+  t.throws(() => (t.context.client.createImport as any)({ data_file_url: 'https://x/f.csv' }), {
+    message: 'importData.type is required',
+  });
+  const imp = {
+    data_file_url: 'https://example.com/people.csv',
+    type: 'people' as const,
+    identifier: 'email' as const,
+  };
+  t.context.client.createImport(imp);
+  t.true(post.calledWith(`${API}/imports`, { import: imp }));
+});
+
+test('#getImport: gets a single import and validates', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.throws(() => t.context.client.getImport(''), { message: 'importId is required' });
+  t.context.client.getImport(15);
+  t.true(get.calledWith(`${API}/imports/15`));
+});
+
+// Data index
+
+test('#batchUpdateAttributes: posts the wrapped attributes and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.batchUpdateAttributes as any)(null), { message: 'attributes is required' });
+  t.throws(() => t.context.client.batchUpdateAttributes([]), { message: 'attributes is required' });
+  const attributes = [{ name: 'plan', description: 'Subscription plan' }];
+  t.context.client.batchUpdateAttributes(attributes);
+  t.true(post.calledWith(`${API}/data_index/attributes`, { attributes }));
+});
+
+test('#batchUpdateEvents: posts the wrapped events and validates', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  t.throws(() => (t.context.client.batchUpdateEvents as any)(null), { message: 'events is required' });
+  t.throws(() => t.context.client.batchUpdateEvents([]), { message: 'events is required' });
+  const events = [{ name: 'purchase', description: 'Completed a purchase' }];
+  t.context.client.batchUpdateEvents(events);
+  t.true(post.calledWith(`${API}/data_index/events`, { events }));
+});
+
+// Misc
+
+test('#listWorkspaces: gets the workspaces endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.listWorkspaces();
+  t.true(get.calledWith(`${API}/workspaces`));
+});
+
+test('#getIpAddresses: gets the ip_addresses endpoint', (t) => {
+  const get = sinon.stub(t.context.client.request, 'get');
+  t.context.client.getIpAddresses();
+  t.true(get.calledWith(`${API}/info/ip_addresses`));
+});

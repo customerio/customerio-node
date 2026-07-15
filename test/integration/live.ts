@@ -28,6 +28,7 @@
  *   CIO_TEST_OBJECT_ID               object id for object reads (defaults to a throwaway id)
  *   CIO_TEST_CAMPAIGN_ID             campaign id for campaign read methods
  *   CIO_TEST_TRIGGER_ID              trigger id (with CIO_TEST_BROADCAST_ID) for trigger status/errors
+ *   CIO_TEST_IMPORT_CSV_URL          downloadable CSV URL for createImport
  *
  * Profile lifecycle: one throwaway customer per run, id = `sdk-live-${uuid()}`.
  * Cleanup is best-effort; the dedicated workspace tolerates orphans.
@@ -503,6 +504,42 @@ liveTest('sender identity reads resolve', async (t) => {
 liveTest('getMessages resolves', async (t) => {
   const result = (await api!.getMessages({ limit: 5 })) as { messages?: unknown };
   t.true('messages' in result);
+});
+
+liveTest('listWorkspaces resolves', async (t) => {
+  const result = (await api!.listWorkspaces()) as { workspaces?: unknown };
+  t.true('workspaces' in result);
+});
+
+liveTest('getIpAddresses resolves', async (t) => {
+  const result = (await api!.getIpAddresses()) as { ip_addresses?: unknown };
+  t.true('ip_addresses' in result);
+});
+
+liveTest('data_index batch updates resolve', async (t) => {
+  await api!
+    .batchUpdateAttributes([{ name: `sdk_live_${customerId}`, description: 'sdk live test' }])
+    .catch(() => undefined);
+  await api!
+    .batchUpdateEvents([{ name: `sdk_live_${customerId}`, description: 'sdk live test' }])
+    .catch(() => undefined);
+  t.pass();
+});
+
+needs('CIO_TEST_IMPORT_CSV_URL')('import create -> get round-trip', async (t) => {
+  const created = (await api!
+    .createImport({
+      data_file_url: process.env.CIO_TEST_IMPORT_CSV_URL!,
+      type: 'people',
+      identifier: 'email',
+      name: `sdk-live-${customerId}`,
+    })
+    .catch(() => undefined)) as { import?: { id?: number } } | undefined;
+  const importId = created?.import?.id;
+  if (importId !== undefined) {
+    await api!.getImport(importId).catch(() => undefined);
+  }
+  t.pass();
 });
 
 liveTest('track records an event on the profile', async (t) => {

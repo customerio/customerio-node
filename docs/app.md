@@ -2146,3 +2146,81 @@ api.getArchivedMessage("RPCImftJDcAAAAd...");
 #### Options
 
 - **messageId**: The delivery id (`CIO-Delivery-ID`) (required)
+
+## Imports, data index & workspace info
+
+### api.createImport(importData)
+
+Start a [CSV import](https://customer.io/docs/api/app/#operation/createImports). The CSV is loaded from a hosted URL you provide as `data_file_url`.
+
+```javascript
+api.createImport({
+  data_file_url: "https://example.com/people.csv",
+  type: "people",
+  identifier: "email",
+  name: "Q3 signups",
+});
+```
+
+#### Options
+
+- **importData**: The import definition
+  - _data_file_url_: URL of the CSV file to import (required)
+  - _type_: `"people"` / `"event"` / `"object"` / `"relationship"` (required)
+  - _identifier_: Which column keys the rows — `"id"`/`"email"` for people & events; `"id"`/`"email"`/`"cio_id"` for relationships
+  - _object_type_id_: Required when `type` is `"object"`
+  - _name_: Display name (defaults to the filename)
+  - _description_: Description of the import
+  - _people_to_process_ / _data_to_process_: `"all"` / `"only_existing"` / `"only_new"` (mutually exclusive)
+
+### api.getImport(importId)
+
+Get the status of an import.
+
+```javascript
+api.getImport(15);
+```
+
+#### Options
+
+- **importId**: The import's numeric id (required)
+
+### api.batchUpdateAttributes(attributes)
+
+Batch-update attribute metadata (descriptions, etc.) — up to 100 at a time.
+
+```javascript
+api.batchUpdateAttributes([{ name: "plan", description: "Subscription plan" }]);
+```
+
+#### Options
+
+- **attributes**: A non-empty array of attribute updates (max 100). Each requires a `name`; may also include `description`, `object_type_id`, `is_relationship`, `event_name`, `privacy_level`
+
+### api.batchUpdateEvents(events)
+
+Batch-update event metadata — up to 100 at a time.
+
+```javascript
+api.batchUpdateEvents([{ name: "purchase", description: "Completed a purchase" }]);
+```
+
+#### Options
+
+- **events**: A non-empty array of event updates (max 100). Each requires a `name`; may also include `description`
+
+### api.listWorkspaces()
+
+List the workspaces (environments) in your account, with usage counts.
+
+```javascript
+api.listWorkspaces();
+```
+
+### api.getIpAddresses()
+
+List the Customer.io egress IP addresses (for allowlisting).
+
+```javascript
+api.getIpAddresses();
+```
