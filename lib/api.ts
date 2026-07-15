@@ -628,6 +628,56 @@ export type MessageOptions = {
   get_tracked_responses?: boolean;
 };
 
+/** What a CSV import loads. */
+export type ImportType = 'people' | 'event' | 'object' | 'relationship';
+
+/** Which records an import processes. */
+export type ImportProcessScope = 'all' | 'only_existing' | 'only_new';
+
+/** Definition for creating a CSV import via {@link APIClient.createImport}. */
+export type ImportInput = {
+  /** URL of the CSV file to import (required). */
+  data_file_url: string;
+  /** What the CSV loads (required). */
+  type: ImportType;
+  /** Which identifier the CSV keys rows by. `id`/`email` for people & events; `id`/`email`/`cio_id` for relationships. */
+  identifier?: 'id' | 'email' | 'cio_id';
+  /** Object type id — required when `type` is `object`. */
+  object_type_id?: string | number;
+  /** Display name (defaults to the filename). */
+  name?: string;
+  /** Description of the import. */
+  description?: string;
+  /** For people imports: which profiles to process. Mutually exclusive with `data_to_process`. */
+  people_to_process?: ImportProcessScope;
+  /** For object/relationship imports: which records to process. Mutually exclusive with `people_to_process`. */
+  data_to_process?: ImportProcessScope;
+};
+
+/** A single attribute-metadata update for {@link APIClient.batchUpdateAttributes}. */
+export type DataIndexAttribute = {
+  /** The attribute name (required). */
+  name: string;
+  /** A human-readable description. */
+  description?: string;
+  /** Scope the attribute to an object type. */
+  object_type_id?: number;
+  /** Whether the attribute is a relationship attribute. */
+  is_relationship?: boolean;
+  /** Scope the attribute to an event. */
+  event_name?: string;
+  /** Privacy level (requires the sensitive-attributes feature). */
+  privacy_level?: number;
+};
+
+/** A single event-metadata update for {@link APIClient.batchUpdateEvents}. */
+export type DataIndexEvent = {
+  /** The event name (required). */
+  name: string;
+  /** A human-readable description. */
+  description?: string;
+};
+
 type APIDefaults = RequestDefaults & { region: Region; url?: string; retry?: Partial<RetryOptions> };
 
 type Recipients = Record<string, unknown>;
@@ -3811,6 +3861,92 @@ export class APIClient {
     }
 
     return this.request.get(`${this.apiRoot}/messages/${encodeURIComponent(messageId)}/archived_message`);
+  }
+
+  /**
+   * Start a CSV import.
+   *
+   * @param importData The import definition. `data_file_url` and `type` are required. See {@link ImportInput}.
+   * @returns The parsed JSON response body (`{ import: {...} }`).
+   * @throws {MissingParamError} If `importData` is missing/not an object, or `data_file_url`/`type` is empty.
+   */
+  createImport(importData: ImportInput) {
+    if (importData == null || typeof importData !== 'object') {
+      throw new MissingParamError('importData');
+    }
+
+    if (isEmpty(importData.data_file_url)) {
+      throw new MissingParamError('importData.data_file_url');
+    }
+
+    if (isEmpty(importData.type)) {
+      throw new MissingParamError('importData.type');
+    }
+
+    return this.request.post(`${this.apiRoot}/imports`, { import: importData });
+  }
+
+  /**
+   * Get the status of an import.
+   *
+   * @param importId The import's numeric id.
+   * @returns The parsed JSON response body (`{ import: {...} }`).
+   * @throws {MissingParamError} If `importId` is empty.
+   */
+  getImport(importId: string | number) {
+    if (isEmpty(importId)) {
+      throw new MissingParamError('importId');
+    }
+
+    return this.request.get(`${this.apiRoot}/imports/${encodeURIComponent(importId)}`);
+  }
+
+  /**
+   * Batch-update attribute metadata (up to 100 at a time).
+   *
+   * @param attributes The attribute updates. Each requires a `name`. See {@link DataIndexAttribute}.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `attributes` is not a non-empty array.
+   */
+  batchUpdateAttributes(attributes: DataIndexAttribute[]) {
+    if (!Array.isArray(attributes) || attributes.length === 0) {
+      throw new MissingParamError('attributes');
+    }
+
+    return this.request.post(`${this.apiRoot}/data_index/attributes`, { attributes });
+  }
+
+  /**
+   * Batch-update event metadata (up to 100 at a time).
+   *
+   * @param events The event updates. Each requires a `name`. See {@link DataIndexEvent}.
+   * @returns The parsed JSON response body (empty on success — the API returns 204).
+   * @throws {MissingParamError} If `events` is not a non-empty array.
+   */
+  batchUpdateEvents(events: DataIndexEvent[]) {
+    if (!Array.isArray(events) || events.length === 0) {
+      throw new MissingParamError('events');
+    }
+
+    return this.request.post(`${this.apiRoot}/data_index/events`, { events });
+  }
+
+  /**
+   * List the workspaces (environments) in your account, with usage counts.
+   *
+   * @returns The parsed JSON response body (`{ workspaces: [...] }`).
+   */
+  listWorkspaces() {
+    return this.request.get(`${this.apiRoot}/workspaces`);
+  }
+
+  /**
+   * List the Customer.io egress IP addresses (for allowlisting).
+   *
+   * @returns The parsed JSON response body (`{ ip_addresses: [...] }`).
+   */
+  getIpAddresses() {
+    return this.request.get(`${this.apiRoot}/info/ip_addresses`);
   }
 }
 
