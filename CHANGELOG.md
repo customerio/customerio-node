@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.2.0]
+
+This release completes the App API surface: `APIClient` now covers the full Customer.io [Journeys App API](https://docs.customer.io/api/app/). Every endpoint was verified against the live API behavior, with unit and live integration coverage.
+
+#### Added
+
+- **Transactional message management** on `APIClient`: `listTransactionalMessages`, `getTransactionalMessage`, `getTransactionalMessageContents`, `getTransactionalMessageMetrics`, `getTransactionalMessageMetricsLinks`, `getTransactionalMessageDeliveries`, and `updateTransactionalMessageContent`. ([#231](https://github.com/customerio/customerio-node/pull/231))
+- **`sendWhatsApp`** transactional method (with a `SendWhatsAppRequest` builder). ([#238](https://github.com/customerio/customerio-node/pull/238))
+- **Campaign methods**: list/get campaigns and actions, action & campaign content and localizations, metrics (campaign/action, link metrics, journey metrics), messages, and broadcast trigger status/errors. ([#232](https://github.com/customerio/customerio-node/pull/232))
+- **Broadcast methods**: list/get broadcasts and actions, action content, metrics, link metrics, messages, and triggers. ([#233](https://github.com/customerio/customerio-node/pull/233))
+- **Newsletter methods**: core CRUD, contents, metrics, messages, send/schedule, and localization + test-group management. ([#235](https://github.com/customerio/customerio-node/pull/235), [#236](https://github.com/customerio/customerio-node/pull/236))
+- **Design Studio methods**: folders and emails (list/create/get/update/delete), email translations (languages), and components. ([#239](https://github.com/customerio/customerio-node/pull/239), [#240](https://github.com/customerio/customerio-node/pull/240))
+- **Assets methods**: file upload (`createAsset`, `multipart/form-data`) and file/folder CRUD. ([#241](https://github.com/customerio/customerio-node/pull/241))
+- **Collections methods**: CRUD plus content read/replace. ([#242](https://github.com/customerio/customerio-node/pull/242))
+- **Deliverability methods**: ESP email-suppression management (`searchSuppression`, `getSuppressions`, `getDomainSuppressions`, `createSuppression`, `deleteSuppression`) and reporting-webhook CRUD. ([#243](https://github.com/customerio/customerio-node/pull/243))
+- **Content & sender utilities**: snippet CRUD, sender-identity reads (`getSenderIdentities`, `getSenderIdentity`, `getSenderIdentityUsedBy`), and the workspace message log (`getMessages`, `getMessage`, `getArchivedMessage`). ([#244](https://github.com/customerio/customerio-node/pull/244))
+- **Imports, data index & workspace info**: `createImport`, `getImport`, `batchUpdateAttributes`, `batchUpdateEvents`, `listWorkspaces`, and `getIpAddresses`. ([#245](https://github.com/customerio/customerio-node/pull/245))
+- **`ObjectFilter`** type for `findObjects`, plus top-level `not` support on audience/object filters. ([#234](https://github.com/customerio/customerio-node/pull/234))
+
+#### Fixed
+
+- **App API metric and message query parameters** now match the API: journey metrics send `resolution`; action metrics forward `type`/`unique` correctly; unsupported `type`/`state` params were removed; and campaign-metric `version` is optional. ([#237](https://github.com/customerio/customerio-node/pull/237))
+
 ## [5.1.0]
 
 #### Added
