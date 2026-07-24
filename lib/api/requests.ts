@@ -19,6 +19,7 @@ export type SendEmailRequestOptionalOptions = Partial<{
   headers: Record<string, any>;
   preheader: string;
   reply_to: string;
+  cc: string;
   bcc: string;
   body: string;
   body_plain: string;
@@ -55,6 +56,7 @@ const EMAIL_OPTIONAL_KEYS = [
   'message_data',
   'preheader',
   'reply_to',
+  'cc',
   'bcc',
   'body_plain',
   'body_amp',
