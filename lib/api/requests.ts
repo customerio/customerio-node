@@ -297,7 +297,6 @@ export type SendWhatsAppRequestRequiredOptions = {
 
 export type SendWhatsAppRequestOptionalOptions = Partial<{
   to: string;
-  from: string;
   tracked: boolean;
   disable_message_retention: boolean;
   send_to_unsubscribed: boolean;
@@ -311,7 +310,6 @@ export type SendWhatsAppRequestOptions = SendWhatsAppRequestRequiredOptions & Se
 
 const WHATSAPP_OPTIONAL_KEYS = [
   'to',
-  'from',
   'tracked',
   'disable_message_retention',
   'send_to_unsubscribed',

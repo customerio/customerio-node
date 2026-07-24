@@ -90,7 +90,7 @@ Create a new `SendWhatsAppRequest` object containing:
 
 - `transactional_message_id`: the ID or trigger name of the transactional message you want to send.
 - an `identifiers` object containing the `id` or `email` of your recipient. If the profile does not exist, Customer.io will create it.
-- `to` and `from`: E.164-formatted phone numbers. Both are optional only when the referenced `transactional_message_id` already defines them.
+- `to`: an E.164-formatted phone number. Optional only when the referenced `transactional_message_id` already defines it.
 
 Use `sendWhatsApp` referencing your request to send a transactional message. [Learn more about transactional messages](https://customer.io/docs/transactional-api).
 
@@ -100,7 +100,6 @@ const api = new APIClient("app-key", { region: RegionUS });
 
 const request = new SendWhatsAppRequest({
   to: "+15558675309",
-  from: "+15551234567",
   transactional_message_id: "3",
   message_data: {
     name: "Person",
