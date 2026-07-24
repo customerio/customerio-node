@@ -678,7 +678,6 @@ test('#sendWhatsApp: with optional parameters: success', (t) => {
   sinon.stub(t.context.client.request, 'post');
   let req = new SendWhatsAppRequest({
     to: '+1234567890',
-    from: '+1987654321',
     identifiers: { id: '2' },
     transactional_message_id: 1,
     message_data: { key: 'value' },
@@ -693,7 +692,6 @@ test('#sendWhatsApp: with optional parameters: success', (t) => {
   t.truthy((t.context.client.request.post as SinonStub).calledWith(`${RegionUS.apiUrl}/send/whatsapp`, req.message));
   t.is(req.message.transactional_message_id, 1);
   t.is(req.message.to, '+1234567890');
-  t.is(req.message.from, '+1987654321');
   t.deepEqual(req.message.message_data, { key: 'value' });
   t.true(req.message.tracked);
   t.true(req.message.disable_message_retention);
