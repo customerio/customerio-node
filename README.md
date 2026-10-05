@@ -36,7 +36,44 @@ npm i --save customerio-node
 
 ## Usage
 
-### Creating a new instance
+### Quick start
+
+Create a client with your secret key (`ak_…`). It sends tracking calls to the Track API and transactional messages to the App API, and picks the US or EU region from the key.
+
+```javascript
+const { CustomerIO } = require("customerio-node");
+const cio = new CustomerIO({ apiKey: process.env.CIO_API_KEY });
+
+await cio.identify("user_123", { email: "a@example.com" });
+await cio.track("user_123", { name: "order_completed" });
+await cio.sendEmail({
+  to: "a@example.com",
+  identifiers: { id: "user_123" },
+  transactional_message_id: 5,
+});
+```
+
+Pass `region` to override the region in the key. Legacy App API keys also work here; they default to `RegionUS` unless you pass `region`.
+
+`identify`, `track`, `trackAnonymous`, `trackPageView` and the `send*` methods are on the client directly. The rest of the Track and App API are on `cio.trackClient` and `cio.apiClient`.
+
+If the key can't do what you asked, the call throws a `KeyCapabilityError`. A public key (`wk_…`) throws it before any request when you send a transactional message. A 401 or 403 from the server is rethrown as a `KeyCapabilityError` too, with the original error on `cause`.
+
+```javascript
+const { KeyCapabilityError } = require("customerio-node");
+
+try {
+  await cio.sendEmail(request);
+} catch (err) {
+  if (err instanceof KeyCapabilityError) {
+    console.error(err.capability, err.message); // "transactional", "This key can't send transactional messages ..."
+  }
+}
+```
+
+### Creating a TrackClient instance
+
+The `TrackClient` and `APIClient` constructors below still work as before.
 
 To start using the library, you first need to create an instance of the CIO class:
 
