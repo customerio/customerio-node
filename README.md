@@ -9,7 +9,7 @@
 
 # Customer.io NodeJS
 
-A node client for the Customer.io Journeys [REST API](https://customer.io/docs/api/). If you're new to Customer.io, start with the [`CustomerIO` client](#quick-start): one secret key for tracking and transactional messages.
+A node client for the Customer.io Journeys [REST API](https://customer.io/docs/api/). If you're new to Customer.io, we recommend that you integrate with our [Data Pipelines JavaScript client](https://github.com/customerio/cdp-analytics-js) instead.
 
 ## Supported Node.js versions
 
