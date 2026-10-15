@@ -144,7 +144,7 @@ export type KeyCapability = 'track' | 'transactional';
 /**
  * Thrown by {@link CustomerIO} when its key can't do what a method asks.
  *
- * Thrown before the request when the key's type rules it out (a public `wk_`
+ * Thrown before the request when the key's type rules it out (a public `pk_`
  * key can't send transactional messages). Otherwise the server's 401 or 403 is
  * rethrown as this error, with the original {@link CustomerIORequestError} on
  * `cause`.

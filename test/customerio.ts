@@ -19,9 +19,9 @@ type TestContext = { fetchStub: SinonStub };
 // Every test stubs the global fetch, so they must not run concurrently.
 const test = (avaTest as TestFn<TestContext>).serial;
 
-const usKey = 'ak_us_0123456789ABCDEFGHIJKLMNOPQRSTUV_000000';
-const euKey = 'ak_eu_0123456789ABCDEFGHIJKLMNOPQRSTUV_000000';
-const publicKey = 'wk_us_0123456789ABCDEFGHIJKLMNOPQRSTUV_000000';
+const usKey = 'sk_us_0123456789ABCDEFGHIJKLMNOPQRSTUV_000000';
+const euKey = 'sk_eu_0123456789ABCDEFGHIJKLMNOPQRSTUV_000000';
+const publicKey = 'pk_us_0123456789ABCDEFGHIJKLMNOPQRSTUV_000000';
 const legacyKey = 'abc123';
 
 const respond = (fetchStub: SinonStub, status: number, body: Record<string, any> = {}) => {
@@ -100,7 +100,7 @@ test('trackAnonymous and trackPageView go to the Track API', async (t) => {
   t.is(lastCall(t.context.fetchStub).uri, `${RegionUS.trackUrl}/customers/user_123/events`);
 });
 
-test('ak_eu_ key sends to EU hosts', async (t) => {
+test('sk_eu_ key sends to EU hosts', async (t) => {
   const cio = new CustomerIO({ apiKey: euKey });
 
   await cio.identify('user_123', {});
@@ -185,17 +185,17 @@ test('other send methods go to the App API', async (t) => {
   }
 });
 
-test('wk_ key throws KeyCapabilityError on transactional calls without a request', (t) => {
+test('pk_ key throws KeyCapabilityError on transactional calls without a request', (t) => {
   const cio = new CustomerIO({ apiKey: publicKey });
 
   const error = t.throws(() => cio.sendEmail(emailOptions), { instanceOf: KeyCapabilityError });
   t.is(error?.capability, 'transactional');
-  t.regex(error!.message, /public keys \(wk_\) are for tracking only/);
+  t.regex(error!.message, /public keys \(pk_\) are for tracking only/);
   t.throws(() => cio.apiClient, { instanceOf: KeyCapabilityError });
   t.true(t.context.fetchStub.notCalled);
 });
 
-test('wk_ key can still track', async (t) => {
+test('pk_ key can still track', async (t) => {
   const cio = new CustomerIO({ apiKey: publicKey });
 
   await cio.track('user_123', { name: 'viewed' });

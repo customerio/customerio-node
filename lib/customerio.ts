@@ -24,10 +24,10 @@ import type { KeyCapability } from './utils';
 
 /** Options for {@link CustomerIO}. */
 export type CustomerIOOptions = RequestDefaults & {
-  /** Your Customer.io secret key (`ak_…`), or a legacy App API key. */
+  /** Your Customer.io secret key (`sk_…`), or a legacy App API key. */
   apiKey: string;
   /**
-   * Data region. Optional for `ak_us_…` / `ak_eu_…` keys, which carry their
+   * Data region. Optional for `sk_us_…` / `sk_eu_…` keys, which carry their
    * region. When set, it wins over the key. Legacy keys default to {@link RegionUS}.
    */
   region?: Region;
@@ -38,11 +38,12 @@ export type CustomerIOOptions = RequestDefaults & {
   retry?: Partial<RetryOptions>;
 };
 
-type KeyInfo = { kind: 'ak' | 'wk'; region: Region } | null;
+type KeyInfo = { kind: 'public' | 'secret'; region: Region } | null;
 
-// Keys in the shared format look like `{ak|wk}_{us|eu}_{random}_{checksum}`.
-// The server checks the checksum; the SDK only reads the prefix to pick a host.
-const KEY_PREFIX = /^(ak|wk)_(us|eu)_/;
+// Keys in the shared format look like `{type}_{us|eu}_{random}_{checksum}`,
+// where type is `pk` (public) or `sk` (secret). The server checks the
+// checksum; the SDK only reads the prefix to pick a host and spot public keys.
+const KEY_PREFIX = /^([a-z]{2})_(us|eu)_/;
 
 function parseKey(key: string): KeyInfo {
   const match = KEY_PREFIX.exec(key);
@@ -50,7 +51,7 @@ function parseKey(key: string): KeyInfo {
     return null;
   }
 
-  return { kind: match[1] as 'ak' | 'wk', region: match[2] === 'eu' ? RegionEU : RegionUS };
+  return { kind: match[1] === 'pk' ? 'public' : 'secret', region: match[2] === 'eu' ? RegionEU : RegionUS };
 }
 
 /**
@@ -59,11 +60,11 @@ function parseKey(key: string): KeyInfo {
  *
  * Tracking methods (`identify`, `track`, `trackAnonymous`, `trackPageView`) go
  * to the Track API; `send*` methods go to the App API. Both send the key as a
- * Bearer token. For `ak_us_…` / `ak_eu_…` keys the region comes from the key.
+ * Bearer token. For `sk_us_…` / `sk_eu_…` keys the region comes from the key.
  *
  * When a key can't do what a method asks, the method throws a
  * {@link KeyCapabilityError}: before the request when the key's type says so
- * (a public `wk_` key can't send transactional messages), otherwise when the
+ * (a public `pk_` key can't send transactional messages), otherwise when the
  * server answers 401 or 403.
  *
  * Other Track and App API methods are on {@link CustomerIO.trackClient} and
@@ -87,7 +88,7 @@ export class CustomerIO {
   /** Track API client, authenticated with the key as a Bearer token. */
   readonly trackClient: TrackClient;
   region: Region;
-  private readonly keyKind: 'ak' | 'wk' | 'legacy';
+  private readonly keyKind: 'public' | 'secret' | 'legacy';
   private readonly _apiClient: APIClient;
 
   /**
@@ -117,13 +118,13 @@ export class CustomerIO {
   /**
    * App API client, authenticated with the key.
    *
-   * @throws {KeyCapabilityError} If the key is a public `wk_` key.
+   * @throws {KeyCapabilityError} If the key is a public `pk_` key.
    */
   get apiClient(): APIClient {
-    if (this.keyKind === 'wk') {
+    if (this.keyKind === 'public') {
       throw new KeyCapabilityError(
         'transactional',
-        "This key can't use the App API: public keys (wk_) are for tracking only. Use a secret key (ak_).",
+        "This key can't use the App API: public keys (pk_) are for tracking only. Use a secret key (sk_).",
       );
     }
 
@@ -199,7 +200,7 @@ const CAPABILITY_ACTIONS: Record<KeyCapability, string> = {
 };
 
 // Turns a 401/403 into a KeyCapabilityError so a key mismatch is never a bare
-// auth failure. Synchronous throws (missing params, wk_ keys) pass through.
+// auth failure. Synchronous throws (missing params, pk_ keys) pass through.
 function guard(capability: KeyCapability, call: () => Promise<Record<string, any>>): Promise<Record<string, any>> {
   return call().catch((error: unknown) => {
     if (error instanceof CustomerIORequestError && (error.statusCode === 401 || error.statusCode === 403)) {
