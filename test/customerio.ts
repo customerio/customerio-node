@@ -209,7 +209,11 @@ test('401 from the App API becomes KeyCapabilityError', async (t) => {
   const error = await t.throwsAsync(cio.sendEmail(emailOptions), { instanceOf: KeyCapabilityError });
   t.is(error?.capability, 'transactional');
   t.is(error?.statusCode, 401);
-  t.is(error?.message, "This key can't send transactional messages (401): unauthorized");
+  t.is(
+    error?.message,
+    'The server refused this request to send transactional messages (401): unauthorized. ' +
+      'Check the key type, its IP restrictions and the workspace status.',
+  );
   t.true(error?.cause instanceof CustomerIORequestError);
 });
 

@@ -53,7 +53,7 @@ await cio.sendEmail({
 });
 ```
 
-Pass `region` to override the region in the key. Legacy App API keys also work here; they default to `RegionUS` unless you pass `region`.
+Pass `region` to override the region in the key. Legacy App API keys also work here for transactional calls; they default to `RegionUS` unless you pass `region`. Tracking calls on Pipelines workspaces need a source-bound `pk_` or `sk_` key.
 
 `identify`, `track`, `trackAnonymous`, `trackPageView` and the `send*` methods are on the client directly. The rest of the Track and App API are on `cio.trackClient` and `cio.apiClient`.
 
@@ -66,7 +66,7 @@ try {
   await cio.sendEmail(request);
 } catch (err) {
   if (err instanceof KeyCapabilityError) {
-    console.error(err.capability, err.message); // "transactional", "This key can't send transactional messages ..."
+    console.error(err.capability, err.message); // "transactional", "The server refused this request to send transactional messages ..."
   }
 }
 ```

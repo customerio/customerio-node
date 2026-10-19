@@ -43,7 +43,7 @@ type KeyInfo = { kind: 'public' | 'secret'; region: Region } | null;
 // Keys in the shared format look like `{type}_{us|eu}_{random}_{checksum}`,
 // where type is `pk` (public) or `sk` (secret). The server checks the
 // checksum; the SDK only reads the prefix to pick a host and spot public keys.
-const KEY_PREFIX = /^([a-z]{2})_(us|eu)_/;
+const KEY_PREFIX = /^(pk|sk)_(us|eu)_/;
 
 function parseKey(key: string): KeyInfo {
   const match = KEY_PREFIX.exec(key);
@@ -206,7 +206,8 @@ function guard(capability: KeyCapability, call: () => Promise<Record<string, any
     if (error instanceof CustomerIORequestError && (error.statusCode === 401 || error.statusCode === 403)) {
       throw new KeyCapabilityError(
         capability,
-        `This key can't ${CAPABILITY_ACTIONS[capability]} (${error.statusCode}): ${error.message}`,
+        `The server refused this request to ${CAPABILITY_ACTIONS[capability]} (${error.statusCode}): ${error.message}. ` +
+          'Check the key type, its IP restrictions and the workspace status.',
         error,
       );
     }
