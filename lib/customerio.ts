@@ -31,9 +31,9 @@ export type CustomerIOOptions = RequestDefaults & {
    * set, it must match the key's region. Legacy keys default to {@link RegionUS}.
    */
   region?: Region;
-  /** Override the Track API base URL (e.g. a mock server). */
+  /** Override the Track API base URL. Must use `https://`, since the key is sent with every request. */
   trackUrl?: string;
-  /** Override the App API base URL (e.g. a mock server). */
+  /** Override the App API base URL. Must use `https://`, since the key is sent with every request. */
   apiUrl?: string;
   retry?: Partial<RetryOptions>;
 };
@@ -54,6 +54,24 @@ function regionName(region: Region): 'us' | 'eu' | null {
   }
 
   return null;
+}
+
+// The key travels as a Bearer token, so an override must not send it in clear text.
+function requireHttps(name: 'trackUrl' | 'apiUrl', url: string | undefined) {
+  // An empty string falls back to the region host, as before.
+  if (!url) {
+    return;
+  }
+
+  let protocol: string;
+  try {
+    ({ protocol } = new URL(url));
+  } catch {
+    throw new Error(`${name} must be a valid URL`);
+  }
+  if (protocol !== 'https:') {
+    throw new Error(`${name} must start with https://`);
+  }
 }
 
 function parseKey(key: string): KeyInfo {
@@ -104,10 +122,12 @@ export class CustomerIO {
 
   /**
    * @throws If `apiKey` is empty, `region` is provided and is not a {@link Region} instance,
-   * or `region` doesn't match the region of a `pk_`/`sk_` key.
+   * `region` doesn't match the region of a `pk_`/`sk_` key, or `trackUrl`/`apiUrl` isn't an `https://` URL.
    */
   constructor(options: CustomerIOOptions) {
-    const { apiKey, region, trackUrl, apiUrl, ...requestDefaults } = options ?? ({} as CustomerIOOptions);
+    const { apiKey: rawKey, region, trackUrl, apiUrl, ...requestDefaults } = options ?? ({} as CustomerIOOptions);
+    // Keys pasted from env files often carry stray whitespace, which would hide the prefix.
+    const apiKey = (rawKey ?? '').trim();
 
     if (!apiKey) {
       throw new Error('apiKey is required');
@@ -115,6 +135,8 @@ export class CustomerIO {
     if (region && !(region instanceof Region)) {
       throw new Error('region must be one of Regions.US or Regions.EU');
     }
+    requireHttps('trackUrl', trackUrl);
+    requireHttps('apiUrl', apiUrl);
 
     const key = parseKey(apiKey);
     if (region && key) {

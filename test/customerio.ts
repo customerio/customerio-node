@@ -52,6 +52,19 @@ test.afterEach.always((t) => {
 test('constructor requires apiKey', (t) => {
   t.throws(() => new CustomerIO({ apiKey: '' }), { message: 'apiKey is required' });
   t.throws(() => new CustomerIO(undefined as any), { message: 'apiKey is required' });
+  t.throws(() => new CustomerIO({ apiKey: '   ' }), { message: 'apiKey is required' });
+});
+
+test('constructor trims the key', async (t) => {
+  const eu = new CustomerIO({ apiKey: ` ${euKey}` });
+  t.is(eu.region, RegionEU);
+  await eu.identify('1', {});
+  t.is(lastCall(t.context.fetchStub).init.headers.Authorization, `Bearer ${euKey}`);
+  await eu.sendEmail(emailOptions);
+  t.is(lastCall(t.context.fetchStub).init.headers.Authorization, `Bearer ${euKey}`);
+
+  t.is(new CustomerIO({ apiKey: `${euKey}\n` }).region, RegionEU);
+  t.throws(() => new CustomerIO({ apiKey: ` ${publicKey}` }).apiClient, { instanceOf: KeyCapabilityError });
 });
 
 test('constructor rejects an invalid region', (t) => {
@@ -120,13 +133,27 @@ test('sk_eu_ key sends to EU hosts', async (t) => {
 });
 
 test('custom URLs override the region hosts', async (t) => {
-  const cio = new CustomerIO({ apiKey: usKey, trackUrl: 'http://track.test', apiUrl: 'http://api.test' });
+  const cio = new CustomerIO({ apiKey: usKey, trackUrl: 'https://track.test', apiUrl: 'https://api.test' });
 
   await cio.identify('1', {});
-  t.is(lastCall(t.context.fetchStub).uri, 'http://track.test/customers/1');
+  t.is(lastCall(t.context.fetchStub).uri, 'https://track.test/customers/1');
 
   await cio.sendEmail(emailOptions);
-  t.is(lastCall(t.context.fetchStub).uri, 'http://api.test/send/email');
+  t.is(lastCall(t.context.fetchStub).uri, 'https://api.test/send/email');
+});
+
+test('custom URLs must use https', (t) => {
+  t.throws(() => new CustomerIO({ apiKey: usKey, trackUrl: 'http://track.test' }), {
+    message: 'trackUrl must start with https://',
+  });
+  t.throws(() => new CustomerIO({ apiKey: usKey, apiUrl: 'http://api.test' }), {
+    message: 'apiUrl must start with https://',
+  });
+  t.throws(() => new CustomerIO({ apiKey: usKey, trackUrl: 'track.test' }), {
+    message: 'trackUrl must be a valid URL',
+  });
+  t.throws(() => new CustomerIO({ apiKey: usKey, apiUrl: 'not a url' }), { message: 'apiUrl must be a valid URL' });
+  t.is(t.context.fetchStub.callCount, 0);
 });
 
 test('request defaults reach both transports', async (t) => {
