@@ -88,7 +88,7 @@ test('explicit region must match the key', (t) => {
     message: 'region eu does not match the us region of this key',
   });
 
-  const custom = new Region('http://track.test', 'http://api.test', 'http://cdp.test');
+  const custom = new Region('https://track.test', 'https://api.test', 'https://cdp.test');
   t.is(new CustomerIO({ apiKey: euKey, region: custom }).region, custom);
 });
 
@@ -153,6 +153,22 @@ test('custom URLs must use https', (t) => {
     message: 'trackUrl must be a valid URL',
   });
   t.throws(() => new CustomerIO({ apiKey: usKey, apiUrl: 'not a url' }), { message: 'apiUrl must be a valid URL' });
+  t.throws(
+    () =>
+      new CustomerIO({
+        apiKey: usKey,
+        region: new Region('http://track.test', 'https://api.test', 'https://cdp.test'),
+      }),
+    { message: 'region trackUrl must start with https://' },
+  );
+  t.throws(
+    () =>
+      new CustomerIO({
+        apiKey: legacyKey,
+        region: new Region('https://track.test', 'http://api.test', 'https://cdp.test'),
+      }),
+    { message: 'region apiUrl must start with https://' },
+  );
   t.is(t.context.fetchStub.callCount, 0);
 });
 

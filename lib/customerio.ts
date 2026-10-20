@@ -57,7 +57,7 @@ function regionName(region: Region): 'us' | 'eu' | null {
 }
 
 // The key travels as a Bearer token, so an override must not send it in clear text.
-function requireHttps(name: 'trackUrl' | 'apiUrl', url: string | undefined) {
+function requireHttps(name: string, url: string | undefined) {
   // An empty string falls back to the region host, as before.
   if (!url) {
     return;
@@ -122,7 +122,7 @@ export class CustomerIO {
 
   /**
    * @throws If `apiKey` is empty, `region` is provided and is not a {@link Region} instance,
-   * `region` doesn't match the region of a `pk_`/`sk_` key, or `trackUrl`/`apiUrl` isn't an `https://` URL.
+   * `region` doesn't match the region of a `pk_`/`sk_` key, or `trackUrl`/`apiUrl` (or the region's URLs) isn't an `https://` URL.
    */
   constructor(options: CustomerIOOptions) {
     const { apiKey: rawKey, region, trackUrl, apiUrl, ...requestDefaults } = options ?? ({} as CustomerIOOptions);
@@ -137,6 +137,11 @@ export class CustomerIO {
     }
     requireHttps('trackUrl', trackUrl);
     requireHttps('apiUrl', apiUrl);
+    if (region) {
+      // A custom Region carries its own URLs, and the key goes out to them too.
+      requireHttps('region trackUrl', region.trackUrl);
+      requireHttps('region apiUrl', region.apiUrl);
+    }
 
     const key = parseKey(apiKey);
     if (region && key) {
