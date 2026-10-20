@@ -66,8 +66,14 @@ test('region comes from the key', (t) => {
   t.is(new CustomerIO({ apiKey: publicKey }).region, RegionUS);
 });
 
-test('explicit region wins over the key', (t) => {
-  t.is(new CustomerIO({ apiKey: euKey, region: RegionUS }).region, RegionUS);
+test('explicit region must match the key', (t) => {
+  t.is(new CustomerIO({ apiKey: euKey, region: RegionEU }).region, RegionEU);
+  t.throws(() => new CustomerIO({ apiKey: euKey, region: RegionUS }), {
+    message: 'region us does not match the eu region of this key',
+  });
+  t.throws(() => new CustomerIO({ apiKey: publicKey, region: RegionEU }), {
+    message: 'region eu does not match the us region of this key',
+  });
 });
 
 test('legacy keys keep the region option and US default', (t) => {
@@ -203,7 +209,7 @@ test('pk_ key can still track', async (t) => {
 });
 
 test('401 from the App API becomes KeyCapabilityError', async (t) => {
-  respond(t.context.fetchStub, 401, { meta: { error: 'unauthorized' } });
+  respond(t.context.fetchStub, 401, { errors: [{ detail: 'unauthorized', status: '401' }] });
   const cio = new CustomerIO({ apiKey: usKey });
 
   const error = await t.throwsAsync(cio.sendEmail(emailOptions), { instanceOf: KeyCapabilityError });

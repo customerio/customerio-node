@@ -27,8 +27,8 @@ export type CustomerIOOptions = RequestDefaults & {
   /** Your Customer.io secret key (`sk_…`), or a legacy App API key. */
   apiKey: string;
   /**
-   * Data region. Optional for `sk_us_…` / `sk_eu_…` keys, which carry their
-   * region. When set, it wins over the key. Legacy keys default to {@link RegionUS}.
+   * Data region. Optional for `pk_`/`sk_` keys, which carry their region; when
+   * set, it must match the key's region. Legacy keys default to {@link RegionUS}.
    */
   region?: Region;
   /** Override the Track API base URL (e.g. a mock server). */
@@ -44,6 +44,17 @@ type KeyInfo = { kind: 'public' | 'secret'; region: Region } | null;
 // where type is `pk` (public) or `sk` (secret). The server checks the
 // checksum; the SDK only reads the prefix to pick a host and spot public keys.
 const KEY_PREFIX = /^(pk|sk)_(us|eu)_/;
+
+function regionName(region: Region): 'us' | 'eu' | null {
+  if (region.trackUrl === RegionUS.trackUrl) {
+    return 'us';
+  }
+  if (region.trackUrl === RegionEU.trackUrl) {
+    return 'eu';
+  }
+
+  return null;
+}
 
 function parseKey(key: string): KeyInfo {
   const match = KEY_PREFIX.exec(key);
@@ -92,7 +103,8 @@ export class CustomerIO {
   private readonly _apiClient: APIClient;
 
   /**
-   * @throws If `apiKey` is empty, or `region` is provided and is not a {@link Region} instance.
+   * @throws If `apiKey` is empty, `region` is provided and is not a {@link Region} instance,
+   * or `region` doesn't match the region of a `pk_`/`sk_` key.
    */
   constructor(options: CustomerIOOptions) {
     const { apiKey, region, trackUrl, apiUrl, ...requestDefaults } = options ?? ({} as CustomerIOOptions);
@@ -105,6 +117,14 @@ export class CustomerIO {
     }
 
     const key = parseKey(apiKey);
+    if (region && key) {
+      const given = regionName(region);
+      const expected = regionName(key.region);
+      // A prefixed key belongs to one region, so a different one can only fail.
+      if (given && given !== expected) {
+        throw new Error(`region ${given} does not match the ${expected} region of this key`);
+      }
+    }
     this.keyKind = key ? key.kind : 'legacy';
     this.region = region || key?.region || RegionUS;
 

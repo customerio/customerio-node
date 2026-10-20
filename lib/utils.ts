@@ -103,6 +103,12 @@ export class CustomerIORequestError extends Error {
 ${json.meta.errors.map((error: string) => `  - ${error}`).join('\n')}`;
     }
 
+    // The App API reports auth failures as `{ errors: [{ detail, status }] }`.
+    const detail = Array.isArray(json.errors) ? json.errors[0]?.detail : undefined;
+    if (typeof detail === 'string' && detail) {
+      return detail;
+    }
+
     return 'Unknown error';
   }
 
