@@ -11,7 +11,7 @@ import {
   SendInboxMessageRequest,
   SendInAppRequest,
 } from '../lib/api/requests';
-import { RegionUS, RegionEU } from '../lib/regions';
+import { Region, RegionUS, RegionEU } from '../lib/regions';
 import { CustomerIORequestError, KeyCapabilityError, MissingParamError } from '../lib/utils';
 
 type TestContext = { fetchStub: SinonStub };
@@ -74,6 +74,9 @@ test('explicit region must match the key', (t) => {
   t.throws(() => new CustomerIO({ apiKey: publicKey, region: RegionEU }), {
     message: 'region eu does not match the us region of this key',
   });
+
+  const custom = new Region('http://track.test', 'http://api.test', 'http://cdp.test');
+  t.is(new CustomerIO({ apiKey: euKey, region: custom }).region, custom);
 });
 
 test('legacy keys keep the region option and US default', (t) => {
