@@ -103,6 +103,12 @@ export class CustomerIORequestError extends Error {
 ${json.meta.errors.map((error: string) => `  - ${error}`).join('\n')}`;
     }
 
+    // The App API reports auth failures as `{ errors: [{ detail, status }] }`.
+    const detail = Array.isArray(json.errors) ? json.errors[0]?.detail : undefined;
+    if (typeof detail === 'string' && detail) {
+      return detail;
+    }
+
     return 'Unknown error';
   }
 
@@ -135,5 +141,30 @@ export class MissingParamError extends Error {
   constructor(param: string) {
     super(`${param} is required`);
     this.name = 'MissingParamError';
+  }
+}
+
+/** What a {@link KeyCapabilityError} says the key can't do. */
+export type KeyCapability = 'track' | 'transactional';
+
+/**
+ * Thrown by {@link CustomerIO} when its key can't do what a method asks.
+ *
+ * Thrown before the request when the key's type rules it out (a public `pk_`
+ * key can't send transactional messages). Otherwise the server's 401 or 403 is
+ * rethrown as this error, with the original {@link CustomerIORequestError} on
+ * `cause`.
+ */
+export class KeyCapabilityError extends Error {
+  /** What the key can't do. */
+  capability: KeyCapability;
+  /** The HTTP status, when the server refused the key. */
+  statusCode?: number;
+
+  constructor(capability: KeyCapability, message: string, cause?: CustomerIORequestError) {
+    super(message, { cause });
+    this.name = 'KeyCapabilityError';
+    this.capability = capability;
+    this.statusCode = cause?.statusCode;
   }
 }
