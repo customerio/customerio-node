@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.3.0]
+
+Tagged on GitHub but never published to npm, because `package.json` was not bumped before the release. These changes ship to npm in the next release.
+
+#### Added
+
+- **`cc`** on transactional email requests. ([#247](https://github.com/customerio/customerio-node/pull/247))
+
+#### Fixed
+
+- **`SendWhatsAppRequest`** no longer sends a `from` field. ([#250](https://github.com/customerio/customerio-node/pull/250))
+
 ## [5.2.0]
 
 This release completes the App API surface: `APIClient` now covers the full Customer.io [Journeys App API](https://docs.customer.io/api/app/). Every endpoint was verified against the live API behavior, with unit and live integration coverage.
