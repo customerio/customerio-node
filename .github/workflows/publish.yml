@@ -35,7 +35,7 @@ jobs:
       # build the tagged commit rather than the commit that triggered this run.
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.release-please.outputs.sha }}
+          ref: ${{ needs.release-please.outputs.sha || github.sha }}
 
       - name: setup node
         uses: actions/setup-node@v6
