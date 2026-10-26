@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.4.0](https://github.com/customerio/customerio-node/compare/v5.3.0...v5.4.0) (2026-10-26)
+
+
+### Features
+
+* **MBL-2330:** one-key CustomerIO client ([#254](https://github.com/customerio/customerio-node/issues/254)) ([654465c](https://github.com/customerio/customerio-node/commit/654465ca0c4fcd1cd10b5d6f452992dcc6524949))
+
 ## [5.3.0]
 
 Tagged on GitHub but never published to npm, because `package.json` was not bumped before the release. These changes ship to npm in the next release.
