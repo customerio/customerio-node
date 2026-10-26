@@ -15,6 +15,7 @@ jobs:
       pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
+      sha: ${{ steps.release.outputs.sha }}
     steps:
       - id: release
         uses: googleapis/release-please-action@v5
@@ -30,7 +31,11 @@ jobs:
       contents: read
       id-token: write
     steps:
+      # Overlapping pushes can make a later run create an earlier release, so
+      # build the tagged commit rather than the commit that triggered this run.
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.release-please.outputs.sha }}
 
       - name: setup node
         uses: actions/setup-node@v6
