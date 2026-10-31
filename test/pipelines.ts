@@ -49,6 +49,31 @@ test('constructor uses Basic auth with the write key as username and a blank pas
   t.is(t.context.client.request.auth, expected);
 });
 
+test('constructor uses Bearer auth with a public or secret API key', (t) => {
+  t.is(new PipelinesClient('pk_us_abc123').request.auth, 'Bearer pk_us_abc123');
+  t.is(new PipelinesClient('sk_us_abc123').request.auth, 'Bearer sk_us_abc123');
+});
+
+test('constructor determines the region by the API key provided', (t) => {
+  t.is(new PipelinesClient('sk_eu_abc123').pipelinesRoot, 'https://cdp-eu.customer.io/v1');
+  t.is(new PipelinesClient('pk_eu_abc123', { region: RegionEU }).pipelinesRoot, 'https://cdp-eu.customer.io/v1');
+});
+
+test("constructor throws when region doesn't match the API key's region", (t) => {
+  t.throws(() => new PipelinesClient('sk_eu_abc123', { region: RegionUS }), {
+    message: 'region us does not match the eu region of this key',
+  });
+  t.throws(() => new PipelinesClient('pk_us_abc123', { region: RegionEU }), {
+    message: 'region eu does not match the us region of this key',
+  });
+});
+
+test('constructor trims whitespace around an API key before detecting its prefix and region', (t) => {
+  const client = new PipelinesClient('  sk_eu_abc123\n');
+  t.is(client.request.auth, 'Bearer sk_eu_abc123');
+  t.is(client.pipelinesRoot, 'https://cdp-eu.customer.io/v1');
+});
+
 test('constructor throws when writeKey is missing', (t) => {
   t.throws(() => new PipelinesClient(''), { message: 'writeKey is required' });
 });
