@@ -71,7 +71,7 @@ export class PipelinesClient {
   private readonly autoContext: PipelinesContext;
 
   /**
-   * @param rawKey Your public (`pk_…`) or secret (`sk_…`) API key, or your Data
+   * @param writeKey Your public (`pk_…`) or secret (`sk_…`) API key, or your Data
    *   Pipelines source write key (Data Pipelines -> Sources).
    * @param defaults Optional overrides. Use `region` to select {@link RegionUS} or
    *   {@link RegionEU} (with an API key, the region is determined by the key provided),
@@ -83,12 +83,12 @@ export class PipelinesClient {
    * @throws {Error} If `region` is provided and is not a {@link Region} instance, or
    *   doesn't match the region of the API key provided.
    */
-  constructor(rawKey: string, defaults: Partial<PipelinesDefaults> = {}) {
-    if (isEmpty(rawKey)) {
+  constructor(writeKey: string, defaults: Partial<PipelinesDefaults> = {}) {
+    if (isEmpty(writeKey)) {
       throw new MissingParamError('writeKey');
     }
-    // Keys pasted from env files often carry stray whitespace, which would hide the prefix.
-    const writeKey = rawKey.trim();
+    // Trim whitespace to ensure we properly identify whether it's an API key or write key.
+    writeKey = writeKey.trim();
     if (defaults.region && !(defaults.region instanceof Region)) {
       throw new Error('region must be one of Regions.US or Regions.EU');
     }
