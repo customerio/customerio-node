@@ -2,23 +2,33 @@
 
 Method reference for the Pipelines client. See the [README](../README.md) for installation and cross-cutting behavior (regions, retries, and promise handling).
 
-The Pipelines API is Customer.io's ingestion endpoint for the Segment-compatible identify/track/page/screen/group/alias event model. It runs at a different host (`cdp.customer.io`) from the Track and App APIs and authenticates with a **Pipelines write key** (set up under _Data Pipelines → Sources_ in the dashboard).
+The Pipelines API is Customer.io's ingestion endpoint for the Segment-compatible identify/track/page/screen/group/alias event model. It runs at a different host (`cdp.customer.io`) from the Track and App APIs and authenticates with a public (`pk_…`) or secret (`sk_…`) **API key**, sent as a Bearer token. You can also use a legacy **Pipelines write key** (set up under _Data Pipelines → Sources_ in the dashboard).
 
 > **Need client-side batching, buffered flushes, or retries?** Use [`@customerio/cdp-analytics-node`](https://www.npmjs.com/package/@customerio/cdp-analytics-node) instead. `PipelinesClient` in this package is a thin, stateless client that issues one HTTP request per call — same as `TrackClient` and `APIClient`.
 
 ### Creating a Pipelines client
 
+**With an API key:** use the secret key (`sk_…`) that Customer.io creates when you [set up the Customer.io API integration](https://docs.customer.io/integrations/data-in/connections/http-api/#connect-a-customerio-pipelines-api-source). The region is determined by the API key provided.
+
 ```js
-const { PipelinesClient, RegionUS, RegionEU } = require("customerio-node");
+const { PipelinesClient } = require("customerio-node");
+
+const pipelines = new PipelinesClient("YOUR_API_KEY");
+```
+
+**With a legacy write key:** the client defaults to `RegionUS`. If your account is hosted in the EU data center, pass `RegionEU`.
+
+```js
+const { PipelinesClient, RegionEU } = require("customerio-node");
 
 const pipelines = new PipelinesClient("YOUR_PIPELINES_WRITE_KEY", {
-  region: RegionUS, // or RegionEU; defaults to RegionUS
+  region: RegionEU,
 });
 ```
 
 **Constructor options** (second argument):
 
-- `region`: `RegionUS` or `RegionEU`. Defaults to `RegionUS`.
+- `region`: `RegionUS` or `RegionEU`. Defaults to the API key's region, or `RegionUS` for a write key. If `region` doesn't match the API key's region, the constructor throws an `Error`.
 - `url`: Override the region-derived host. Useful for testing against a proxy.
 - `strictMode`: When `true`, sends `X-Strict-Mode: 1` on every request so the Pipelines API validates payloads and returns proper HTTP error codes instead of accepting malformed events silently.
 - `defaultContext`: Default `context` values merged under every outgoing payload (per-call `context` always wins on key conflicts). Useful for setting things like `ip` or `locale` once per client instance.
