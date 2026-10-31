@@ -68,6 +68,12 @@ test("constructor throws when region doesn't match the API key's region", (t) =>
   });
 });
 
+test('constructor trims whitespace around an API key before detecting its prefix and region', (t) => {
+  const client = new PipelinesClient('  sk_eu_abc123\n');
+  t.is(client.request.auth, 'Bearer sk_eu_abc123');
+  t.is(client.pipelinesRoot, 'https://cdp-eu.customer.io/v1');
+});
+
 test('constructor throws when writeKey is missing', (t) => {
   t.throws(() => new PipelinesClient(''), { message: 'writeKey is required' });
 });
