@@ -29,7 +29,7 @@ const pipelines = new PipelinesClient("YOUR_PIPELINES_WRITE_KEY", {
 **Constructor options** (second argument):
 
 - `region`: `RegionUS` or `RegionEU`. Defaults to the API key's region, or `RegionUS` for a write key. If `region` doesn't match the API key's region, the constructor throws an `Error`.
-- `url`: Override the region-derived host. Useful for testing against a proxy.
+- `url`: Override the region-derived host. Useful for testing against a proxy. With an API key, it must start with `https://`.
 - `strictMode`: When `true`, sends `X-Strict-Mode: 1` on every request so the Pipelines API validates payloads and returns proper HTTP error codes instead of accepting malformed events silently.
 - `defaultContext`: Default `context` values merged under every outgoing payload (per-call `context` always wins on key conflicts). Useful for setting things like `ip` or `locale` once per client instance.
 - `timeout`: HTTP timeout in ms. Defaults to `10_000`.

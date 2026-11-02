@@ -1,6 +1,6 @@
 import type { RequestData, RequestDefaults, RetryOptions } from './request';
 import Request from './request';
-import { Region, RegionUS, RegionEU } from './regions';
+import { Region, RegionUS } from './regions';
 import { TrackClient } from './track';
 import { APIClient } from './api';
 import {
@@ -19,7 +19,7 @@ import type {
   SendInboxMessageRequestOptions,
   SendInAppRequestOptions,
 } from './api/requests';
-import { CustomerIORequestError, KeyCapabilityError } from './utils';
+import { CustomerIORequestError, KeyCapabilityError, parseKey, regionName, requireHttps } from './utils';
 import type { KeyCapability } from './utils';
 
 /** Options for {@link CustomerIO}. */
@@ -37,51 +37,6 @@ export type CustomerIOOptions = RequestDefaults & {
   apiUrl?: string;
   retry?: Partial<RetryOptions>;
 };
-
-type KeyInfo = { kind: 'public' | 'secret'; region: Region } | null;
-
-// Keys in the shared format look like `{type}_{us|eu}_{random}_{checksum}`,
-// where type is `pk` (public) or `sk` (secret). The server checks the
-// checksum; the SDK only reads the prefix to pick a host and spot public keys.
-const KEY_PREFIX = /^(pk|sk)_(us|eu)_/;
-
-function regionName(region: Region): 'us' | 'eu' | null {
-  if (region.trackUrl === RegionUS.trackUrl) {
-    return 'us';
-  }
-  if (region.trackUrl === RegionEU.trackUrl) {
-    return 'eu';
-  }
-
-  return null;
-}
-
-// The key travels as a Bearer token, so an override must not send it in clear text.
-function requireHttps(name: string, url: string | undefined) {
-  // An empty string falls back to the region host, as before.
-  if (!url) {
-    return;
-  }
-
-  let protocol: string;
-  try {
-    ({ protocol } = new URL(url));
-  } catch {
-    throw new Error(`${name} must be a valid URL`);
-  }
-  if (protocol !== 'https:') {
-    throw new Error(`${name} must start with https://`);
-  }
-}
-
-function parseKey(key: string): KeyInfo {
-  const match = KEY_PREFIX.exec(key);
-  if (!match) {
-    return null;
-  }
-
-  return { kind: match[1] === 'pk' ? 'public' : 'secret', region: match[2] === 'eu' ? RegionEU : RegionUS };
-}
 
 /**
  * One client for tracking and transactional messages, authenticated with a

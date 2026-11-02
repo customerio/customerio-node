@@ -2,7 +2,7 @@ import type { TestFn } from 'ava';
 import avaTest from 'ava';
 import sinon from 'sinon';
 import { PipelinesClient } from '../lib/pipelines';
-import { RegionUS, RegionEU } from '../lib/regions';
+import { Region, RegionUS, RegionEU } from '../lib/regions';
 import { version } from '../lib/version';
 import type { BatchItem } from '../lib/pipelines/payloads';
 
@@ -72,6 +72,21 @@ test('constructor trims whitespace around an API key before detecting its prefix
   const client = new PipelinesClient('  sk_eu_abc123\n');
   t.is(client.request.auth, 'Bearer sk_eu_abc123');
   t.is(client.pipelinesRoot, 'https://cdp-eu.customer.io/v1');
+});
+
+test('constructor requires https URLs with an API key', (t) => {
+  t.throws(() => new PipelinesClient('sk_us_abc123', { url: 'http://cdp.test/v1' }), {
+    message: 'url must start with https://',
+  });
+  t.throws(() => new PipelinesClient('pk_us_abc123', { url: 'not a url' }), { message: 'url must be a valid URL' });
+  t.throws(
+    () =>
+      new PipelinesClient('sk_us_abc123', {
+        region: new Region('https://track.test', 'https://api.test', 'http://cdp.test'),
+      }),
+    { message: 'region pipelinesUrl must start with https://' },
+  );
+  t.is(new PipelinesClient('sk_us_abc123', { url: 'https://cdp.test/v1' }).pipelinesRoot, 'https://cdp.test/v1');
 });
 
 test('constructor throws when writeKey is missing', (t) => {

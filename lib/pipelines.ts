@@ -1,8 +1,8 @@
 import { randomUUID } from 'crypto';
 import Request from './request';
 import type { RequestDefaults, RetryOptions } from './request';
-import { Region, RegionUS, RegionEU } from './regions';
-import { isEmpty, MissingParamError } from './utils';
+import { Region, RegionUS } from './regions';
+import { isEmpty, MissingParamError, parseKey, regionName, requireHttps } from './utils';
 import { version } from './version';
 import type {
   AliasPayload,
@@ -18,7 +18,10 @@ import type {
 
 export type PipelinesDefaults = RequestDefaults & {
   region: Region;
-  /** Overrides the region-derived host. Useful for testing against a proxy. */
+  /**
+   * Overrides the region-derived host. Useful for testing against a proxy. Must
+   * use `https://` with an API key, since the key is sent with every request.
+   */
   url?: string;
   /**
    * When `true`, sends `X-Strict-Mode: 1` on every request. Strict mode asks
@@ -81,7 +84,8 @@ export class PipelinesClient {
    *   (e.g. `timeout`, or `dispatcher` for proxies / custom TLS / keep-alive).
    * @throws {MissingParamError} If `writeKey` is empty.
    * @throws {Error} If `region` is provided and is not a {@link Region} instance, or
-   *   doesn't match the region of the API key provided.
+   *   doesn't match the region of the API key provided, or if an API key is used with
+   *   a `url` (or a custom region's `pipelinesUrl`) that isn't an `https://` URL.
    */
   constructor(writeKey: string, defaults: Partial<PipelinesDefaults> = {}) {
     if (isEmpty(writeKey)) {
@@ -93,13 +97,18 @@ export class PipelinesClient {
       throw new Error('region must be one of Regions.US or Regions.EU');
     }
     // The region is determined by the API key provided (`sk_eu_…` is EU). Write keys default to the US.
-    const keyRegion = /^(pk|sk)_(us|eu)_/.exec(writeKey)?.[2];
-    const regionFromKey = keyRegion === 'eu' ? RegionEU : RegionUS;
-    const otherRegion = keyRegion === 'eu' ? RegionUS : RegionEU;
-    // The other region's host answers 200 and drops the events, so a conflicting region can only fail.
-    if (keyRegion && defaults.region?.pipelinesUrl === otherRegion.pipelinesUrl) {
-      const given = keyRegion === 'eu' ? 'us' : 'eu';
-      throw new Error(`region ${given} does not match the ${keyRegion} region of this key`);
+    const key = parseKey(writeKey);
+    if (key) {
+      requireHttps('url', defaults.url);
+      // A custom Region carries its own URLs, and the key goes out to them too.
+      requireHttps('region pipelinesUrl', defaults.region?.pipelinesUrl);
+
+      const given = defaults.region && regionName(defaults.region);
+      const expected = regionName(key.region);
+      // The other region's host answers 200 and drops the events, so a conflicting region can only fail.
+      if (given && given !== expected) {
+        throw new Error(`region ${given} does not match the ${expected} region of this key`);
+      }
     }
 
     this.writeKey = writeKey;
@@ -107,7 +116,7 @@ export class PipelinesClient {
     // passthrough delivers it on every request. Existing headers on the
     // incoming defaults are preserved.
     const headers = defaults.strictMode ? { ...(defaults.headers ?? {}), 'X-Strict-Mode': '1' } : defaults.headers;
-    this.defaults = { ...defaults, headers, region: defaults.region || regionFromKey };
+    this.defaults = { ...defaults, headers, region: defaults.region || key?.region || RegionUS };
 
     // Public (`pk_`) and secret (`sk_`) API keys go as a Bearer token.
     //
@@ -128,7 +137,7 @@ export class PipelinesClient {
       defaultContext: _defaultContext,
       ...requestDefaults
     } = this.defaults;
-    this.request = keyRegion
+    this.request = key
       ? new Request(writeKey, requestDefaults)
       : new Request({ siteid: writeKey, apikey: '' }, requestDefaults);
 

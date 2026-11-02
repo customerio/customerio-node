@@ -1,4 +1,6 @@
 import { IdentifierType } from '../lib/types';
+import { RegionUS, RegionEU } from './regions';
+import type { Region } from './regions';
 
 /** Returns `true` for `null`, `undefined`, an empty/whitespace string, or a non-finite number. */
 export const isEmpty = (value: string | number | null | undefined) => {
@@ -167,4 +169,49 @@ export class KeyCapabilityError extends Error {
     this.capability = capability;
     this.statusCode = cause?.statusCode;
   }
+}
+
+type KeyInfo = { kind: 'public' | 'secret'; region: Region } | null;
+
+// Keys in the shared format look like `{type}_{us|eu}_{random}_{checksum}`,
+// where type is `pk` (public) or `sk` (secret). The server checks the
+// checksum; the SDK only reads the prefix to pick a host and spot public keys.
+const KEY_PREFIX = /^(pk|sk)_(us|eu)_/;
+
+export function regionName(region: Region): 'us' | 'eu' | null {
+  if (region.trackUrl === RegionUS.trackUrl) {
+    return 'us';
+  }
+  if (region.trackUrl === RegionEU.trackUrl) {
+    return 'eu';
+  }
+
+  return null;
+}
+
+// The key travels as a Bearer token, so an override must not send it in clear text.
+export function requireHttps(name: string, url: string | undefined) {
+  // An empty string falls back to the region host, as before.
+  if (!url) {
+    return;
+  }
+
+  let protocol: string;
+  try {
+    ({ protocol } = new URL(url));
+  } catch {
+    throw new Error(`${name} must be a valid URL`);
+  }
+  if (protocol !== 'https:') {
+    throw new Error(`${name} must start with https://`);
+  }
+}
+
+export function parseKey(key: string): KeyInfo {
+  const match = KEY_PREFIX.exec(key);
+  if (!match) {
+    return null;
+  }
+
+  return { kind: match[1] === 'pk' ? 'public' : 'secret', region: match[2] === 'eu' ? RegionEU : RegionUS };
 }
