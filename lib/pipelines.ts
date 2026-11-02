@@ -45,8 +45,8 @@ export type PipelinesDefaults = RequestDefaults & {
 /**
  * Client for the Customer.io Pipelines (Data Pipelines) API.
  *
- * Authenticates with a public (`pk_…`) or secret (`sk_…`) API key as a Bearer
- * token, or with a Data Pipelines source write key. Use this client to send
+ * Authenticates with a secret (`sk_…`) API key as a Bearer token, or with a
+ * Data Pipelines source write key. Use this client to send
  * Segment-compatible identify/track/page/screen/group/alias events, one at a
  * time or batched. Payloads use camelCase (`userId`, `anonymousId`, `groupId`,
  * `previousId`), matching the Pipelines wire format.
@@ -74,8 +74,8 @@ export class PipelinesClient {
   private readonly autoContext: PipelinesContext;
 
   /**
-   * @param writeKey Your public (`pk_…`) or secret (`sk_…`) API key, or your Data
-   *   Pipelines source write key (Data Pipelines -> Sources).
+   * @param writeKey Your secret (`sk_…`) API key, or your legacy Data Pipelines
+   *   source write key (Data Pipelines -> Sources).
    * @param defaults Optional overrides. Use `region` to select {@link RegionUS} or
    *   {@link RegionEU} (with an API key, the region is determined by the key provided),
    *   `url` to point at a custom host, `strictMode` to have the API
