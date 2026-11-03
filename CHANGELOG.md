@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.5.0](https://github.com/customerio/customerio-node/compare/v5.4.0...v5.5.0) (2026-11-03)
+
+
+### Features
+
+* **pipelines:** support Bearer auth with API keys in PipelinesClient ([#262](https://github.com/customerio/customerio-node/issues/262)) ([d60db2c](https://github.com/customerio/customerio-node/commit/d60db2c18028b0dcefdb8e58d51942c7d4fcd4d0))
+
 ## [5.4.0](https://github.com/customerio/customerio-node/compare/v5.3.0...v5.4.0) (2026-10-26)
 
 
