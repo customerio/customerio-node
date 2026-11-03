@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import Request from './request';
 import type { RequestDefaults, RetryOptions } from './request';
 import { Region, RegionUS } from './regions';
-import { isEmpty, MissingParamError } from './utils';
+import { isEmpty, MissingParamError, parseKey, regionName, requireHttps } from './utils';
 import { version } from './version';
 import type {
   AliasPayload,
@@ -18,7 +18,10 @@ import type {
 
 export type PipelinesDefaults = RequestDefaults & {
   region: Region;
-  /** Overrides the region-derived host. Useful for testing against a proxy. */
+  /**
+   * Overrides the region-derived host. Useful for testing against a proxy. Must
+   * use `https://` with an API key, since the key is sent with every request.
+   */
   url?: string;
   /**
    * When `true`, sends `X-Strict-Mode: 1` on every request. Strict mode asks
@@ -42,7 +45,8 @@ export type PipelinesDefaults = RequestDefaults & {
 /**
  * Client for the Customer.io Pipelines (Data Pipelines) API.
  *
- * Authenticates with a Data Pipelines source write key. Use this client to send
+ * Authenticates with a secret (`sk_…`) API key as a Bearer token, or with a
+ * Data Pipelines source write key. Use this client to send
  * Segment-compatible identify/track/page/screen/group/alias events, one at a
  * time or batched. Payloads use camelCase (`userId`, `anonymousId`, `groupId`,
  * `previousId`), matching the Pipelines wire format.
@@ -55,9 +59,9 @@ export type PipelinesDefaults = RequestDefaults & {
  *
  * @example
  * ```ts
- * import { PipelinesClient, RegionUS } from 'customerio-node';
+ * import { PipelinesClient } from 'customerio-node';
  *
- * const cdp = new PipelinesClient(writeKey, { region: RegionUS });
+ * const cdp = new PipelinesClient(process.env.CIO_API_KEY);
  * await cdp.identify({ userId: '123', traits: { email: 'a@example.com' } });
  * await cdp.track({ userId: '123', event: 'Signed Up' });
  * ```
@@ -70,21 +74,41 @@ export class PipelinesClient {
   private readonly autoContext: PipelinesContext;
 
   /**
-   * @param writeKey Your Data Pipelines source write key (Data Pipelines -> Sources).
+   * @param writeKey Your secret (`sk_…`) API key, or your legacy Data Pipelines
+   *   source write key (Data Pipelines -> Sources).
    * @param defaults Optional overrides. Use `region` to select {@link RegionUS} or
-   *   {@link RegionEU}, `url` to point at a custom host, `strictMode` to have the API
+   *   {@link RegionEU} (with an API key, the region is determined by the key provided),
+   *   `url` to point at a custom host, `strictMode` to have the API
    *   validate payloads and return real HTTP errors, or `defaultContext` to merge a
    *   base `context` under every call. Accepts any fetch {@link RequestDefaults} field too
    *   (e.g. `timeout`, or `dispatcher` for proxies / custom TLS / keep-alive).
    * @throws {MissingParamError} If `writeKey` is empty.
-   * @throws {Error} If `region` is provided and is not a {@link Region} instance.
+   * @throws {Error} If `region` is provided and is not a {@link Region} instance, or
+   *   doesn't match the region of the API key provided, or if an API key is used with
+   *   a `url` (or a custom region's `pipelinesUrl`) that isn't an `https://` URL.
    */
   constructor(writeKey: string, defaults: Partial<PipelinesDefaults> = {}) {
     if (isEmpty(writeKey)) {
       throw new MissingParamError('writeKey');
     }
+    // Trim whitespace to ensure we properly identify whether it's an API key or write key.
+    writeKey = writeKey.trim();
     if (defaults.region && !(defaults.region instanceof Region)) {
       throw new Error('region must be one of Regions.US or Regions.EU');
+    }
+    // The region is determined by the API key provided (`sk_eu_…` is EU). Write keys default to the US.
+    const key = parseKey(writeKey);
+    if (key) {
+      requireHttps('url', defaults.url);
+      // A custom Region carries its own URLs, and the key goes out to them too.
+      requireHttps('region pipelinesUrl', defaults.region?.pipelinesUrl);
+
+      const given = defaults.region && regionName(defaults.region);
+      const expected = regionName(key.region);
+      // The other region's host answers 200 and drops the events, so a conflicting region can only fail.
+      if (given && given !== expected) {
+        throw new Error(`region ${given} does not match the ${expected} region of this key`);
+      }
     }
 
     this.writeKey = writeKey;
@@ -92,9 +116,11 @@ export class PipelinesClient {
     // passthrough delivers it on every request. Existing headers on the
     // incoming defaults are preserved.
     const headers = defaults.strictMode ? { ...(defaults.headers ?? {}), 'X-Strict-Mode': '1' } : defaults.headers;
-    this.defaults = { ...defaults, headers, region: defaults.region || RegionUS };
+    this.defaults = { ...defaults, headers, region: defaults.region || key?.region || RegionUS };
 
-    // The Pipelines API authenticates with HTTP Basic where the write key is
+    // Public (`pk_`) and secret (`sk_`) API keys go as a Bearer token.
+    //
+    // Write keys authenticate with HTTP Basic where the write key is
     // the username and the password is blank. The existing `CIORequest`
     // BasicAuth helper builds `${siteid}:${apikey}` — we map the write key
     // into `siteid` and leave `apikey` empty so the encoded credential is
@@ -111,7 +137,9 @@ export class PipelinesClient {
       defaultContext: _defaultContext,
       ...requestDefaults
     } = this.defaults;
-    this.request = new Request({ siteid: writeKey, apikey: '' }, requestDefaults);
+    this.request = key
+      ? new Request(writeKey, requestDefaults)
+      : new Request({ siteid: writeKey, apikey: '' }, requestDefaults);
 
     this.pipelinesRoot = this.defaults.url ? this.defaults.url : this.defaults.region.pipelinesUrl;
 
