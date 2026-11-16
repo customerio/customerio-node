@@ -2,6 +2,11 @@ name: test
 
 on: [push, pull_request]
 
+# Tests only need to read the code. Without this, push runs get the repo's
+# default write token while npm ci runs dependency install scripts.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,6 +25,8 @@ jobs:
     name: ${{ matrix.runtime.kind }} ${{ matrix.runtime.version }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: setup node
         if: matrix.runtime.kind == 'node'
