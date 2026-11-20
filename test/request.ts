@@ -404,7 +404,7 @@ test.serial(
 
       t.fail();
     } catch (err: any) {
-      t.is(err.message, 'Unknown error');
+      t.is(err.message, 'Request failed with status 400');
     }
   },
 );
@@ -446,7 +446,7 @@ test.serial('#handler makes a request and rejects with `null` as body', async (t
 
     t.fail();
   } catch (err: any) {
-    t.is(err.message, 'Unknown error');
+    t.is(err.message, 'Request failed with status 500');
   }
 });
 
