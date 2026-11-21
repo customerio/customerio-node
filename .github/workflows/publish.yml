@@ -1,50 +1,91 @@
 name: publish
 
+# Code and release PRs land in a private repo with review, and Copybara copies
+# them here. Once the test workflow passes on main, publish the version in
+# package.json if it is new: npm first, then the tag and GitHub release.
+# Publishing lives in this file because npm trusted publishing is bound to publish.yml.
 on:
-  push:
+  workflow_run:
+    workflows: [test]
+    types: [completed]
     branches: [main]
-  release:
-    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
 
 jobs:
-  release-please:
-    if: github.event_name == 'push'
+  publish:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      sha: ${{ steps.release.outputs.sha }}
-    steps:
-      - id: release
-        uses: googleapis/release-please-action@v5
-
-  # Publishing lives in this file because npm trusted publishing is bound to
-  # publish.yml. A release created by release-please with GITHUB_TOKEN does not
-  # fire the `release` event, so the push run publishes it here instead.
-  publish:
-    needs: release-please
-    if: ${{ !cancelled() && (github.event_name == 'release' || needs.release-please.outputs.release_created == 'true') }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
       id-token: write
     steps:
-      # Overlapping pushes can make a later run create an earlier release, so
-      # build the tagged commit rather than the commit that triggered this run.
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.release-please.outputs.sha || github.sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+
+      # Only the commit CI tested. A newer main gets its own run.
+      - name: Check main is the commit CI passed
+        id: current
+        env:
+          CI_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [[ -n "$CI_SHA" && "$(git rev-parse origin/main)" != "$CI_SHA" ]]; then
+            echo "Main moved past $CI_SHA; skipping."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "release=true" >> "$GITHUB_OUTPUT"
+
+      - name: Find the version
+        id: version
+        if: steps.current.outputs.release == 'true'
+        run: |
+          version="$(node -p 'require("./package.json").version')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "v$version is already tagged."
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: setup node
+        if: steps.version.outputs.new == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
           package-manager-cache: false
 
-      - run: npm ci
-      - run: npm run build
-      - run: npm test
-      - run: npm publish --provenance --access public
+      - name: Publish to npm
+        if: steps.version.outputs.new == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # A rerun after a failed tag step skips the publish.
+          if [[ -n "$(npm view "customerio-node@$VERSION" version 2>/dev/null)" ]]; then
+            echo "customerio-node@$VERSION is already on npm."
+            exit 0
+          fi
+          npm ci
+          npm run build
+          npm test
+          npm publish --provenance --access public
+
+      - name: Tag and create the GitHub release
+        if: steps.version.outputs.new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # The CHANGELOG section for this version, without its heading.
+          awk -v v="[$VERSION]" 'index($0, "## " v) == 1 {on=1; next} /^## / {on=0} on' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          gh release create "v$VERSION" --target "$(git rev-parse HEAD)" \
+            --title "v$VERSION" --notes-file "$RUNNER_TEMP/notes.md"
