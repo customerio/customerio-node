@@ -7,12 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Grant the token the permissions the Pages deploy needs. `id-token` is
-# required by actions/deploy-pages for OIDC.
+# Read-only by default. Only the deploy job gets the Pages permissions, so the
+# build job's npm ci never runs with a token that can deploy.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # Allow only one concurrent Pages deployment. Don't cancel an in-progress run,
 # so a deploy always finishes cleanly.
@@ -25,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: setup node
         uses: actions/setup-node@v6
@@ -46,6 +46,10 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # `id-token` is required by actions/deploy-pages for OIDC.
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
