@@ -56,6 +56,38 @@ export interface ResponseLike {
   ok: boolean;
 }
 
+function listErrors(errors: string[]): string {
+  const count = errors.length;
+
+  return `${count} ${count === 1 ? 'error' : 'errors'}:
+${errors.map((error) => `  - ${error}`).join('\n')}`;
+}
+
+const asString = (value: unknown) => (typeof value === 'string' ? value : '');
+
+// Formats one Pipelines strict-mode error as `batch[2].event: must provide
+// value for required field`. `index` is the item's position in a batch.
+function pipelinesError(error: any): string {
+  const message = asString(error?.message);
+  if (!message) {
+    return '';
+  }
+
+  const index = Number.isInteger(error.index) ? `batch[${error.index}]` : '';
+  const where = [index, asString(error.field)].filter(Boolean).join('.');
+
+  return where ? `${where}: ${message}` : message;
+}
+
+function isJSON(text: string): boolean {
+  try {
+    JSON.parse(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Thrown when the Customer.io API responds with a non-2xx status.
  *
@@ -91,31 +123,48 @@ export class CustomerIORequestError extends Error {
   /** The raw response body as a string. May be empty. */
   body: string;
 
-  static composeMessage(json: Record<string, any> | null): string {
-    if (!json) {
-      return 'Unknown error';
-    }
-
-    if (json.meta && json.meta.error) {
+  /**
+   * Builds the error message from a response. The Track and App API formats
+   * are read first, then the Pipelines API formats, then a plain-text body,
+   * then the status code.
+   */
+  static composeMessage(json: Record<string, any> | null, body?: string, statusCode?: number): string {
+    if (json?.meta && json.meta.error) {
       return json.meta.error;
-    } else if (json.meta && json.meta.errors) {
-      const count = json.meta.errors.length;
-
-      return `${count} ${count === 1 ? 'error' : 'errors'}:
-${json.meta.errors.map((error: string) => `  - ${error}`).join('\n')}`;
+    } else if (json?.meta && json.meta.errors) {
+      return listErrors(json.meta.errors);
     }
 
     // The App API reports auth failures as `{ errors: [{ detail, status }] }`.
-    const detail = Array.isArray(json.errors) ? json.errors[0]?.detail : undefined;
+    const detail = Array.isArray(json?.errors) ? json.errors[0]?.detail : undefined;
     if (typeof detail === 'string' && detail) {
       return detail;
     }
 
-    return 'Unknown error';
+    // Pipelines API failures look like `{ success: false, code, message }`.
+    const message = [asString(json?.code), asString(json?.message)].filter(Boolean).join(': ');
+    if (message) {
+      return message;
+    }
+
+    // Pipelines API strict mode reports `{ errors: [{ index?, reason, field, message }] }`.
+    const errors = Array.isArray(json?.errors) ? json.errors.map(pipelinesError).filter(Boolean) : [];
+    if (errors.length === 1) {
+      return errors[0];
+    } else if (errors.length > 1) {
+      return listErrors(errors);
+    }
+
+    const text = body?.trim();
+    if (text && !isJSON(text)) {
+      return text;
+    }
+
+    return statusCode ? `Request failed with status ${statusCode}` : 'Unknown error';
   }
 
   constructor(json: Record<string, any> | null, statusCode: number, response: ResponseLike, body: string) {
-    super(CustomerIORequestError.composeMessage(json));
+    super(CustomerIORequestError.composeMessage(json, body, statusCode));
 
     this.name = 'CustomerIORequestError';
     this.statusCode = statusCode;
