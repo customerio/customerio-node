@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.5.1](https://github.com/customerio/customerio-node/compare/v5.5.0...v5.5.1) (2026-11-23)
+
+
+### Bug Fixes
+
+* **pipelines:** show Pipelines API error messages instead of "Unknown error" ([#268](https://github.com/customerio/customerio-node/issues/268)) ([002d580](https://github.com/customerio/customerio-node/commit/002d5804f012faf1a92d6dc314db4c93eccbdb41))
+
 ## [5.5.0](https://github.com/customerio/customerio-node/compare/v5.4.0...v5.5.0) (2026-11-03)
 
 
