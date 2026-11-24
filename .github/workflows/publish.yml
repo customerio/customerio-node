@@ -65,6 +65,8 @@ jobs:
           payload: |
             {
               "text": "Node SDK ${{ steps.version.outputs.version }} published to npm",
+              "username": "Node deployment bot",
+              "icon_url": "https://raw.githubusercontent.com/github/explore/main/topics/nodejs/nodejs.png",
               "channel": "#server-sdk-deployments",
               "blocks": [
                 {
@@ -86,6 +88,8 @@ jobs:
           payload: |
             {
               "text": "Node SDK release failure",
+              "username": "Node deployment bot",
+              "icon_url": "https://raw.githubusercontent.com/github/explore/main/topics/nodejs/nodejs.png",
               "channel": "#server-sdk-deployments",
               "blocks": [
                 {
