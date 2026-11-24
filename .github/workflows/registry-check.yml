@@ -52,6 +52,10 @@ jobs:
             # so the tag then sits on an ancestor of this run's commit.
             tagged=$(git rev-parse -q --verify "refs/tags/v${version}^{commit}" || true)
             published_at=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v${version}" --jq .published_at 2>/dev/null || true)
+            # A failed API call prints its error body, so keep only a real timestamp.
+            if ! printf '%s' "$published_at" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z$'; then
+              published_at=""
+            fi
             if [ -n "$tagged" ] && [ "$tagged" = "$(git rev-parse HEAD)" ]; then
               check=true
             elif [ -n "$tagged" ] && git merge-base --is-ancestor "$tagged" HEAD \
