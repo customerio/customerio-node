@@ -6,6 +6,7 @@ import { resolve } from 'path';
 import fs from 'fs';
 import Request from '../lib/request';
 import type { RetryOptions } from '../lib/request';
+import { CustomerIORequestError } from '../lib/utils';
 
 type TestContext = { req: Request; fetchStub: sinon.SinonStub; sleepStub: SinonStub };
 
@@ -887,6 +888,31 @@ test.serial('#handler does not retry a deterministic error (unparseable JSON)', 
   createMockRequest(t.context.fetchStub, 200, '<html></html>');
 
   await t.throwsAsync(() => t.context.req.handler(putOptions), { message: /Unable to parse JSON/ });
+  t.is(t.context.fetchStub.callCount, 1);
+  t.is(t.context.sleepStub.callCount, 0);
+});
+
+test.serial('#handler retries a 5xx with an HTML body and resolves once it succeeds', async (t) => {
+  t.context.fetchStub.onCall(0).resolves(makeMockResponse(502, '<html><body>502 Bad Gateway</body></html>', {}));
+  t.context.fetchStub.onCall(1).resolves(makeMockResponse(200, JSON.stringify({ ok: true }), {}));
+
+  const res = await t.context.req.handler(putOptions);
+
+  t.deepEqual(res, { ok: true });
+  t.is(t.context.fetchStub.callCount, 2);
+  t.is(t.context.sleepStub.callCount, 1);
+});
+
+test.serial('#handler rejects a 4xx with a plain-text body as a request error, without retrying', async (t) => {
+  createMockRequest(t.context.fetchStub, 400, 'Error when parsing request');
+
+  const err = await t.throwsAsync<CustomerIORequestError>(() => t.context.req.handler(putOptions), {
+    instanceOf: CustomerIORequestError,
+  });
+
+  t.is(err?.statusCode, 400);
+  t.is(err?.message, 'Error when parsing request');
+  t.is(err?.body, 'Error when parsing request');
   t.is(t.context.fetchStub.callCount, 1);
   t.is(t.context.sleepStub.callCount, 0);
 });
