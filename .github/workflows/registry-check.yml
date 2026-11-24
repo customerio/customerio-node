@@ -38,16 +38,24 @@ jobs:
         id: version
         env:
           VERSION_INPUT: ${{ inputs.version }}
+          RUN_STARTED_AT: ${{ github.event.workflow_run.run_started_at }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             version="${VERSION_INPUT#v}"
             check=true
           else
             version=$(jq -r .version package.json)
-            # Most pushes to main release nothing. Only the commit that release-please
-            # tagged as this version is a release.
+            # Most pushes to main release nothing. A run released this version when
+            # its commit carries the tag, or when the release was published while it
+            # ran: overlapping pushes can make a later run create an earlier release,
+            # so the tag then sits on an ancestor of this run's commit.
             tagged=$(git rev-parse -q --verify "refs/tags/v${version}^{commit}" || true)
-            if [ "$tagged" = "$(git rev-parse HEAD)" ]; then
+            published_at=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v${version}" --jq .published_at 2>/dev/null || true)
+            if [ -n "$tagged" ] && [ "$tagged" = "$(git rev-parse HEAD)" ]; then
+              check=true
+            elif [ -n "$tagged" ] && git merge-base --is-ancestor "$tagged" HEAD \
+              && [ -n "$published_at" ] && [ ! "$published_at" \< "$RUN_STARTED_AT" ]; then
               check=true
             else
               check=false
