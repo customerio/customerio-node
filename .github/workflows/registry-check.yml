@@ -92,7 +92,7 @@ jobs:
           payload: |
             {
               "text": "Node SDK ${{ steps.version.outputs.version }} is missing from npm",
-              "channel": "#mobile-deployments",
+              "channel": "#server-sdk-deployments",
               "blocks": [
                 {
                   "type": "section",
