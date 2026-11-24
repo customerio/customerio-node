@@ -230,18 +230,24 @@ export default class CIORequest {
     }
 
     const responseBody = await response.text();
-    let json: Record<string, any> = {};
+    const succeeded = statusCode >= 200 && statusCode < 300;
+    let json: Record<string, any> | null = {};
 
     try {
       if (responseBody && responseBody.length) {
         json = JSON.parse(responseBody);
       }
     } catch (error) {
-      throw new Error(`Unable to parse JSON. Error: ${error} \nBody:\n ${responseBody}`);
+      if (succeeded) {
+        throw new Error(`Unable to parse JSON. Error: ${error} \nBody:\n ${responseBody}`);
+      }
+      // A proxy or load balancer in front of the API can answer an error with
+      // plain text or HTML. Keep the status, so a 5xx is still retried.
+      json = null;
     }
 
-    if (statusCode >= 200 && statusCode < 300) {
-      return json;
+    if (succeeded) {
+      return json as Record<string, any>;
     }
 
     const responseLike = {
