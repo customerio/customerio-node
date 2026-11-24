@@ -92,6 +92,8 @@ jobs:
           payload: |
             {
               "text": "Node SDK ${{ steps.version.outputs.version }} is missing from npm",
+              "username": "Node deployment bot",
+              "icon_url": "https://raw.githubusercontent.com/github/explore/main/topics/nodejs/nodejs.png",
               "channel": "#server-sdk-deployments",
               "blocks": [
                 {
