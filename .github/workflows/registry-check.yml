@@ -1,0 +1,105 @@
+name: registry-check
+
+# release-please creates releases with GITHUB_TOKEN, which does not fire
+# `release` or tag `push` events, so this runs when publish.yml finishes.
+on:
+  workflow_run:
+    workflows: [publish]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to look for on npm, for example 5.5.1
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  registry-check:
+    # A cancelled publish run released nothing.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion != 'cancelled' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PACKAGE: customerio-node
+      # Secrets can't be read in a step `if`, so the alert step tests this copy.
+      # While the secret is unset, the alert is skipped.
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_NOTIFY_SERVER_SDK_RELEASES_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Full history so release tags are available.
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Work out which version to look for
+        id: version
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            version="${VERSION_INPUT#v}"
+            check=true
+          else
+            version=$(jq -r .version package.json)
+            # Most pushes to main release nothing. Only the commit that release-please
+            # tagged as this version is a release.
+            tagged=$(git rev-parse -q --verify "refs/tags/v${version}^{commit}" || true)
+            if [ "$tagged" = "$(git rev-parse HEAD)" ]; then
+              check=true
+            else
+              check=false
+              echo "No release was cut at $(git rev-parse --short HEAD), nothing to check."
+            fi
+          fi
+          if ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-.+][0-9A-Za-z.-]+)?$'; then
+            echo "::error::'$version' is not a valid version"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "check=$check" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for the version to appear on npm
+        if: ${{ steps.version.outputs.check == 'true' }}
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          POLL_INTERVAL: "300"
+          POLL_ATTEMPTS: "11"
+        run: |
+          url="https://registry.npmjs.org/${PACKAGE}/${VERSION}"
+          for attempt in $(seq 1 "$POLL_ATTEMPTS"); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$url" || true)
+            if [ "$code" = "200" ]; then
+              echo "${PACKAGE}@${VERSION} is on npm."
+              exit 0
+            fi
+            echo "Attempt ${attempt}/${POLL_ATTEMPTS}: ${PACKAGE}@${VERSION} is not on npm yet (HTTP ${code:-none})."
+            if [ "$attempt" -lt "$POLL_ATTEMPTS" ]; then
+              sleep "$POLL_INTERVAL"
+            fi
+          done
+          echo "::error::${PACKAGE}@${VERSION} is still missing from npm."
+          exit 1
+
+      - name: Alert Slack that the version is missing
+        if: ${{ failure() && steps.version.outputs.check == 'true' && env.SLACK_WEBHOOK_URL != '' }}
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v2.0.0-rc.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Node SDK ${{ steps.version.outputs.version }} is missing from npm",
+              "channel": "#server-sdk-deployments",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Node* SDK ${{ steps.version.outputs.version }} is missing from npm :warning:\nIt was released on GitHub but has not reached the registry after 50 minutes. View the <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs>."
+                  }
+                }
+              ]
+            }
