@@ -33,7 +33,7 @@ jobs:
     env:
       # Secrets can't be read in a step `if`, so the Slack steps test this copy.
       # While the secret is unset, both notices are skipped.
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_NOTIFY_SERVER_SDK_RELEASES_WEBHOOK_URL }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_NOTIFY_RELEASES_WEBHOOK_URL }}
     steps:
       # Overlapping pushes can make a later run create an earlier release, so
       # build the tagged commit rather than the commit that triggered this run.
@@ -65,7 +65,7 @@ jobs:
           payload: |
             {
               "text": "Node SDK ${{ steps.version.outputs.version }} published to npm",
-              "channel": "#server-sdk-deployments",
+              "channel": "#mobile-deployments",
               "blocks": [
                 {
                   "type": "section",
@@ -86,7 +86,7 @@ jobs:
           payload: |
             {
               "text": "Node SDK release failure",
-              "channel": "#server-sdk-deployments",
+              "channel": "#mobile-deployments",
               "blocks": [
                 {
                   "type": "section",
