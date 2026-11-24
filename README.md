@@ -26,7 +26,7 @@ As of v5.0.0 the SDK is built on top of standard `fetch`, so it runs on any runt
 - Node.js (Current, Active LTS, Maintenance LTS; see [Supported Node.js versions](#supported-nodejs-versions) above)
 - Bun (latest)
 
-Other fetch-compatible runtimes (Deno, Cloudflare Workers, etc.) should work but are not part of our test matrix. If you hit a runtime-specific issue, please open one against the [issue tracker](https://github.com/customerio/customerio-node/issues).
+Other fetch-compatible runtimes (Deno, Cloudflare Workers, etc.) should work but are not part of our test matrix. If you hit a runtime-specific issue, please [contact Support](https://fly.customer.io/?support=true).
 
 ## Installation
 
@@ -178,6 +178,10 @@ We've included functional examples in the [examples/ directory](https://github.c
 ```bash
 npm install && npm test
 ```
+
+## Support
+
+For help or to report a bug, [contact Customer.io Support](https://fly.customer.io/?support=true). We don't track issues in this repository.
 
 ## License
 
