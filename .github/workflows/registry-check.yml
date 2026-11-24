@@ -26,7 +26,7 @@ jobs:
       PACKAGE: customerio-node
       # Secrets can't be read in a step `if`, so the alert step tests this copy.
       # While the secret is unset, the alert is skipped.
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_NOTIFY_SERVER_SDK_RELEASES_WEBHOOK_URL }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_NOTIFY_RELEASES_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -92,7 +92,7 @@ jobs:
           payload: |
             {
               "text": "Node SDK ${{ steps.version.outputs.version }} is missing from npm",
-              "channel": "#server-sdk-deployments",
+              "channel": "#mobile-deployments",
               "blocks": [
                 {
                   "type": "section",
