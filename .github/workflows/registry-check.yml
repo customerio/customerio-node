@@ -18,8 +18,10 @@ permissions:
 
 jobs:
   registry-check:
-    # A cancelled publish run released nothing.
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion != 'cancelled' }}
+    # Runs after every publish run, cancelled and failed ones too: release-please
+    # creates the GitHub release before npm publish starts, so a run that stops
+    # in between leaves a release with no package. The tag check below filters
+    # out pushes that released nothing.
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
