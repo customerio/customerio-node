@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.5.2](https://github.com/customerio/customerio-node/compare/v5.5.1...v5.5.2) (2026-11-24)
+
+
+### Bug Fixes
+
+* **request:** retry a 5xx whose body isn't JSON (CDP-7321) ([#273](https://github.com/customerio/customerio-node/issues/273)) ([82851e5](https://github.com/customerio/customerio-node/commit/82851e57a2152c35f7840a6b3dc71d1483064476))
+
 ## [5.5.1](https://github.com/customerio/customerio-node/compare/v5.5.0...v5.5.1) (2026-11-23)
 
 
