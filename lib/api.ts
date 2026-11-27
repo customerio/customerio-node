@@ -629,7 +629,7 @@ export type MessageOptions = {
 };
 
 /** What a CSV import loads. */
-export type ImportType = 'people' | 'event' | 'object' | 'relationship';
+export type ImportType = 'people' | 'event' | 'object' | 'relationship' | 'device';
 
 /** Which records an import processes. */
 export type ImportProcessScope = 'all' | 'only_existing' | 'only_new';
@@ -640,17 +640,17 @@ export type ImportInput = {
   data_file_url: string;
   /** What the CSV loads (required). */
   type: ImportType;
-  /** Which identifier the CSV keys rows by. `id`/`email` for people & events; `id`/`email`/`cio_id` for relationships. */
+  /** Which identifier the CSV keys rows by. `id`/`email` for people, events & devices; `id`/`email`/`cio_id` for relationships. */
   identifier?: 'id' | 'email' | 'cio_id';
   /** Object type id — required when `type` is `object`. */
   object_type_id?: string | number;
-  /** Display name (defaults to the filename). */
+  /** Display name. The API requires it and refuses an import without one. */
   name?: string;
   /** Description of the import. */
   description?: string;
-  /** For people imports: which profiles to process. Mutually exclusive with `data_to_process`. */
+  /** For people imports: which profiles to process. Mutually exclusive with `data_to_process`. The API refuses it for device imports. */
   people_to_process?: ImportProcessScope;
-  /** For object/relationship imports: which records to process. Mutually exclusive with `people_to_process`. */
+  /** For object/relationship imports: which records to process. Mutually exclusive with `people_to_process`. The API refuses it for device imports. */
   data_to_process?: ImportProcessScope;
 };
 
@@ -3866,7 +3866,7 @@ export class APIClient {
   /**
    * Start a CSV import.
    *
-   * @param importData The import definition. `data_file_url` and `type` are required. See {@link ImportInput}.
+   * @param importData The import definition. `data_file_url` and `type` are required, and the API also requires `name`. See {@link ImportInput}.
    * @returns The parsed JSON response body (`{ import: {...} }`).
    * @throws {MissingParamError} If `importData` is missing/not an object, or `data_file_url`/`type` is empty.
    */

@@ -2161,16 +2161,31 @@ api.createImport({
 });
 ```
 
+Import push tokens for people who already exist with a device import:
+
+```javascript
+api.createImport({
+  data_file_url: "https://example.com/devices.csv",
+  type: "device",
+  identifier: "id",
+  name: "Push tokens from our old provider",
+});
+```
+
+The device file needs a person column (`id` or `email`, matching `identifier`), a `token` column and a `platform` column (`ios` or `android`). A `last_used` column in unix seconds is optional. Any other column becomes a device attribute.
+
+A device import only adds devices to people who already exist. Rows for unknown people, and tokens repeated for another person, are skipped and the rest import. `api.getImport(id)` returns `error_download_url`, a file with the skipped rows and the reasons. It is set even when the import succeeds.
+
 #### Options
 
 - **importData**: The import definition
   - _data_file_url_: URL of the CSV file to import (required)
-  - _type_: `"people"` / `"event"` / `"object"` / `"relationship"` (required)
-  - _identifier_: Which column keys the rows — `"id"`/`"email"` for people & events; `"id"`/`"email"`/`"cio_id"` for relationships
+  - _type_: `"people"` / `"event"` / `"object"` / `"relationship"` / `"device"` (required)
+  - _identifier_: Which column keys the rows — `"id"`/`"email"` for people, events & devices; `"id"`/`"email"`/`"cio_id"` for relationships
   - _object_type_id_: Required when `type` is `"object"`
-  - _name_: Display name (defaults to the filename)
+  - _name_: Display name (required by the API)
   - _description_: Description of the import
-  - _people_to_process_ / _data_to_process_: `"all"` / `"only_existing"` / `"only_new"` (mutually exclusive)
+  - _people_to_process_ / _data_to_process_: `"all"` / `"only_existing"` / `"only_new"` (mutually exclusive; the API refuses both for device imports)
 
 ### api.getImport(importId)
 
