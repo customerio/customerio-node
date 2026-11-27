@@ -2385,6 +2385,18 @@ test('#createImport: posts the wrapped import body and validates', (t) => {
   t.true(post.calledWith(`${API}/imports`, { import: imp }));
 });
 
+test('#createImport: posts a device import', (t) => {
+  const post = sinon.stub(t.context.client.request, 'post');
+  const imp = {
+    data_file_url: 'https://example.com/devices.csv',
+    type: 'device' as const,
+    identifier: 'id' as const,
+    name: 'Push tokens from our old provider',
+  };
+  t.context.client.createImport(imp);
+  t.true(post.calledWith(`${API}/imports`, { import: imp }));
+});
+
 test('#getImport: gets a single import and validates', (t) => {
   const get = sinon.stub(t.context.client.request, 'get');
   t.throws(() => t.context.client.getImport(''), { message: 'importId is required' });
